@@ -9,8 +9,13 @@ class Game {
   List<Part> level3Parts;
   List<ResourceType> well;
   String gameId;
-  Queue<ResourceType> availableResources;
   int _nextObjectId = 0;
+  ChangeStack changeStack;
+
+  Queue<ResourceType> availableResources;
+  List<Part> level1Sale;
+  List<Part> level2Sale;
+  List<Part> level3Sale;
 
   Game(this.players, this.gameId) {
     _createGame();
@@ -32,8 +37,22 @@ class Game {
     // give players their starting parts
     for (var player in players) {
       var startingPart = SimplePart(
-          nextObjectId(), 0, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
+          this, nextObjectId(), 0, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
       player.buyPart(startingPart, <ResourceType>[]);
+    }
+
+    // set up the starting market
+    level1Sale = List<Part>(4);
+    level2Sale = List<Part>(3);
+    level3Sale = List<Part>(2);
+    for (var i = 0; i < 4; i++) {
+      level1Sale[i] = level1Parts.removeLast();
+    }
+    for (var i = 0; i < 3; i++) {
+      level2Sale[i] = level2Parts.removeLast();
+    }
+    for (var i = 0; i < 2; i++) {
+      level3Sale[i] = level3Parts.removeLast();
     }
   }
 

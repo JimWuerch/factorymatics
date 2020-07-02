@@ -8,10 +8,16 @@ enum ActionType {
   acquire,
   scavenge,
   convert,
+  doubleConvert,
   mysteryMeat,
+  vp,
+  requestStore,
+  requestConstruct,
   requestAcquire,
   requestConvert,
-  requestMysteryMeat
+  requestDoubleConvert,
+  requestMysteryMeat,
+  requestVp,
 }
 
 abstract class Action {

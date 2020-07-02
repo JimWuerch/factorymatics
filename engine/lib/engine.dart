@@ -10,5 +10,5 @@ export 'src/game_object.dart';
 export 'src/part/part.dart';
 export 'src/player.dart';
 export 'src/resource/resource.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/state/game_state.dart';
+export 'src/undo/undo.dart';

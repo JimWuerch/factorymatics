@@ -12,3 +12,15 @@ class RequestConvertAction extends Action {
 
   RequestConvertAction(Player player, this.resourceType) : super(ActionType.requestConvert, player);
 }
+
+class DoubleConvertAction extends Action {
+  final ResourceType source;
+
+  DoubleConvertAction(Player player, this.source) : super(ActionType.doubleConvert, player);
+}
+
+class RequestDoubleConvertAction extends Action {
+  final ResourceType resourceType;
+
+  RequestDoubleConvertAction(Player player, this.resourceType) : super(ActionType.requestDoubleConvert, player);
+}

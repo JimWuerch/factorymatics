@@ -1,0 +1,36 @@
+import 'package:engine/engine.dart';
+
+class MapChange<K, V> extends Change {
+  MapState<K, V> state;
+  K key;
+  V newValue;
+  V oldValue;
+  bool existed;
+  bool remove;
+
+  // ignore: prefer_initializing_formals
+  MapChange.add(this.state, this.key, V value) : newValue = value {
+    remove = false;
+    oldValue = state[key];
+    existed = state.containsKey(key);
+    execute();
+  }
+
+  MapChange.remove(this.state, this.key) {
+    newValue = null;
+    remove = true;
+    oldValue = state[key];
+    existed = true;
+    execute();
+  }
+
+  @override
+  void execute() {
+    state.change(key, newValue, remove);
+  }
+
+  @override
+  void undo() {
+    state.change(key, oldValue, !existed);
+  }
+}

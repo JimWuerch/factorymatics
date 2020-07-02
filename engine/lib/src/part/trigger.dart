@@ -2,7 +2,7 @@ import 'package:engine/engine.dart';
 import 'package:engine/src/action/construct_action.dart';
 import 'package:engine/src/action/convert_action.dart';
 
-enum TriggerType { store, acquire, construct, convert, purchased }
+enum TriggerType { store, acquire, construct, convert, purchased, constructLevel }
 
 abstract class Trigger {
   final TriggerType triggerType;
@@ -44,6 +44,20 @@ class ConstructTrigger extends Trigger {
   bool isTriggeredBy(Action action) {
     if (action is ConstructAction) {
       return action.part.resource == resourceType;
+    }
+    return false;
+  }
+}
+
+class ConstructLevelTrigger extends Trigger {
+  final int level;
+
+  ConstructLevelTrigger(this.level) : super(TriggerType.constructLevel);
+
+  @override
+  bool isTriggeredBy(Action action) {
+    if (action is ConstructAction) {
+      return action.part.level == level;
     }
     return false;
   }

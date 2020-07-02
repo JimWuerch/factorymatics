@@ -3,10 +3,10 @@ import 'package:engine/engine.dart';
 class ConverterPart extends Part {
   final int _vp;
 
-  ConverterPart(
-      String id, int level, int cost, List<Trigger> triggers, List<Product> products, ResourceType resourceType, int vp)
+  ConverterPart(Game game, String id, int level, int cost, List<Trigger> triggers, List<Product> products,
+      ResourceType resourceType, int vp)
       : _vp = vp,
-        super(id, level, PartType.converter, cost, triggers, null, resourceType);
+        super(game, id, level, PartType.converter, cost, triggers, null, resourceType);
 
   @override
   int get vp => _vp;
