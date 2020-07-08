@@ -1,0 +1,73 @@
+import 'package:engine/engine.dart';
+import 'package:factorymatics/src/game_page_model.dart';
+import 'package:factorymatics/src/part_widget.dart';
+import 'package:flutter/material.dart';
+
+class GamePage extends StatefulWidget {
+  final String title = 'Factorymatics';
+
+  @override
+  _GamePageState createState() => _GamePageState();
+}
+
+class _GamePageState extends State<GamePage> {
+  GamePageModel model;
+
+  @override
+  void initState() {
+    super.initState();
+
+    var ps = PlayerService.createService();
+    ps.addPlayer('bob', '1');
+    ps.addPlayer('alice', '2');
+    model = GamePageModel(ps, 'wheee');
+  }
+
+  Widget _makePartList(List<Part> parts) {
+    var widgets = <Widget>[];
+    for (var part in parts) {
+      widgets.add(PartWidget(part));
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: widgets,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+      ),
+      body: Center(
+        // Center is a layout widget. It takes a single child and positions it
+        // in the middle of the parent.
+        child: Column(
+          // Column is also a layout widget. It takes a list of children and
+          // arranges them vertically. By default, it sizes itself to fit its
+          // children horizontally, and tries to be as tall as its parent.
+          //
+          // Invoke "debug painting" (press "p" in the console, choose the
+          // "Toggle Debug Paint" action from the Flutter Inspector in Android
+          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+          // to see the wireframe for each widget.
+          //
+          // Column has various properties to control how it sizes itself and
+          // how it positions its children. Here we use mainAxisAlignment to
+          // center the children vertically; the main axis here is the vertical
+          // axis because Columns are vertical (the cross axis would be
+          // horizontal).
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            _makePartList(model.game.level3Sale),
+            _makePartList(model.game.level2Sale),
+            _makePartList(model.game.level1Sale),
+          ],
+        ),
+      ),
+    );
+  }
+}

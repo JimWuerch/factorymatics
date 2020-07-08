@@ -1,9 +1,11 @@
 import 'dart:collection';
 
 import 'package:engine/engine.dart';
+import 'package:engine/src/player/player_service.dart';
+import 'package:uuid/uuid.dart';
 
 class Game {
-  List<Player> players;
+  List<PlayerData> players;
   List<Part> level1Parts;
   List<Part> level2Parts;
   List<Part> level3Parts;
@@ -11,21 +13,34 @@ class Game {
   String gameId;
   int _nextObjectId = 0;
   ChangeStack changeStack;
+  Uuid uuidGen;
+  PlayerService playerService;
+  Map<String, Part> allParts;
 
   Queue<ResourceType> availableResources;
   List<Part> level1Sale;
   List<Part> level2Sale;
   List<Part> level3Sale;
 
-  Game(this.players, this.gameId) {
+  Game(this.playerService, this.gameId) {
+    uuidGen = Uuid();
+    players = <PlayerData>[];
+    for (var p in playerService.players) {
+      players.add(PlayerData(this, p));
+    }
+
     _createGame();
+  }
+
+  String getUuid() {
+    return uuidGen.v4();
   }
 
   void _createGame() {
     // set player order
     players.shuffle();
 
-    //loadParts();
+    createParts(this);
     _fillWell();
 
     // make the initial resources available
@@ -38,6 +53,7 @@ class Game {
     for (var player in players) {
       var startingPart = SimplePart(
           this, nextObjectId(), 0, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
+      allParts[startingPart.id] = startingPart;
       player.buyPart(startingPart, <ResourceType>[]);
     }
 
@@ -75,5 +91,9 @@ class Game {
     var ret = _nextObjectId.toString();
     _nextObjectId++;
     return ret;
+  }
+
+  bool applyAction(GameAction action) {
+    return false;
   }
 }

@@ -9,14 +9,14 @@ abstract class Trigger {
 
   Trigger(this.triggerType);
 
-  bool isTriggeredBy(Action action);
+  bool isTriggeredBy(GameAction action);
 }
 
 class StoreTrigger extends Trigger {
   StoreTrigger() : super(TriggerType.store);
 
   @override
-  bool isTriggeredBy(Action action) {
+  bool isTriggeredBy(GameAction action) {
     return action.actionType == ActionType.store;
   }
 }
@@ -27,7 +27,7 @@ class AcquireTrigger extends Trigger {
   AcquireTrigger(this.resourceType) : super(TriggerType.acquire);
 
   @override
-  bool isTriggeredBy(Action action) {
+  bool isTriggeredBy(GameAction action) {
     if (action is AcquireAction) {
       return action.resourceType == resourceType;
     }
@@ -41,7 +41,7 @@ class ConstructTrigger extends Trigger {
   ConstructTrigger(this.resourceType) : super(TriggerType.construct);
 
   @override
-  bool isTriggeredBy(Action action) {
+  bool isTriggeredBy(GameAction action) {
     if (action is ConstructAction) {
       return action.part.resource == resourceType;
     }
@@ -55,7 +55,7 @@ class ConstructLevelTrigger extends Trigger {
   ConstructLevelTrigger(this.level) : super(TriggerType.constructLevel);
 
   @override
-  bool isTriggeredBy(Action action) {
+  bool isTriggeredBy(GameAction action) {
     if (action is ConstructAction) {
       return action.part.level == level;
     }
@@ -69,7 +69,7 @@ class ConvertTrigger extends Trigger {
   ConvertTrigger(this.resourceType) : super(TriggerType.convert);
 
   @override
-  bool isTriggeredBy(Action action) {
+  bool isTriggeredBy(GameAction action) {
     if (action is ConvertAction) {
       return action.source == resourceType;
     }

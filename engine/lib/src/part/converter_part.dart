@@ -6,7 +6,7 @@ class ConverterPart extends Part {
   ConverterPart(Game game, String id, int level, int cost, List<Trigger> triggers, List<Product> products,
       ResourceType resourceType, int vp)
       : _vp = vp,
-        super(game, id, level, PartType.converter, cost, triggers, null, resourceType);
+        super(game, id, level, PartType.converter, cost, triggers, products, resourceType);
 
   @override
   int get vp => _vp;

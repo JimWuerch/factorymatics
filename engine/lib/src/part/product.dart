@@ -4,31 +4,32 @@ import 'package:engine/src/action/vp_action.dart';
 
 abstract class Product {
   Product();
-  Action produce(Game game, Player player);
+  GameAction produce(Game game, String player);
 }
 
 class MysteryMeatProduct extends Product {
   @override
-  Action produce(Game game, Player player) {
+  GameAction produce(Game game, String player) {
     return RequestMysteryMeatAction(player);
   }
 }
 
 class AcquireProduct extends Product {
   @override
-  Action produce(Game game, Player player) {
+  GameAction produce(Game game, String player) {
     return RequestAcquireAction(player);
   }
 }
 
 class ConvertProduct extends Product {
-  final ResourceType resourceType;
+  final ResourceType source;
+  final ResourceType dest;
 
-  ConvertProduct(this.resourceType);
+  ConvertProduct(this.source, this.dest);
 
   @override
-  Action produce(Game game, Player player) {
-    return RequestConvertAction(player, resourceType);
+  GameAction produce(Game game, String player) {
+    return RequestConvertAction(player, source, dest);
   }
 }
 
@@ -38,7 +39,7 @@ class VpProduct extends Product {
   VpProduct(this.vp);
 
   @override
-  Action produce(Game game, Player player) {
+  GameAction produce(Game game, String player) {
     return RequestVpAction(player, vp);
   }
 }
@@ -49,7 +50,7 @@ class DoubleResourceProduct extends Product {
   DoubleResourceProduct(this.resourceType);
 
   @override
-  Action produce(Game game, Player player) {
+  GameAction produce(Game game, String player) {
     return RequestDoubleConvertAction(player, resourceType);
   }
 }

@@ -1,19 +1,48 @@
 import 'package:engine/engine.dart';
 
-class AcquireAction extends Action {
+class AcquireAction extends GameAction {
   ResourceType resourceType;
 
-  AcquireAction(Player player, this.resourceType) : super(ActionType.acquire, player);
+  AcquireAction(String player, this.resourceType) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.acquire;
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    ret['r'] = ResourceType.values.indexOf(resourceType);
+    return ret;
+  }
+
+  AcquireAction.fromJson(Game game, Map<String, dynamic> json)
+      : resourceType = ResourceType.values[json['r'] as int],
+        super.fromJson(game, json);
 }
 
-class RequestAcquireAction extends Action {
-  RequestAcquireAction(Player player) : super(ActionType.requestAcquire, player);
+class RequestAcquireAction extends GameAction {
+  RequestAcquireAction(String player) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.requestAcquire;
+
+  RequestAcquireAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
 }
 
-class MysteryMeatAction extends Action {
-  MysteryMeatAction(Player player) : super(ActionType.mysteryMeat, player);
+class MysteryMeatAction extends GameAction {
+  MysteryMeatAction(String player) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.mysteryMeat;
+
+  MysteryMeatAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
 }
 
-class RequestMysteryMeatAction extends Action {
-  RequestMysteryMeatAction(Player player) : super(ActionType.requestMysteryMeat, player);
+class RequestMysteryMeatAction extends GameAction {
+  RequestMysteryMeatAction(String player) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.requestMysteryMeat;
+
+  RequestMysteryMeatAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
 }

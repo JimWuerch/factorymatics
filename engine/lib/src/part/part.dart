@@ -33,7 +33,7 @@ abstract class Part extends GameObject {
 void createParts(Game game) {
   game.level1Parts = [
     ConverterPart(game, game.nextObjectId(), 1, 1, [ConvertTrigger(ResourceType.club)],
-        [ConvertProduct(ResourceType.club)], ResourceType.heart, 1),
+        [ConvertProduct(ResourceType.club, ResourceType.any)], ResourceType.heart, 1),
     EnhancementPart(game, game.nextObjectId(), 1, 1, ResourceType.heart, 1, 1, 0, 1),
     SimplePart(game, game.nextObjectId(), 1, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct()],
         ResourceType.heart, 1),
@@ -77,10 +77,22 @@ void createParts(Game game) {
     SimplePart(game, game.nextObjectId(), 3, PartType.storage, 4, [StoreTrigger()],
         [MysteryMeatProduct(), MysteryMeatProduct(), MysteryMeatProduct()], ResourceType.club, 4),
     ConverterPart(game, game.nextObjectId(), 3, 4, [ConvertTrigger(ResourceType.any)],
-        [ConvertProduct(ResourceType.any)], ResourceType.diamond, 4),
+        [ConvertProduct(ResourceType.any, ResourceType.any)], ResourceType.diamond, 4),
     SimplePart(game, game.nextObjectId(), 3, PartType.construct, 6, [ConstructLevelTrigger(2)],
         [AcquireProduct(), AcquireProduct()], ResourceType.heart, 6),
   ];
   game.level3Parts.shuffle();
+
+  // save all the parts into the parts dictionary
+  for (var part in game.level1Parts) {
+    game.allParts[part.id] = part;
+  }
+  for (var part in game.level2Parts) {
+    game.allParts[part.id] = part;
+  }
+  for (var part in game.level3Parts) {
+    game.allParts[part.id] = part;
+  }
+
   // game.level3Parts.removeRange(16, game.level3Parts.length);
 }

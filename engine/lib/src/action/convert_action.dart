@@ -1,26 +1,87 @@
 import 'package:engine/engine.dart';
 
-class ConvertAction extends Action {
+class ConvertAction extends GameAction {
   final ResourceType source;
   final ResourceType destination;
 
-  ConvertAction(Player player, this.source, this.destination) : super(ActionType.convert, player);
+  ConvertAction(String player, this.source, this.destination) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.convert;
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    ret['s'] = ResourceType.values.indexOf(source);
+    ret['d'] = ResourceType.values.indexOf(destination);
+    return ret;
+  }
+
+  ConvertAction.fromJson(Game game, Map<String, dynamic> json)
+      : source = ResourceType.values[json['s'] as int],
+        destination = ResourceType.values[json['d'] as int],
+        super.fromJson(game, json);
 }
 
-class RequestConvertAction extends Action {
-  final ResourceType resourceType;
+class RequestConvertAction extends GameAction {
+  final ResourceType source;
+  final ResourceType destination;
 
-  RequestConvertAction(Player player, this.resourceType) : super(ActionType.requestConvert, player);
+  RequestConvertAction(String player, this.source, this.destination) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.convert;
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    ret['s'] = ResourceType.values.indexOf(source);
+    ret['d'] = ResourceType.values.indexOf(destination);
+    return ret;
+  }
+
+  RequestConvertAction.fromJson(Game game, Map<String, dynamic> json)
+      : source = ResourceType.values[json['s'] as int],
+        destination = ResourceType.values[json['d'] as int],
+        super.fromJson(game, json);
 }
 
-class DoubleConvertAction extends Action {
+class DoubleConvertAction extends GameAction {
   final ResourceType source;
 
-  DoubleConvertAction(Player player, this.source) : super(ActionType.doubleConvert, player);
+  DoubleConvertAction(String player, this.source) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.doubleConvert;
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    ret['s'] = ResourceType.values.indexOf(source);
+    return ret;
+  }
+
+  DoubleConvertAction.fromJson(Game game, Map<String, dynamic> json)
+      : source = ResourceType.values[json['s'] as int],
+        super.fromJson(game, json);
 }
 
-class RequestDoubleConvertAction extends Action {
+class RequestDoubleConvertAction extends GameAction {
   final ResourceType resourceType;
 
-  RequestDoubleConvertAction(Player player, this.resourceType) : super(ActionType.requestDoubleConvert, player);
+  RequestDoubleConvertAction(String player, this.resourceType) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.requestDoubleConvert;
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    ret['r'] = ResourceType.values.indexOf(resourceType);
+    return ret;
+  }
+
+  RequestDoubleConvertAction.fromJson(Game game, Map<String, dynamic> json)
+      : resourceType = ResourceType.values[json['r'] as int],
+        super.fromJson(game, json);
 }

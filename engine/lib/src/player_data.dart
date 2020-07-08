@@ -1,6 +1,7 @@
 import 'package:engine/engine.dart';
+import 'package:engine/src/player/player.dart';
 
-class Player {
+class PlayerData {
   final String name;
   final String id;
   final MapState<PartType, ListState<Part>> parts;
@@ -14,15 +15,20 @@ class Player {
   Game game;
   final ListState<Part> savedParts;
 
-  Player({this.game, this.name, this.id})
-      : parts = MapState<PartType, ListState<Part>>(game, '$name:parts'),
-        savedParts = ListState<Part>(game, '$name:savedParts'),
-        _vpChits = GameStateVar(game, '$name:vpChits', 0) {
+  PlayerData(this.game, Player player)
+      : parts = MapState<PartType, ListState<Part>>(game, '${player.name}:parts'),
+        savedParts = ListState<Part>(game, '${player.name}:savedParts'),
+        _vpChits = GameStateVar(game, '${player.name}:vpChits', 0),
+        name = player.name,
+        id = player.playerId {
     resources = <ResourceType, GameStateVar<int>>{};
     for (var resource in ResourceType.values) {
       if (resource != ResourceType.none && resource != ResourceType.any) {
         resources[resource] = GameStateVar(game, '$name:${resource.toString()}', 0);
       }
+    }
+    for (var p in PartType.values) {
+      parts[p] = ListState<Part>(game, '$name:$p:parts');
     }
     resourceStorage = 5;
     partStorage = 1;
@@ -39,9 +45,19 @@ class Player {
 
   void resetPartActivations() => _doParts((part) => part.activated.value = false);
 
-  int resourceCount() {
+  int partCount() {
     var ret = 0;
     _doParts((part) => ret++);
+    return ret;
+  }
+
+  int resourceCount() {
+    var ret = 0;
+    resources.forEach((key, value) {
+      if (key != ResourceType.any && key != ResourceType.none) {
+        ret += value.value;
+      }
+    });
     return ret;
   }
 
@@ -76,9 +92,21 @@ class Player {
 
   void giveVpChit() => _vpChits.value = _vpChits.value + 1;
 
-  bool get hasStorageSpace => resourceStorage > resourceCount();
+  bool get hasResourceStorageSpace => resourceStorage > resourceCount();
+
+  bool get hasPartStorageSpace => partStorage > partCount();
+
+  bool hasResource(ResourceType resourceType) => resources[resourceType].value > 0;
 
   void storeResource(ResourceType resource) {
     resources[resource].value = resources[resource].value + 1;
+  }
+
+  bool canAfford(Part part) {
+    if (part.resource == ResourceType.any && part.cost <= resourceCount()) {
+      return true;
+    } else {
+      return part.cost <= resources[part.resource].value;
+    }
   }
 }
