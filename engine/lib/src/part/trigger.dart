@@ -29,7 +29,7 @@ class AcquireTrigger extends Trigger {
   @override
   bool isTriggeredBy(GameAction action) {
     if (action is AcquireAction) {
-      return action.resourceType == resourceType;
+      return action?.acquiredResource == resourceType;
     }
     return false;
   }

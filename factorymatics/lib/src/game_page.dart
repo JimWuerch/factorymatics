@@ -1,5 +1,6 @@
 import 'package:engine/engine.dart';
 import 'package:factorymatics/src/game_page_model.dart';
+import 'package:factorymatics/src/part_helpers.dart';
 import 'package:factorymatics/src/part_widget.dart';
 import 'package:flutter/material.dart';
 
@@ -19,8 +20,9 @@ class _GamePageState extends State<GamePage> {
 
     var ps = PlayerService.createService();
     ps.addPlayer('bob', '1');
-    ps.addPlayer('alice', '2');
+    //ps.addPlayer('alice', '2');
     model = GamePageModel(ps, 'wheee');
+    model.init();
   }
 
   Widget _makePartList(List<Part> parts) {
@@ -62,12 +64,57 @@ class _GamePageState extends State<GamePage> {
           // horizontal).
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            _makePartList(model.game.level3Sale),
-            _makePartList(model.game.level2Sale),
-            _makePartList(model.game.level1Sale),
+            _makePartList(model.game.level3Sale.list),
+            _makePartList(model.game.level2Sale.list),
+            _makePartList(model.game.level1Sale.list),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                RaisedButton.icon(
+                  icon: Icon(actionToIcon(ActionType.store)),
+                  onPressed: model.isActionSelection && model.canStore
+                      ? () {
+                          _actionButtonPressed(ActionType.store);
+                        }
+                      : null,
+                  label: Text('Store'),
+                ),
+                RaisedButton.icon(
+                  icon: Icon(actionToIcon(ActionType.acquire)),
+                  onPressed: model.isActionSelection && model.canAcquire
+                      ? () {
+                          _actionButtonPressed(ActionType.acquire);
+                        }
+                      : null,
+                  label: Text('Aquire'),
+                ),
+                RaisedButton.icon(
+                  icon: Icon(actionToIcon(ActionType.construct)),
+                  onPressed: model.isActionSelection
+                      ? () {
+                          _actionButtonPressed(ActionType.construct);
+                        }
+                      : null,
+                  label: Text('Construct'),
+                ),
+                RaisedButton.icon(
+                  icon: Icon(actionToIcon(ActionType.search)),
+                  onPressed: model.isActionSelection
+                      ? () {
+                          _actionButtonPressed(ActionType.search);
+                        }
+                      : null,
+                  label: Text('Search'),
+                ),
+              ],
+            ),
           ],
         ),
       ),
     );
+  }
+
+  void _actionButtonPressed(ActionType actionType) {
+    model.selectAction(actionType);
   }
 }

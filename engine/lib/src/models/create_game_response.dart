@@ -15,7 +15,7 @@ class CreateGameResponse extends GameModel {
   @override
   Map<String, dynamic> toJson() {
     var ret = super.toJson();
-    ret['gameIndex'] = gameId;
+    ret['gameId'] = gameId;
     ret['players'] = players;
     return ret;
   }

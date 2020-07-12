@@ -10,6 +10,11 @@ class ConvertAction extends GameAction {
   ActionType get actionType => ActionType.convert;
 
   @override
+  bool matches(GameAction action) {
+    return (action as ConvertAction)?.source == source;
+  }
+
+  @override
   Map<String, dynamic> toJson() {
     var ret = super.toJson();
     ret['s'] = ResourceType.values.indexOf(source);
@@ -23,28 +28,28 @@ class ConvertAction extends GameAction {
         super.fromJson(game, json);
 }
 
-class RequestConvertAction extends GameAction {
-  final ResourceType source;
-  final ResourceType destination;
+// class RequestConvertAction extends GameAction {
+//   final ResourceType source;
+//   final ResourceType destination;
 
-  RequestConvertAction(String player, this.source, this.destination) : super(player);
+//   RequestConvertAction(String player, this.source, this.destination) : super(player);
 
-  @override
-  ActionType get actionType => ActionType.convert;
+//   @override
+//   ActionType get actionType => ActionType.convert;
 
-  @override
-  Map<String, dynamic> toJson() {
-    var ret = super.toJson();
-    ret['s'] = ResourceType.values.indexOf(source);
-    ret['d'] = ResourceType.values.indexOf(destination);
-    return ret;
-  }
+//   @override
+//   Map<String, dynamic> toJson() {
+//     var ret = super.toJson();
+//     ret['s'] = ResourceType.values.indexOf(source);
+//     ret['d'] = ResourceType.values.indexOf(destination);
+//     return ret;
+//   }
 
-  RequestConvertAction.fromJson(Game game, Map<String, dynamic> json)
-      : source = ResourceType.values[json['s'] as int],
-        destination = ResourceType.values[json['d'] as int],
-        super.fromJson(game, json);
-}
+//   RequestConvertAction.fromJson(Game game, Map<String, dynamic> json)
+//       : source = ResourceType.values[json['s'] as int],
+//         destination = ResourceType.values[json['d'] as int],
+//         super.fromJson(game, json);
+// }
 
 class DoubleConvertAction extends GameAction {
   final ResourceType source;
@@ -53,6 +58,11 @@ class DoubleConvertAction extends GameAction {
 
   @override
   ActionType get actionType => ActionType.doubleConvert;
+
+  @override
+  bool matches(GameAction action) {
+    return (action as DoubleConvertAction)?.source == source;
+  }
 
   @override
   Map<String, dynamic> toJson() {
@@ -66,22 +76,22 @@ class DoubleConvertAction extends GameAction {
         super.fromJson(game, json);
 }
 
-class RequestDoubleConvertAction extends GameAction {
-  final ResourceType resourceType;
+// class RequestDoubleConvertAction extends GameAction {
+//   final ResourceType resourceType;
 
-  RequestDoubleConvertAction(String player, this.resourceType) : super(player);
+//   RequestDoubleConvertAction(String player, this.resourceType) : super(player);
 
-  @override
-  ActionType get actionType => ActionType.requestDoubleConvert;
+//   @override
+//   ActionType get actionType => ActionType.requestDoubleConvert;
 
-  @override
-  Map<String, dynamic> toJson() {
-    var ret = super.toJson();
-    ret['r'] = ResourceType.values.indexOf(resourceType);
-    return ret;
-  }
+//   @override
+//   Map<String, dynamic> toJson() {
+//     var ret = super.toJson();
+//     ret['r'] = ResourceType.values.indexOf(resourceType);
+//     return ret;
+//   }
 
-  RequestDoubleConvertAction.fromJson(Game game, Map<String, dynamic> json)
-      : resourceType = ResourceType.values[json['r'] as int],
-        super.fromJson(game, json);
-}
+//   RequestDoubleConvertAction.fromJson(Game game, Map<String, dynamic> json)
+//       : resourceType = ResourceType.values[json['r'] as int],
+//         super.fromJson(game, json);
+// }

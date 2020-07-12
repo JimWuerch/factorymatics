@@ -6,9 +6,18 @@ export 'action_request.dart';
 export 'action_response.dart';
 export 'create_game_request.dart';
 export 'create_game_response.dart';
+export 'join_game_request.dart';
+export 'join_game_response.dart';
 export 'response_model.dart';
 
-enum GameModelType { createGameRequest, createGameResponse, actionRequest, actionResponse }
+enum GameModelType {
+  createGameRequest,
+  createGameResponse,
+  actionRequest,
+  actionResponse,
+  joinGameRequest,
+  joinGameResponse,
+}
 enum ResponseCode { ok, error, failedValidation }
 
 abstract class GameModel {

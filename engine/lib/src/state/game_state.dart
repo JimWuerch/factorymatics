@@ -46,6 +46,12 @@ class GameStateVar<T> extends GameStateBase {
     }
   }
 
+  // ignore: use_setters_to_change_properties
+  void reinitialize(T value) {
+    // using this skips the changestack
+    _value = value;
+  }
+
   void _change(T newValue) {
     _value = newValue;
     if (onChanged != null) onChanged(this);

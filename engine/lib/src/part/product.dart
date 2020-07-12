@@ -10,14 +10,14 @@ abstract class Product {
 class MysteryMeatProduct extends Product {
   @override
   GameAction produce(Game game, String player) {
-    return RequestMysteryMeatAction(player);
+    return MysteryMeatAction(player);
   }
 }
 
 class AcquireProduct extends Product {
   @override
   GameAction produce(Game game, String player) {
-    return RequestAcquireAction(player);
+    return AcquireAction(player, null);
   }
 }
 
@@ -29,7 +29,7 @@ class ConvertProduct extends Product {
 
   @override
   GameAction produce(Game game, String player) {
-    return RequestConvertAction(player, source, dest);
+    return ConvertAction(player, source, dest);
   }
 }
 
@@ -40,7 +40,7 @@ class VpProduct extends Product {
 
   @override
   GameAction produce(Game game, String player) {
-    return RequestVpAction(player, vp);
+    return VpAction(player, vp);
   }
 }
 
@@ -51,6 +51,6 @@ class DoubleResourceProduct extends Product {
 
   @override
   GameAction produce(Game game, String player) {
-    return RequestDoubleConvertAction(player, resourceType);
+    return DoubleConvertAction(player, resourceType);
   }
 }

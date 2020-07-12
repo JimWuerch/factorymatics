@@ -31,23 +31,20 @@ abstract class Part extends GameObject {
 // black = spade
 // yellow = diamond
 void createParts(Game game) {
-  game.level1Parts = [
-    ConverterPart(game, game.nextObjectId(), 1, 1, [ConvertTrigger(ResourceType.club)],
-        [ConvertProduct(ResourceType.club, ResourceType.any)], ResourceType.heart, 1),
-    EnhancementPart(game, game.nextObjectId(), 1, 1, ResourceType.heart, 1, 1, 0, 1),
-    SimplePart(game, game.nextObjectId(), 1, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct()],
-        ResourceType.heart, 1),
-    SimplePart(game, game.nextObjectId(), 1, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)],
-        [AcquireProduct()], ResourceType.heart, 1),
-    SimplePart(game, game.nextObjectId(), 1, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)],
-        [MysteryMeatProduct()], ResourceType.diamond, 1),
-  ];
+  game.level1Parts = ListState<Part>(game, 'level1Parts')
+    ..add(ConverterPart(game, game.nextObjectId(), 1, 1, [ConvertTrigger(ResourceType.club)],
+        [ConvertProduct(ResourceType.club, ResourceType.any)], ResourceType.heart, 1))
+    ..add(EnhancementPart(game, game.nextObjectId(), 1, 1, ResourceType.heart, 1, 1, 0, 1))
+    ..add(SimplePart(game, game.nextObjectId(), 1, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct()],
+        ResourceType.heart, 1))
+    ..add(SimplePart(game, game.nextObjectId(), 1, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)],
+        [AcquireProduct()], ResourceType.heart, 1))
+    ..add(SimplePart(game, game.nextObjectId(), 1, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)],
+        [MysteryMeatProduct()], ResourceType.diamond, 1));
 
-  game.level1Parts.shuffle();
-
-  game.level2Parts = [
-    EnhancementPart(game, game.nextObjectId(), 2, 3, ResourceType.club, 3, 2, 1, 2),
-    SimplePart(
+  game.level2Parts = ListState<Part>(game, 'level2Parts')
+    ..add(EnhancementPart(game, game.nextObjectId(), 2, 3, ResourceType.club, 3, 2, 1, 2))
+    ..add(SimplePart(
         game,
         game.nextObjectId(),
         2,
@@ -56,8 +53,8 @@ void createParts(Game game) {
         [AcquireTrigger(ResourceType.club), AcquireTrigger(ResourceType.spade)],
         [MysteryMeatProduct()],
         ResourceType.heart,
-        2),
-    SimplePart(
+        2))
+    ..add(SimplePart(
         game,
         game.nextObjectId(),
         2,
@@ -66,22 +63,17 @@ void createParts(Game game) {
         [ConstructTrigger(ResourceType.spade), ConstructTrigger(ResourceType.heart)],
         [VpProduct(1)],
         ResourceType.club,
-        3),
-    ConverterPart(game, game.nextObjectId(), 2, 3, [ConvertTrigger(ResourceType.diamond)],
-        [DoubleResourceProduct(ResourceType.diamond)], ResourceType.spade, 3),
-  ];
+        3))
+    ..add(ConverterPart(game, game.nextObjectId(), 2, 3, [ConvertTrigger(ResourceType.diamond)],
+        [DoubleResourceProduct(ResourceType.diamond)], ResourceType.spade, 3));
 
-  game.level2Parts.shuffle();
-
-  game.level3Parts = [
-    SimplePart(game, game.nextObjectId(), 3, PartType.storage, 4, [StoreTrigger()],
-        [MysteryMeatProduct(), MysteryMeatProduct(), MysteryMeatProduct()], ResourceType.club, 4),
-    ConverterPart(game, game.nextObjectId(), 3, 4, [ConvertTrigger(ResourceType.any)],
-        [ConvertProduct(ResourceType.any, ResourceType.any)], ResourceType.diamond, 4),
-    SimplePart(game, game.nextObjectId(), 3, PartType.construct, 6, [ConstructLevelTrigger(2)],
-        [AcquireProduct(), AcquireProduct()], ResourceType.heart, 6),
-  ];
-  game.level3Parts.shuffle();
+  game.level3Parts = ListState<Part>(game, 'level3Parts')
+    ..add(SimplePart(game, game.nextObjectId(), 3, PartType.storage, 4, [StoreTrigger()],
+        [MysteryMeatProduct(), MysteryMeatProduct(), MysteryMeatProduct()], ResourceType.club, 4))
+    ..add(ConverterPart(game, game.nextObjectId(), 3, 4, [ConvertTrigger(ResourceType.any)],
+        [ConvertProduct(ResourceType.any, ResourceType.any)], ResourceType.diamond, 4))
+    ..add(SimplePart(game, game.nextObjectId(), 3, PartType.construct, 6, [ConstructLevelTrigger(2)],
+        [AcquireProduct(), AcquireProduct()], ResourceType.heart, 6));
 
   // save all the parts into the parts dictionary
   for (var part in game.level1Parts) {

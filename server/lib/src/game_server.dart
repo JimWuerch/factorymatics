@@ -46,6 +46,7 @@ class GameServer {
       case GameModelType.createGameRequest:
         var request = model as CreateGameRequest;
         var game = createGame(request.gameId);
+        game.startGame();
         return CreateGameResponse(game, model.ownerId, 'create game', game.gameId,
             game.playerService.players.map<String>((e) => e.name).toList());
 
@@ -53,6 +54,12 @@ class GameServer {
         var request = model as ActionRequest;
         doAction(request.gameId, request.action);
         return null;
+
+      case GameModelType.joinGameRequest:
+        var request = model as JoinGameRequest;
+        var game = games.find(request.gameId);
+        var turns = game.getTurns(request.turnIndex);
+        return JoinGameResponse(game, request.ownerId, 'joinGameResponse', turns, ResponseCode.ok);
 
       default:
         return null;

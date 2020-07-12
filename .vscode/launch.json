@@ -5,7 +5,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "hexxtrains",
+            "name": "factorymatics",
             "program": "${workspaceFolder}/factorymatics/lib/main.dart",
             "request": "launch",
             "type": "dart"

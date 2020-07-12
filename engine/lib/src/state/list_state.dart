@@ -53,6 +53,8 @@ class ListState<T> extends GameStateBase with IterableMixin<T> {
 
   Iterator<T> get iterator => _list.iterator;
 
+  List<T> get list => List<T>.unmodifiable(_list);
+
   void change(T value, int index, ListChangeOperation operation) {
     switch (operation) {
       case ListChangeOperation.add:

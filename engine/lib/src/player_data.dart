@@ -1,4 +1,5 @@
 import 'package:engine/engine.dart';
+import 'package:engine/src/part/converter_part.dart';
 import 'package:engine/src/player/player.dart';
 
 class PlayerData {
@@ -11,7 +12,7 @@ class PlayerData {
   Map<ResourceType, GameStateVar<int>> resources;
   int resourceStorage;
   int partStorage;
-  int scavenge;
+  int search;
   Game game;
   final ListState<Part> savedParts;
 
@@ -32,7 +33,7 @@ class PlayerData {
     }
     resourceStorage = 5;
     partStorage = 1;
-    scavenge = 3;
+    search = 3;
   }
 
   void _doParts(void Function(Part) fn) {
@@ -43,7 +44,7 @@ class PlayerData {
     }
   }
 
-  void resetPartActivations() => _doParts((part) => part.activated.value = false);
+  void resetPartActivations() => _doParts((part) => part.activated.reinitialize(false));
 
   int partCount() {
     var ret = 0;
@@ -81,7 +82,7 @@ class PlayerData {
     savedParts.remove(part);
   }
 
-  bool get gameEnded => parts.length > 15 || _level3Parts > 3;
+  bool get isGameEnded => parts.length > 15 || _level3Parts > 3;
 
   int get score {
     var ret = 0;
@@ -108,5 +109,18 @@ class PlayerData {
     } else {
       return part.cost <= resources[part.resource].value;
     }
+  }
+
+  bool canConvert(ResourceType resourceType) {
+    for (var part in parts[PartType.converter]) {
+      if (!part.activated.value && (part as ConverterPart).canConvert(resourceType)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  bool isInStorage(Part part) {
+    return savedParts.contains(part);
   }
 }
