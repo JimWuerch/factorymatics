@@ -16,12 +16,27 @@ class GameServer {
   GameTransport gameTransport;
   PlayerService playerService;
 
-  GameServer(this.clientCallback);
+  GameServer(this.clientCallback) : playerService = PlayerService.createService();
 
-  Game createGame(String gameId) {
-    var game = Game(playerService, gameId);
-    games.store(game);
-    return game;
+  void createPlayer(String name, String id) {
+    playerService.addPlayer(name, id);
+  }
+
+  void joinPlayerToGame(String gameId, String playerId) {
+    games.addPlayer(gameId, playerService.getPlayer(playerId));
+  }
+
+  String createGameLobby(String playerId) {
+    var lobby = games.createLobby();
+    games.addPlayer(lobby.gameId, playerService.getPlayer(playerId));
+    return lobby.gameId;
+  }
+
+  GameController createGame(String gameId) {
+    var gc = GameController();
+    gc.setupGame(games.findPlayers(gameId).map<String>((e) => e.playerId).toList(), playerService, gameId);
+    games.store(gc);
+    return gc;
   }
 
   void closeGame(String gameId) {
@@ -34,21 +49,19 @@ class GameServer {
   }
 
   bool doAction(String gameId, GameAction action) {
-    var game = games.find(gameId);
-    return game.applyAction(action);
+    var game = games.find(gameId).game;
+    return false; //game.applyAction(action);
   }
 
-  GameModel handleRequest(GameModel model) {
+  ResponseModel handleRequest(GameModel model) {
     //TODO: add validator
     // validateRequest(model);
 
     switch (model.modelType) {
       case GameModelType.createGameRequest:
         var request = model as CreateGameRequest;
-        var game = createGame(request.gameId);
-        game.startGame();
-        return CreateGameResponse(game, model.ownerId, 'create game', game.gameId,
-            game.playerService.players.map<String>((e) => e.name).toList());
+        var gc = createGame(request.gameId);
+        return CreateGameResponse(gc.game, model.ownerId, 'create game', ResponseCode.ok);
 
       case GameModelType.actionRequest:
         var request = model as ActionRequest;
@@ -57,9 +70,15 @@ class GameServer {
 
       case GameModelType.joinGameRequest:
         var request = model as JoinGameRequest;
-        var game = games.find(request.gameId);
-        var turns = game.getTurns(request.turnIndex);
-        return JoinGameResponse(game, request.ownerId, 'joinGameResponse', turns, ResponseCode.ok);
+        var gc = games.find(request.gameId);
+        var gameState = gc.getGameState();
+        return JoinGameResponse(gc.game, request.ownerId, 'joinGameResponse', ResponseCode.ok, gameState);
+
+      case GameModelType.createLobbyRequest:
+        var request = model as CreateLobbyRequest;
+        playerService.addPlayer(request.playerName, request.ownerId);
+        var lobby = createGameLobby(request.ownerId);
+        return CreateLobbyResponse(lobby, request.ownerId, ResponseCode.ok);
 
       default:
         return null;

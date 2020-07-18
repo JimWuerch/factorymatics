@@ -1,11 +1,11 @@
 import 'package:engine/engine.dart';
 
-import 'action_request.dart';
-
 export 'action_request.dart';
 export 'action_response.dart';
 export 'create_game_request.dart';
 export 'create_game_response.dart';
+export 'create_lobby_request.dart';
+export 'create_lobby_response.dart';
 export 'join_game_request.dart';
 export 'join_game_response.dart';
 export 'response_model.dart';
@@ -17,6 +17,8 @@ enum GameModelType {
   actionResponse,
   joinGameRequest,
   joinGameResponse,
+  createLobbyRequest,
+  createLobbyResponse
 }
 enum ResponseCode { ok, error, failedValidation }
 
@@ -61,6 +63,10 @@ GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
       return ActionRequest.fromJson(game, json);
     case GameModelType.actionResponse:
       return ActionResponse.fromJson(json);
+    case GameModelType.createLobbyRequest:
+      return CreateLobbyRequest.fromJson(json);
+    case GameModelType.createLobbyResponse:
+      return CreateLobbyResponse.fromJson(json);
     default:
       throw InvalidOperationError('Unknown model type $type');
   }

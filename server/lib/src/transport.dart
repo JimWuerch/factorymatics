@@ -15,8 +15,22 @@ class LocalServerTransport implements GameTransport {
   LocalServerTransport(this.server);
 
   @override
-  Future<GameModel> sendRequest(GameModel model) async {
+  Future<ResponseModel> sendRequest(GameModel model) async {
     return server.handleRequest(model);
+  }
+
+  @override
+  void init() {}
+}
+
+class LocalClientTransport implements GameTransport {
+  final LocalServerTransport serverTransport;
+
+  LocalClientTransport(this.serverTransport);
+
+  @override
+  Future<ResponseModel> sendRequest(GameModel model) async {
+    return serverTransport.sendRequest(model);
   }
 
   @override

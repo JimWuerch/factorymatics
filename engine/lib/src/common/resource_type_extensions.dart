@@ -3,7 +3,7 @@ import 'package:engine/engine.dart';
 String resourceListToString(List<ResourceType> src) {
   if (src == null) return '';
 
-  var chars = <String>['A', 'B', 'C', 'D', 'E', 'F'];
+  var chars = <String>['N', 'H', 'S', 'D', 'C', 'A', 'X', 'Y', 'Z'];
   var s = StringBuffer();
   for (var resource in src) {
     s.write(chars[ResourceType.values.indexOf(resource)]);

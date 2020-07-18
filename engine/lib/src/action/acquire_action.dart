@@ -39,6 +39,9 @@ class AcquireAction extends GameAction {
 class MysteryMeatAction extends GameAction {
   MysteryMeatAction(String player) : super(player);
 
+  // not sent over the wire
+  ResourceType resource;
+
   @override
   ActionType get actionType => ActionType.mysteryMeat;
 

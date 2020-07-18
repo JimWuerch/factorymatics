@@ -18,8 +18,8 @@ class PlayerService {
     return player;
   }
 
-  Player getPlayer(String name) {
-    return players.firstWhere((element) => element.name == name);
+  Player getPlayer(String playerId) {
+    return players.firstWhere((element) => element.playerId == playerId);
   }
 
   Map<String, dynamic> toJson() => <String, dynamic>{

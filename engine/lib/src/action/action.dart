@@ -11,6 +11,7 @@ import 'vp_action.dart';
 export 'acquire_action.dart';
 export 'construct_action.dart';
 export 'convert_action.dart';
+export 'internal_action.dart';
 export 'search_action.dart';
 export 'select_action_action.dart';
 export 'store_action.dart';
@@ -27,6 +28,7 @@ enum ActionType {
   vp,
   selectAction,
   gameMode,
+  internal,
   // requestStore,
   // requestConstruct,
   // requestAcquire,

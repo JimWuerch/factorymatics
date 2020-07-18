@@ -14,7 +14,6 @@ class LocalServer extends Server {
   Stream<GameAction> _outboundActions;
   LocalServerTransport transport;
   Game _game;
-  PlayerService _playerService;
 
   LocalServer() {
     server = GameServer(handleAction);
@@ -26,28 +25,28 @@ class LocalServer extends Server {
   Stream<GameAction> get actions => _outboundActions;
 
   @override
-  void postAction(GameAction action) async {
-    var response = await transport.sendRequest(ActionRequest(_game, 'bob', action));
+  Future<ResponseModel> postAction(GameAction action) async {
+    return await transport.sendRequest(ActionRequest(_game, 'bob', action));
   }
 
   void handleAction(GameAction action) {
     _streamController.add(action);
   }
 
-  Future<Game> createGame(int gameIndex) async {
-    //var response = server.handleRequest(CreateGameRequest('bob', gameIndex));
-    var response = await transport.sendRequest(CreateGameRequest('bob', 'game1'));
-    if (response is CreateGameResponse) {
-      _playerService = PlayerService.createService();
-      for (var player in response.players) {
-        _playerService.addPlayer(player, player);
-      }
-      _game = Game(_playerService, response.gameId);
-      return _game;
-    } else {
-      return null;
-    }
-  }
+  // Future<Game> createGame(String gameId) async {
+  //   //var response = server.handleRequest(CreateGameRequest('bob', gameIndex));
+  //   var response = await transport.sendRequest(CreateGameRequest('bob', gameId));
+  //   if (response is CreateGameResponse) {
+  //     _playerService = PlayerService.createService();
+  //     for (var player in response.players) {
+  //       _playerService.addPlayer(player, player);
+  //     }
+  //     _game = Game(_playerService, response.gameId);
+  //     return _game;
+  //   } else {
+  //     return null;
+  //   }
+  // }
 
   void closeGame() {
     //server.closeGame();

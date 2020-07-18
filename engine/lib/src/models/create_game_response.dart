@@ -2,12 +2,12 @@ import 'package:engine/engine.dart';
 
 import 'game_model.dart';
 
-class CreateGameResponse extends GameModel {
-  final String gameId;
+class CreateGameResponse extends ResponseModel {
   final List<String> players;
 
-  CreateGameResponse(Game game, String owner, String desc, this.gameId, this.players)
-      : super(game.gameId, owner, 'createGame response');
+  CreateGameResponse(Game game, String owner, String desc, ResponseCode code)
+      : players = game.getPlayerNames(),
+        super(game.gameId, owner, 'createGame response', code);
 
   @override
   GameModelType get modelType => GameModelType.createGameResponse;
@@ -15,13 +15,14 @@ class CreateGameResponse extends GameModel {
   @override
   Map<String, dynamic> toJson() {
     var ret = super.toJson();
-    ret['gameId'] = gameId;
     ret['players'] = players;
     return ret;
   }
 
-  CreateGameResponse.fromJson(Map<String, dynamic> json)
-      : gameId = json['gameId'] as String,
-        players = listFromJson<String>(json),
-        super.fromJson(json);
+  CreateGameResponse._fromJsonHelper(this.players, Map<String, dynamic> json) : super.fromJson(json);
+
+  factory CreateGameResponse.fromJson(Map<String, dynamic> json) {
+    var players = listFromJson<String>(json);
+    return CreateGameResponse._fromJsonHelper(players, json);
+  }
 }

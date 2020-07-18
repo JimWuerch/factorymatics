@@ -14,8 +14,6 @@ class Game {
   static const int level2MarketSize = 3;
   static const int level3MarketSize = 2;
 
-  Random random;
-
   List<PlayerData> players;
 
   String gameId;
@@ -23,16 +21,18 @@ class Game {
   Uuid uuidGen;
   PlayerService playerService;
   Map<String, Part> allParts;
-  List<ResourceType> availableResources;
+  Random random = Random();
 
-  ListState<Part> level1Parts;
-  ListState<Part> level2Parts;
-  ListState<Part> level3Parts;
+  ListState<ResourceType> availableResources;
+
+  List<ListState<Part>> partDecks;
+  // ListState<Part> level2Parts;
+  // ListState<Part> level3Parts;
   ListState<ResourceType> well;
 
-  ListState<Part> level1Sale;
-  ListState<Part> level2Sale;
-  ListState<Part> level3Sale;
+  List<ListState<Part>> saleParts;
+  // ListState<Part> level2Sale;
+  // ListState<Part> level3Sale;
 
   List<Turn> gameTurns;
 
@@ -44,12 +44,12 @@ class Game {
 
   ChangeStack changeStack;
 
-  Game(this.playerService, this.gameId) {
-    random = Random();
+  Game(List<String> playerNames, this.playerService, this.gameId) {
     uuidGen = Uuid();
     players = <PlayerData>[];
-    for (var p in playerService.players) {
-      players.add(PlayerData(this, p));
+    for (var p in playerNames) {
+      var playerId = playerService != null ? playerService.getPlayer(p).playerId : p;
+      players.add(PlayerData(this, playerId));
     }
 
     allParts = <String, Part>{};
@@ -65,35 +65,31 @@ class Game {
     // we'll discard this changeStack
     changeStack = ChangeStack();
 
-    // set player order
-    players.shuffle();
-
-    createParts(this);
-    _fillWell();
-
-    // make the initial resources available
-    availableResources = <ResourceType>[];
-    for (var i = 0; i < availableResourceCount; i++) {
-      availableResources.add(getFromWell());
+    partDecks = List<ListState<Part>>(3);
+    well = ListState<ResourceType>(this, 'well');
+    availableResources = ListState(this, 'availableResources');
+    saleParts = List<ListState<Part>>(3);
+    for (var i = 0; i < 3; ++i) {
+      saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
     }
+    createParts(this);
 
     // give players their starting parts
     for (var player in players) {
       var startingPart = SimplePart(
-          this, nextObjectId(), 0, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
-      allParts[startingPart.id] = startingPart;
+          this, "0", -1, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
+      //allParts[startingPart.id] = startingPart;
       player.buyPart(startingPart, <ResourceType>[]);
     }
+  }
 
-    // set up the starting market
-    level1Sale = ListState<Part>(this, 'lvl1Sale');
-    level2Sale = ListState<Part>(this, 'lvl2Sale');
-    level3Sale = ListState<Part>(this, 'lvl3Sale');
-    refillMarket();
+  void assignStartingDecks(List<List<Part>> decks) {
+    for (var i = 0; i < 3; ++i) {
+      partDecks[i] = ListState<Part>(this, 'lvl${i}Deck', starting: decks[i]);
+    }
   }
 
   void _fillWell() {
-    well = ListState<ResourceType>(this, 'well');
     for (var i = 0; i < 13; i++) {
       well.add(ResourceType.heart);
       well.add(ResourceType.diamond);
@@ -102,20 +98,26 @@ class Game {
     }
   }
 
-  void refillMarket() {
-    for (var i = level1Sale.length; i < level1MarketSize; i++) {
-      level1Sale.add(level1Parts.removeAt(random.nextInt(level1Parts.length)));
-    }
-    for (var i = level2Sale.length; i < level2MarketSize; i++) {
-      level2Sale.add(level2Parts.removeAt(random.nextInt(level2Parts.length)));
-    }
-    for (var i = level3Sale.length; i < level3MarketSize; i++) {
-      level3Sale.add(level3Parts.removeAt(random.nextInt(level3Parts.length)));
+  ResourceType getFromWell() {
+    return well.removeAt(random.nextInt(well.length));
+  }
+
+  void addToWell(ResourceType resource) {
+    well.add(resource);
+  }
+
+  void refillResources() {
+    for (var i = availableResources.length; i < Game.availableResourceCount; i++) {
+      availableResources.add(getFromWell());
     }
   }
 
-  ResourceType getFromWell() {
-    return well.removeAt(random.nextInt(well.length));
+  void refillMarket() {
+    for (var lvl = 0; lvl < 3; ++lvl) {
+      for (var i = saleParts[lvl].length; i < Game.level1MarketSize; i++) {
+        saleParts[lvl].add(partDecks[lvl].removeLast());
+      }
+    }
   }
 
   String nextObjectId() {
@@ -124,8 +126,8 @@ class Game {
     return ret;
   }
 
-  bool applyAction(GameAction action) {
-    return false;
+  ValidateResponseCode applyAction(GameAction action) {
+    return currentTurn.processAction(action);
   }
 
   PlayerData getNextPlayer() {
@@ -138,6 +140,11 @@ class Game {
   }
 
   Turn startNextTurn() {
+    changeStack = ChangeStack();
+    refillMarket();
+    refillResources();
+    changeStack.clear();
+
     var turn = Turn(this, getNextPlayer());
     gameTurns.add(turn);
     _currentTurn++;
@@ -147,68 +154,40 @@ class Game {
     return currentTurn;
   }
 
-  void endTurn() {}
+  void endTurn() {
+    // check for game end
 
-  void startGame() {
-    // set player order
-    players.shuffle();
-    _currentPlayerIndex = -1; // so we can call get next
-    _currentTurn = 0;
-    gameTurns = <Turn>[];
-
+    // if game not over, next turn
     startNextTurn();
   }
 
+  void createGame() {
+    // do one-time stuff here
+    _fillWell();
+  }
+
+  void startGame() {
+    _currentPlayerIndex = -1; // so we can call get next
+    _currentTurn = -1;
+    gameTurns = <Turn>[];
+  }
+
   bool isInDeck(Part part) {
-    switch (part.level) {
-      case 1:
-        return level1Parts.contains(part);
-      case 2:
-        return level2Parts.contains(part);
-      case 3:
-        return level3Parts.contains(part);
-      default:
-        return false;
-    }
+    return partDecks[part.level].contains(part);
+  }
+
+  bool isForSale(Part part) {
+    return saleParts[part.level].contains(part);
   }
 
   /// Remove [part] from either the sale list or a deck.
-  void removePart(Part part) {
+  bool removePart(Part part) {
     if (isInDeck(part)) {
-      switch (part.level) {
-        case 1:
-          level1Parts.remove(part);
-          break;
-        case 2:
-          level2Parts.remove(part);
-          break;
-        case 3:
-          level3Parts.remove(part);
-          break;
-        default:
-          break; // shouldn't be possible
-      }
-    } else {
-      switch (part.level) {
-        case 1:
-          level1Sale.remove(part);
-          break;
-        case 2:
-          level2Sale.remove(part);
-          break;
-        case 3:
-          level3Sale.remove(part);
-          break;
-        default:
-          throw InvalidOperationError('Invalid part level');
-      }
+      return partDecks[part.level].remove(part);
+    } else if (isForSale(part)) {
+      return saleParts[part.level].remove(part);
     }
-  }
-
-  ResourceType acquireResource(int index) {
-    var ret = availableResources.removeAt(index);
-    availableResources.add(getFromWell());
-    return ret;
+    return false;
   }
 
   List<Turn> getTurns(int startIndex) {
@@ -240,5 +219,91 @@ class Game {
     }
 
     return true;
+  }
+
+  /// Returns playerIds unless non-authoritative, in which case player names are returned
+  List<String> getPlayerIds() {
+    var ret = <String>[];
+    for (var player in players) {
+      ret.add(playerService != null ? playerService.getPlayer(player.id).name : player.id);
+    }
+
+    return ret;
+  }
+
+  List<String> getPlayerNames() {
+    var ret = <String>[];
+    for (var player in players) {
+      ret.add(playerService.getPlayer(player.id).name);
+    }
+    return ret;
+  }
+
+  ResourceType acquireResource(int index) {
+    return availableResources.removeAt(index);
+  }
+
+  // List<String> _playerDataToStringList(List<PlayerData> players) {
+  //   var ret = <String>[];
+  //   for (var player in players) {
+  //     ret.add(playerService.getPlayer(player.id).name);
+  //   }
+  // }
+
+  // List<PlayerData> _playerDataFromStringList(Game game, List<String> names) {
+  //   var ret = <PlayerData>[];
+  //   for (var name in names) {
+  //     ret.add(PlayerData(game, game.playerService.getPlayer(playerId)));
+  //   }
+  // }
+
+  Map<String, dynamic> toJson() {
+    var ret = <String, dynamic>{};
+    ret['gameId'] = gameId;
+    ret['res'] = resourceListToString(availableResources.toList());
+    ret['s1'] = partListToString(saleParts[0].toList());
+    ret['s2'] = partListToString(saleParts[1].toList());
+    ret['s3'] = partListToString(saleParts[2].toList());
+    ret['cp'] = _currentPlayerIndex;
+
+    return ret;
+  }
+
+  factory Game.fromJson(List<String> players, PlayerService playerService, Map<String, dynamic> json) {
+    var gameId = json['gameId'] as String;
+
+    var game = Game(players, playerService, gameId);
+    game.changeStack = ChangeStack(); // we'll discard this
+    partStringToList(json['s1'] as String, (part) => game.saleParts[0].add(part), game.allParts);
+    partStringToList(json['s2'] as String, (part) => game.saleParts[1].add(part), game.allParts);
+    partStringToList(json['s3'] as String, (part) => game.saleParts[2].add(part), game.allParts);
+    stringToResourceListState(json['res'] as String, game.availableResources);
+
+    game._currentPlayerIndex = json['cp'] as int;
+
+    return game;
+  }
+}
+
+String partListToString(List<Part> parts) {
+  var buf = StringBuffer();
+  for (var part in parts) {
+    var i = int.parse(part.id);
+    buf.write(i.toRadixString(16).padLeft(2, "0"));
+  }
+  return buf.toString();
+}
+
+void partStringToList(String src, void Function(Part) addFn, Map<String, Part> allParts) {
+  for (var i = 0; i <= src.length - 2; i += 2) {
+    var hex = src.substring(i, i + 2);
+    var partId = int.parse(hex, radix: 16).toString();
+    addFn(allParts[partId]);
+  }
+}
+
+void stringToResourceListState(String src, ListState<ResourceType> list) {
+  for (var i = 0; i < src.length; i++) {
+    list.add(ResourceType.values[int.parse(src.substring(i, i + 1))]);
   }
 }

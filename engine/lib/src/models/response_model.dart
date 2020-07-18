@@ -3,7 +3,7 @@ import 'package:engine/engine.dart';
 abstract class ResponseModel extends GameModel {
   final ResponseCode responseCode;
 
-  ResponseModel(Game game, String owner, String desc, this.responseCode) : super(game.gameId, owner, desc);
+  ResponseModel(String gameId, String owner, String desc, this.responseCode) : super(gameId, owner, desc);
 
   @override
   Map<String, dynamic> toJson() {
