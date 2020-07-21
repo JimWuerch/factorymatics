@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 
 import 'package:engine/engine.dart';
 import 'package:factorymatics/src/client.dart';
@@ -8,11 +9,12 @@ class GamePageModel {
   String gameId;
   LocalClient client;
   String playerId = 'id1';
-  final StreamController<void> _notifierController = StreamController<void>.broadcast();
-  Stream<void> get notifier => _notifierController.stream;
+  final StreamController<int> _notifierController = StreamController<int>.broadcast();
+  Stream<int> get notifier => _notifierController.stream;
   PlayerService playerService;
   List<String> players;
   String playerName = 'bob';
+  List<GameAction> availableActions = <GameAction>[];
 
   GamePageModel(this.gameId);
 
@@ -35,48 +37,129 @@ class GamePageModel {
         playerService.addPlayer(player, player);
       }
     }
-    response = await client.postRequest(JoinGameRequest(gameId, playerId));
+    await doGameUpdate();
+
+    if (isOurTurn && (game.currentTurn.turnState.value == TurnState.notStarted)) {
+      doStartTurn();
+      await doGameUpdate();
+    }
+  }
+
+  Future<void> doGameUpdate() async {
+    var response = await client.postRequest(JoinGameRequest(gameId, playerId));
     if (response.responseCode != ResponseCode.ok) {
       _notifierController.addError(null);
     }
     if (response is JoinGameResponse) {
-      game = GameController.restoreGame(createGameResponse.players, null, gameId);
-      _notifierController.add(null);
+      game = GameController.restoreGame(players, null, response.gameState);
+      game.tmpName = 'client';
+      if (game.currentTurn != null) {
+        availableActions = game.currentTurn.getAvailableActions();
+      }
+      _notifierController.add(1);
     } else {
       _notifierController.addError(null);
     }
   }
 
-  bool get isActionSelection => game.currentTurn?.turnState == TurnState.started;
+  Future<void> doStartTurn() async {
+    var startTurnResponse = await client.postAction(game, GameModeAction(playerId, GameModeType.startTurn));
+    if (startTurnResponse.responseCode != ResponseCode.ok) {
+      _notifierController.addError(null);
+    }
+  }
+
+  bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
+
+  bool get isResourcePickerEnabled =>
+      game.currentTurn?.selectedAction?.value == ActionType.acquire &&
+      game.currentTurn?.turnState?.value == TurnState.actionSelected;
+
+  bool get isOurTurn => game.currentPlayer.id == playerName;
 
   Future<void> selectAction(ActionType actionType) async {
     switch (actionType) {
       case ActionType.store:
-        await _doStore();
+        await _selectStore();
         break;
       case ActionType.acquire:
-        await _doAcquire();
+        await _selectAcquire();
         break;
       case ActionType.construct:
-        await _doConstruct();
+        await _selectConstruct();
         break;
       case ActionType.search:
-        await _doSearch();
+        await _selectSearch();
         break;
       default:
         throw ArgumentError('Unknown type: ${actionType.toString()}');
     }
   }
 
+  bool isPartEnabled(Part part) {
+    for (var action in availableActions) {
+      if (action is StoreAction) {
+        if (part.id == action.part.id) {
+          return true;
+        }
+      } else if (action is ConstructAction) {
+        if (part.id == action.part.id) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  HashSet<String> getEnabledParts() {
+    var ret = HashSet<String>();
+    for (var action in availableActions) {
+      if (action is StoreAction) {
+        ret.add(action.part.id);
+      } else if (action is ConstructAction) {
+        ret.add(action.part.id);
+      }
+    }
+    return ret;
+  }
+
   bool get canStore => game.currentTurn?.player?.hasPartStorageSpace ?? false;
 
   bool get canAcquire => game.currentTurn?.player?.hasResourceStorageSpace ?? false;
 
-  Future<void> _doStore() async {}
+  Future<ResponseCode> _selectStore() async {
+    var response = await client.postAction(game, SelectActionAction(playerId, ActionType.store));
+    if (response.responseCode != ResponseCode.ok) {
+      return response.responseCode;
+    }
+    await doGameUpdate();
 
-  Future<void> _doAcquire() async {}
+    return response.responseCode;
+  }
 
-  Future<void> _doConstruct() async {}
+  Future<void> _selectAcquire() async {
+    var response = await client.postAction(game, SelectActionAction(playerId, ActionType.acquire));
+    if (response.responseCode != ResponseCode.ok) {
+      return response.responseCode;
+    }
+    await doGameUpdate();
 
-  Future<void> _doSearch() async {}
+    return response.responseCode;
+  }
+
+  Future<void> _selectConstruct() async {}
+
+  Future<void> _selectSearch() async {}
+
+  Future<void> resourceSelected(int index) async {
+    var response = await client.postAction(game, AcquireAction(playerId, index, null));
+    if (response.responseCode != ResponseCode.ok) {
+      return;
+      // response.responseCode;
+    }
+    await doGameUpdate();
+
+    return;
+    // response.responseCode;
+  }
 }

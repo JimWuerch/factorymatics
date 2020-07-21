@@ -1,4 +1,5 @@
 import 'package:engine/engine.dart';
+import 'package:tuple/tuple.dart';
 import 'game_store.dart';
 import 'transport.dart';
 
@@ -48,9 +49,9 @@ class GameServer {
     games.delete(gameId);
   }
 
-  bool doAction(String gameId, GameAction action) {
+  Tuple2<ValidateResponseCode, GameAction> doAction(String gameId, GameAction action) {
     var game = games.find(gameId).game;
-    return false; //game.applyAction(action);
+    return game.applyAction(action);
   }
 
   ResponseModel handleRequest(GameModel model) {
@@ -65,8 +66,9 @@ class GameServer {
 
       case GameModelType.actionRequest:
         var request = model as ActionRequest;
-        doAction(request.gameId, request.action);
-        return null;
+        var response = doAction(request.gameId, request.action);
+        return ActionResponse(request.gameId, request.ownerId,
+            response.item1 == ValidateResponseCode.ok ? ResponseCode.ok : ResponseCode.error, response.item2);
 
       case GameModelType.joinGameRequest:
         var request = model as JoinGameRequest;

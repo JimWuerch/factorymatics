@@ -4,7 +4,7 @@ class AcquireAction extends GameAction {
   final int index;
   ResourceType acquiredResource; // set by the engine after processing
 
-  AcquireAction(String player, this.index) : super(player);
+  AcquireAction(String player, this.index, Part producedBy) : super(player, producedBy?.id);
 
   @override
   ActionType get actionType => ActionType.acquire;
@@ -27,17 +27,8 @@ class AcquireAction extends GameAction {
         super.fromJson(game, json);
 }
 
-// class RequestAcquireAction extends GameAction {
-//   RequestAcquireAction(String player) : super(player);
-
-//   @override
-//   ActionType get actionType => ActionType.requestAcquire;
-
-//   RequestAcquireAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
-// }
-
 class MysteryMeatAction extends GameAction {
-  MysteryMeatAction(String player) : super(player);
+  MysteryMeatAction(String player, Part producedBy) : super(player, producedBy?.id);
 
   // not sent over the wire
   ResourceType resource;
@@ -53,12 +44,3 @@ class MysteryMeatAction extends GameAction {
 
   MysteryMeatAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
 }
-
-// class RequestMysteryMeatAction extends GameAction {
-//   RequestMysteryMeatAction(String player) : super(player);
-
-//   @override
-//   ActionType get actionType => ActionType.requestMysteryMeat;
-
-//   RequestMysteryMeatAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
-// }

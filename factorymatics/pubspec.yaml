@@ -15,6 +15,7 @@ dependencies:
     path: ../engine
   server:
     path: ../server
+  tuple: ^1.0.3
 
   cupertino_icons: ^0.1.3
   flutter_vector_icons: ^0.2.1

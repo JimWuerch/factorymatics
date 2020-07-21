@@ -5,9 +5,10 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
-  PartWidget(this.part);
+  PartWidget({this.part, this.enabled});
 
   final Part part;
+  final bool enabled;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -62,7 +63,7 @@ class _PartWidgetState extends State<PartWidget> {
         child: Padding(
           padding: EdgeInsets.all(8),
           child: Container(
-            color: Colors.white,
+            color: widget.enabled ? Colors.white : Colors.grey[400],
             child: Column(
               children: <Widget>[
                 Row(

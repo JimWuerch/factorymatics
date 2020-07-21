@@ -1,31 +1,53 @@
 import 'package:engine/engine.dart';
 
 class SearchAction extends GameAction {
-  final GameAction action;
+  final int level;
 
-  SearchAction(String player, this.action) : super(player);
+  SearchAction(String player, this.level) : super(player);
 
   @override
-  ActionType get actionType => ActionType.acquire;
+  ActionType get actionType => ActionType.search;
 
   @override
   bool matches(GameAction action) {
-    return action is SearchAction;
+    return (action as SearchAction)?.level == level;
   }
 
   @override
   Map<String, dynamic> toJson() {
     var ret = super.toJson();
-    ret['action'] = action.toJson();
+    ret['level'] = level;
     return ret;
   }
 
-  SearchAction._fromJsonHelper(Game game, Map<String, dynamic> json, this.action) : super.fromJson(game, json);
+  SearchAction.fromJson(Game game, Map<String, dynamic> json)
+      : level = json['level'] as int,
+        super.fromJson(game, json);
+}
 
-  factory SearchAction.fromJson(Game game, Map<String, dynamic> json) {
-    var action = actionFromJson(game, json['action'] as Map<String, dynamic>);
-    return SearchAction._fromJsonHelper(game, json, action);
+class SearchActionResult extends GameAction {
+  final List<String> parts;
+
+  SearchActionResult(String player, this.parts) : super(player);
+
+  @override
+  ActionType get actionType => ActionType.searchActionResult;
+
+  @override
+  bool matches(GameAction action) {
+    return false; // don't call this
   }
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    ret['parts'] = parts;
+    return ret;
+  }
+
+  SearchActionResult.fromJson(Game game, Map<String, dynamic> json)
+      : parts = listFromJson<String>(json['parts']),
+        super.fromJson(game, json);
 }
 
 // class RequestSearchAction extends GameAction {

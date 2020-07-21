@@ -27,13 +27,13 @@ abstract class Part extends GameObject {
         ready = GameStateVar(game, 'part:$id:ready', false),
         super(id);
 
-  List<GameAction> getProducts(Game game, String playerId) {
-    var ret = <GameAction>[];
-    for (var product in products) {
-      ret.add(product.produce(game, playerId));
-    }
-    return ret;
-  }
+  // List<GameAction> getProducts(Game game, String playerId) {
+  //   var ret = <GameAction>[];
+  //   for (var product in products) {
+  //     ret.add(product.produce(game, playerId));
+  //   }
+  //   return ret;
+  // }
 }
 
 // blue = club
@@ -47,23 +47,23 @@ void createParts(Game game) {
   // level 1 parts
   //game.partDecks[0] = ListState<Part>(game, 'level0Parts')
   parts
-    ..add(ConverterPart(game, (partId++).toString(), 1, 1, [ConvertTrigger(ResourceType.club)],
+    ..add(ConverterPart(game, (partId++).toString(), 0, 1, [ConvertTrigger(ResourceType.club)],
         [ConvertProduct(ResourceType.club, ResourceType.any)], ResourceType.heart, 1))
-    ..add(EnhancementPart(game, (partId++).toString(), 1, 1, ResourceType.heart, 1, 1, 0, 1))
-    ..add(SimplePart(game, game.nextObjectId(), 1, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct()],
+    ..add(EnhancementPart(game, (partId++).toString(), 0, 1, ResourceType.heart, 1, 1, 0, 1))
+    ..add(SimplePart(game, (partId++).toString(), 0, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct()],
         ResourceType.heart, 1))
-    ..add(SimplePart(game, (partId++).toString(), 1, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)],
+    ..add(SimplePart(game, (partId++).toString(), 0, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)],
         [AcquireProduct()], ResourceType.heart, 1))
-    ..add(SimplePart(game, (partId++).toString(), 1, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)],
+    ..add(SimplePart(game, (partId++).toString(), 0, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)],
         [MysteryMeatProduct()], ResourceType.diamond, 1));
 
   //game.partDecks[1] = ListState<Part>(game, 'level1Parts')
   parts
-    ..add(EnhancementPart(game, (partId++).toString(), 2, 3, ResourceType.club, 3, 2, 1, 2))
+    ..add(EnhancementPart(game, (partId++).toString(), 1, 3, ResourceType.club, 3, 2, 1, 2))
     ..add(SimplePart(
         game,
         (partId++).toString(),
-        2,
+        1,
         PartType.acquire,
         2,
         [AcquireTrigger(ResourceType.club), AcquireTrigger(ResourceType.spade)],
@@ -73,23 +73,23 @@ void createParts(Game game) {
     ..add(SimplePart(
         game,
         (partId++).toString(),
-        2,
+        1,
         PartType.construct,
         3,
         [ConstructTrigger(ResourceType.spade), ConstructTrigger(ResourceType.heart)],
         [VpProduct(1)],
         ResourceType.club,
         3))
-    ..add(ConverterPart(game, (partId++).toString(), 2, 3, [ConvertTrigger(ResourceType.diamond)],
+    ..add(ConverterPart(game, (partId++).toString(), 1, 3, [ConvertTrigger(ResourceType.diamond)],
         [DoubleResourceProduct(ResourceType.diamond)], ResourceType.spade, 3));
 
   //game.partDecks[2] = ListState<Part>(game, 'level2Parts')
   parts
-    ..add(SimplePart(game, (partId++).toString(), 3, PartType.storage, 4, [StoreTrigger()],
+    ..add(SimplePart(game, (partId++).toString(), 2, PartType.storage, 4, [StoreTrigger()],
         [MysteryMeatProduct(), MysteryMeatProduct(), MysteryMeatProduct()], ResourceType.club, 4))
-    ..add(ConverterPart(game, (partId++).toString(), 3, 4, [ConvertTrigger(ResourceType.any)],
+    ..add(ConverterPart(game, (partId++).toString(), 2, 4, [ConvertTrigger(ResourceType.any)],
         [ConvertProduct(ResourceType.any, ResourceType.any)], ResourceType.diamond, 4))
-    ..add(SimplePart(game, (partId++).toString(), 3, PartType.construct, 6, [ConstructLevelTrigger(2)],
+    ..add(SimplePart(game, (partId++).toString(), 2, PartType.construct, 6, [ConstructLevelTrigger(2)],
         [AcquireProduct(), AcquireProduct()], ResourceType.heart, 6));
 
   // save all the parts into the parts dictionary

@@ -1,5 +1,6 @@
 import 'package:engine/engine.dart';
 import 'package:engine/src/action/game_mode_action.dart';
+import 'package:tuple/tuple.dart';
 
 enum ValidateResponseCode { ok, notAllowed, noStorage, cantAfford, partNotForSale, unknownAction, outOfTurn }
 
@@ -7,6 +8,7 @@ enum TurnState {
   notStarted, // waiting for start turn action
   started, // waiting for SelectActionAction
   actionSelected, // received SelectActionAction
+  searchSelected, // if the selectedAction is search, this state is waiting for the deck choice
   selectedActionCompleted, // ready to handle triggered actions
   ended, // received end turn action
 }
@@ -16,53 +18,59 @@ class Turn {
   final PlayerData player;
   final GameStateVar<TurnState> turnState;
   final GameStateVar<ActionType> selectedAction;
-  // bool get isActionSelected => selectedAction.value != null;
-  // GameStateVar<bool> selectedActionCompleted;
-  // bool get isSelectedActionCompleted => selectedActionCompleted.value;
   final ChangeStack changeStack;
-  final List<GameAction> actions;
-  final List<GameAction> availableActions;
   bool isGameEndTriggered;
+  List<Part> searchedParts;
 
   Turn(this.game, this.player)
       : changeStack = ChangeStack(),
-        actions = <GameAction>[],
-        availableActions = <GameAction>[],
         turnState = GameStateVar(game, 'turnState', TurnState.notStarted),
         selectedAction = GameStateVar(game, 'selectedAction', null),
-        // selectedActionCompleted = GameStateVar(game, 'selectedActionCompleted', false),
         isGameEndTriggered = false {
     // do stuff
   }
 
   Map<String, dynamic> toJson() {
     var ret = <String, dynamic>{
-      'player': player.id,
-      'actions': actions.map<Map<String, dynamic>>((e) => e.toJson()).toList(),
+      //'player': player.id,
+      'state': TurnState.values.indexOf(turnState.value),
     };
+    if (selectedAction.value != null) {
+      ret['selectedAction'] = ActionType.values.indexOf(selectedAction.value);
+    }
+    if (searchedParts != null) {
+      var p = <String>[];
+      for (var part in searchedParts) {
+        p.add(part.id);
+      }
+      ret['searchedParts'] = p;
+    }
 
     return ret;
   }
 
-  Turn._fromJsonHelper(this.game, this.player, List<GameAction> actionList)
+  Turn._fromJsonHelper(this.game, this.player, TurnState state, ActionType selected, this.searchedParts)
       : changeStack = ChangeStack(),
-        actions = <GameAction>[],
-        availableActions = <GameAction>[],
-        turnState = GameStateVar(game, 'turnState', TurnState.notStarted),
-        selectedAction = GameStateVar(game, 'selectedAction', null),
-        isGameEndTriggered = false {
-    // replay the turn
-    for (var action in actionList) {
-      processAction(action);
+        turnState = GameStateVar(game, 'turnState', state),
+        selectedAction = GameStateVar(game, 'selectedAction', selected),
+        isGameEndTriggered = false;
+
+  factory Turn.fromJson(Game game, PlayerData player, Map<String, dynamic> json) {
+    //var player = game.getPlayerFromId(json['player'] as String);
+    var turnState = TurnState.values[json['state'] as int];
+    ActionType selectedAction;
+    if (json.containsKey('selectedAction')) {
+      selectedAction = ActionType.values[json['selectedAction'] as int];
     }
-  }
-
-  factory Turn.fromJson(Game game, Map<String, dynamic> json) {
-    var player = game.getPlayerFromId(json['player'] as String);
-    var item = json['players'] as List<dynamic>;
-    var actions = item.map<GameAction>((dynamic json) => actionFromJson(game, json as Map<String, dynamic>)).toList();
-
-    return Turn._fromJsonHelper(game, player, actions);
+    List<Part> searchedParts;
+    if (json.containsKey('searchedParts')) {
+      var plist = listFromJson<String>(json['searchedParts']);
+      searchedParts = <Part>[];
+      for (var p in plist) {
+        searchedParts.add(game.allParts[p]);
+      }
+    }
+    return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts);
   }
 
   List<GameAction> getAvailableActions() {
@@ -90,19 +98,24 @@ class Turn {
       return ret;
     }
 
-    // converter actions can always be done at this point
+    // converter actions are available at this point
     for (var part in player.parts[PartType.converter]) {
       if (!part.activated.value && part.ready.value) {
         for (var product in part.products) {
-          ret.add(product.produce(game, player.id));
+          _addAllAvailableActions(ret, part, product.produce(game, player.id, part));
         }
       }
     }
 
     // did we do the action we selected yet?
     if (turnState.value == TurnState.actionSelected) {
-      _addAllAvailableActions(ret, SelectActionAction(player.id, selectedAction.value));
+      _addAllAvailableActions(ret, null, SelectActionAction(player.id, selectedAction.value));
       return ret;
+    }
+
+    // we can build or store one of the parts we searched
+    if (turnState.value == TurnState.searchSelected) {
+      _addSearchedPartActions(ret);
     }
 
     if (turnState.value == TurnState.selectedActionCompleted) {
@@ -116,7 +129,7 @@ class Turn {
       for (var part in player.parts[PartType.storage]) {
         if (!part.activated.value && part.ready.value) {
           for (var product in part.products) {
-            _addAllAvailableActions(ret, product.produce(game, player.id));
+            _addAllAvailableActions(ret, part, product.produce(game, player.id, part));
           }
         }
       }
@@ -125,62 +138,102 @@ class Turn {
     return ret;
   }
 
-  void _addAllAvailableActions(List<GameAction> actions, GameAction action) {
+  void _addSearchedPartActions(List<GameAction> actions) {
+    if (searchedParts == null) return;
+    for (var part in searchedParts) {
+      if (player.canAfford(part)) {
+        actions.add(ConstructAction(player.id, part, null, null));
+      }
+      if (player.hasPartStorageSpace) {
+        actions.add(StoreAction(player.id, part, null));
+      }
+    }
+  }
+
+  void _addAllAvailableActions(List<GameAction> actions, Part part, GameAction action) {
     if (action is SelectActionAction) {
       switch (action.selectedAction) {
         case ActionType.store:
           // can store any part for sale
-          for (var i = 0; i < 3; ++i) {
-            for (var part in game.saleParts[i]) {
-              actions.add(StoreAction(player.id, part));
-            }
-          }
+          _addStorePartActions(actions, null);
           break;
 
         case ActionType.acquire:
-          actions.add(AcquireAction(player.id, -1));
+          actions.add(AcquireAction(player.id, -1, null));
           break;
 
         case ActionType.construct:
           // add all buildings we can currently afford
-          for (var i = 0; i < 3; ++i) {
-            for (var part in game.saleParts[i]) {
-              if (player.canAfford(part)) {
-                actions.add(StoreAction(player.id, part));
-              }
-            }
-          }
-          for (var part in player.savedParts) {
-            if (player.canAfford(part)) {
-              actions.add(StoreAction(player.id, part));
-            }
-          }
+          _addAffordablePartActions(actions, null);
+          break;
+
+        case ActionType.search:
+          // can search one of the 3 decks
+          actions.add(SearchAction(player.id, 0));
+          actions.add(SearchAction(player.id, 1));
+          actions.add(SearchAction(player.id, 2));
           break;
 
         default:
           break;
       }
     } else if (action is MysteryMeatAction) {
-      actions.add(MysteryMeatAction(player.id));
+      actions.add(action);
     } else if (action is AcquireAction) {
-      actions.add(AcquireAction(player.id, -1));
+      actions.add(action);
+    } else if (action is ConvertAction) {
+      if (player.hasResource(action.source)) {
+        actions.add(action);
+      }
+    } else if (action is DoubleConvertAction) {
+      if (player.hasResource(action.source) && player.hasResourceStorageSpace) {
+        actions.add(action);
+      }
+    }
+  }
+
+  void _addStorePartActions(List<GameAction> actions, Part producedBy) {
+    if (player.hasPartStorageSpace) {
+      for (var i = 0; i < 3; ++i) {
+        for (var part in game.saleParts[i]) {
+          actions.add(StoreAction(player.id, part, producedBy));
+        }
+      }
+    }
+  }
+
+  void _addAffordablePartActions(List<GameAction> actions, Part producedBy) {
+    for (var i = 0; i < 3; ++i) {
+      for (var part in game.saleParts[i]) {
+        if (player.canAfford(part)) {
+          actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
+        }
+      }
+    }
+    for (var part in player.savedParts) {
+      if (player.canAfford(part)) {
+        actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
+      }
     }
   }
 
   void startTurn() {
     game.changeStack = changeStack;
     player.resetPartActivations();
+    turnState.value = TurnState.started;
     changeStack.clear();
   }
 
   void endTurn() {
+    turnState.value = TurnState.ended;
     changeStack.clear();
     isGameEndTriggered = player.isGameEnded;
     game.changeStack = null;
     game.endTurn();
   }
 
-  ValidateResponseCode verifyAction(GameAction action, {bool isDuringSearch = false}) {
+/*
+  ValidateResponseCode verifyAction(GameAction action) {
     // first make sure it's something that the game state allows
     if (action.owner != player.id) {
       return ValidateResponseCode.outOfTurn;
@@ -242,163 +295,253 @@ class Turn {
         return ValidateResponseCode.unknownAction;
     }
   }
-
+*/
   // check to see if the player is even allowed to do the action
-  ValidateResponseCode isAvailableAction(GameAction action) {
+  GameAction _isAvailableAction(GameAction action) {
+    var availableActions = getAvailableActions();
     for (var a in availableActions) {
-      if (a.matches(action)) break;
+      if (a.matches(action)) return a;
     }
     // if we got here, the action wasn't in the available list
-    return ValidateResponseCode.notAllowed;
+    return null;
   }
 
-  ValidateResponseCode selectAction(GameAction action) {
-    selectedAction.value = action.actionType;
+  // ValidateResponseCode selectAction(GameAction action) {
+  //   selectedAction.value = action.actionType;
 
-    switch (selectedAction.value) {
-      case ActionType.store:
-        _selectedStoreAction(action as StoreAction);
-        break;
+  //   switch (selectedAction.value) {
+  //     case ActionType.store:
+  //       _selectedStoreAction(action as StoreAction);
+  //       break;
 
-      case ActionType.acquire:
-        _selectedAcquireAction(action as AcquireAction);
-        break;
+  //     case ActionType.acquire:
+  //       _selectedAcquireAction(action as AcquireAction);
+  //       break;
 
-      case ActionType.construct:
-        _selectedConstructAction(action as ConstructAction);
-        break;
+  //     case ActionType.construct:
+  //       _selectedConstructAction(action as ConstructAction);
+  //       break;
 
-      case ActionType.search:
-        _selectedSearchAction(action as SearchAction);
-        break;
+  //     case ActionType.search:
+  //       _selectedSearchAction(action as SearchAction);
+  //       break;
 
-      default:
-        return ValidateResponseCode.unknownAction;
+  //     default:
+  //       return ValidateResponseCode.unknownAction;
+  //   }
+
+  //   return ValidateResponseCode.ok;
+  // }
+
+  // void _selectedStoreAction(GameAction action) {}
+
+  // void _selectedAcquireAction(GameAction action) {}
+
+  // void _selectedConstructAction(GameAction action) {}
+
+  // void _selectedSearchAction(GameAction action) {}
+
+  Tuple2<ValidateResponseCode, GameAction> processAction(GameAction action) {
+    var matchedAction = _isAvailableAction(action);
+    if (matchedAction == null) {
+      return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
     }
 
-    return ValidateResponseCode.ok;
-  }
-
-  void _selectedStoreAction(GameAction action) {}
-
-  void _selectedAcquireAction(GameAction action) {}
-
-  void _selectedConstructAction(GameAction action) {}
-
-  void _selectedSearchAction(GameAction action) {}
-
-  ValidateResponseCode processAction(GameAction action) {
-    var ret = verifyAction(action);
-    if (ret != ValidateResponseCode.ok) {
-      return ret;
-    }
+    // the source may not know who made the action available
+    action.producedBy == matchedAction.producedBy;
 
     switch (action.actionType) {
+      case ActionType.gameMode:
+        if (action is GameModeAction) {
+          if (action.mode == GameModeType.startTurn) {
+            startTurn();
+            return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+          }
+        }
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+      case ActionType.selectAction:
+        var a = action as SelectActionAction;
+        selectedAction.value = a.selectedAction;
+        turnState.value = TurnState.actionSelected;
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
       case ActionType.store:
-        ret = _doStore(action as StoreAction);
+        return _doStore(action as StoreAction);
         break;
       case ActionType.construct:
-        ret = _doConstruct(action as ConstructAction);
+        return _doConstruct(action as ConstructAction);
         break;
       case ActionType.acquire:
-        ret = _doAcquire(action as AcquireAction);
+        return _doAcquire(action as AcquireAction);
         break;
       case ActionType.search:
-        ret = _doSearch(action as SearchAction);
+        return _doSearch(action as SearchAction);
         break;
       case ActionType.convert:
-        ret = _doConvert(action as ConvertAction);
+        return _doConvert(action as ConvertAction);
         break;
       case ActionType.doubleConvert:
-        ret = _doDoubleConvert(action as DoubleConvertAction);
+        return _doDoubleConvert(action as DoubleConvertAction);
         break;
       case ActionType.mysteryMeat:
-        ret = _doMysteryMeat(action as MysteryMeatAction);
+        return _doMysteryMeat(action as MysteryMeatAction);
         break;
       case ActionType.vp:
-        ret = _doVp(action as VpAction);
+        return _doVp(action as VpAction);
         break;
       default:
-        ret = ValidateResponseCode.unknownAction;
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.unknownAction, null);
     }
-
-    return ret;
   }
 
   void _doTriggers(GameAction gameAction, PartType partType) {
     for (var part in player.parts[partType]) {
-      for (var trigger in part.triggers) {
-        if (trigger.isTriggeredBy(gameAction)) {
-          part.activated.value = true;
-          for (var product in part.products) {
-            availableActions.add(product.produce(game, player.id));
+      if (!part.activated.value && !part.ready.value) {
+        for (var trigger in part.triggers) {
+          if (trigger.isTriggeredBy(gameAction)) {
+            part.ready.value = true;
           }
         }
       }
     }
   }
 
-  void _markActionExecuted(GameAction action) {
-    for (var index = 0; index < availableActions.length; ++index) {
-      if (availableActions[index].matches(action)) {
-        availableActions.removeAt(index);
-        break;
-      }
+  // void _markActionExecuted(GameAction action) {
+  //   for (var index = 0; index < availableActions.length; ++index) {
+  //     if (availableActions[index].matches(action)) {
+  //       availableActions.removeAt(index);
+  //       break;
+  //     }
+  //   }
+  // }
+
+  ValidateResponseCode _doSearchCompleted(Part part) {
+    if (!searchedParts.contains(part) || turnState.value != TurnState.searchSelected) {
+      return ValidateResponseCode.notAllowed;
     }
+
+    searchedParts.remove(part);
+    for (var part in searchedParts) {
+      game.returnPart(part);
+    }
+
+    turnState.value = TurnState.selectedActionCompleted;
+
+    return ValidateResponseCode.ok;
   }
 
-  ValidateResponseCode _doStore(StoreAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doStore(StoreAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    game.removePart(action.part);
     player.savePart(action.part);
 
-    _markActionExecuted(action);
-    _doTriggers(action, PartType.construct);
+    if (turnState == TurnState.searchSelected) {
+      ret = _doSearchCompleted(action.part);
+      if (ValidateResponseCode.ok != ret) {
+        changeStack.discard();
+        return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+      }
+    } else {
+      game.removePart(action.part);
+    }
+
+    if (action.producedBy != null) {
+      game.allParts[action.producedBy].activated.value = true;
+    }
+
+    _doTriggers(action, PartType.storage);
+
+    if (turnState.value == TurnState.actionSelected) {
+      turnState.value = TurnState.selectedActionCompleted;
+    }
 
     changeStack.commit();
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
-  ValidateResponseCode _doConstruct(ConstructAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doConstruct(ConstructAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    if (game.isForSale(action.part) || game.isInDeck(action.part)) {
-      game.removePart(action.part);
-    } else if (player.isInStorage(action.part)) {
-      player.unsavePart(action.part);
-    } else {
-      changeStack.discard();
-      return ValidateResponseCode.partNotForSale;
+    // do this first so we don't trigger ourself
+    if (action.producedBy != null) {
+      game.allParts[action.producedBy].activated.value = true;
+    }
+    _doTriggers(action, PartType.construct);
+
+    if (turnState.value != TurnState.searchSelected) {
+      if (game.isForSale(action.part) || game.isInDeck(action.part)) {
+        game.removePart(action.part);
+      } else if (player.isInStorage(action.part)) {
+        player.unsavePart(action.part);
+      } else {
+        changeStack.discard();
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.partNotForSale, null);
+      }
     }
 
     player.buyPart(action.part, action.payment);
 
+    if (turnState == TurnState.searchSelected) {
+      ret = _doSearchCompleted(action.part);
+      if (ValidateResponseCode.ok != ret) {
+        changeStack.discard();
+        return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+      }
+    } else if (turnState.value == TurnState.actionSelected) {
+      turnState.value = TurnState.selectedActionCompleted;
+    }
+
     changeStack.commit();
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
-  ValidateResponseCode _doAcquire(AcquireAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doAcquire(AcquireAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    player.storeResource(game.acquireResource(action.index));
+    action.acquiredResource = game.acquireResource(action.index);
+    player.storeResource(action.acquiredResource);
+
+    if (action.producedBy != null) {
+      game.allParts[action.producedBy].activated.value = true;
+    }
+
+    _doTriggers(action, PartType.acquire);
+
+    if (turnState.value == TurnState.actionSelected) {
+      turnState.value = TurnState.selectedActionCompleted;
+    }
 
     changeStack.commit();
     // since we revealed info, no more undo
     changeStack.clear();
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
-  ValidateResponseCode _doSearch(SearchAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doSearch(SearchAction action) {
     var ret = ValidateResponseCode.ok;
+    changeStack.group();
 
-    return ret;
+    searchedParts = <Part>[];
+    var parts = <String>[];
+    for (var i = 0; i < player.search; ++i) {
+      var part = game.drawPart(action.level);
+      searchedParts.add(part);
+      parts.add(part.id);
+    }
+
+    turnState.value = TurnState.searchSelected;
+
+    changeStack.commit();
+    // we looked at cards, no more undo
+    changeStack.clear();
+
+    var result = SearchActionResult(player.id, parts);
+    return Tuple2<ValidateResponseCode, GameAction>(ret, result);
   }
 
-  ValidateResponseCode _doConvert(ConvertAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doConvert(ConvertAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
@@ -406,32 +549,32 @@ class Turn {
     player.storeResource(action.destination);
 
     changeStack.commit();
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
-  ValidateResponseCode _doDoubleConvert(DoubleConvertAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doDoubleConvert(DoubleConvertAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
     player.storeResource(action.source);
 
     changeStack.commit();
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
-  ValidateResponseCode _doMysteryMeat(MysteryMeatAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doMysteryMeat(MysteryMeatAction action) {
     var ret = ValidateResponseCode.ok;
 
     player.storeResource(action.resource);
 
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
-  ValidateResponseCode _doVp(VpAction action) {
+  Tuple2<ValidateResponseCode, GameAction> _doVp(VpAction action) {
     var ret = ValidateResponseCode.ok;
 
     player.giveVpChit();
 
-    return ret;
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 }

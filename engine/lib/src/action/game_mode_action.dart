@@ -12,7 +12,7 @@ class GameModeAction extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    return action is GameModeAction;
+    return (action as GameModeAction)?.mode == mode;
   }
 
   @override

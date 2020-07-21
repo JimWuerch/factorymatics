@@ -19,6 +19,8 @@ class GameController {
     var players = playerIds.toList();
     players.shuffle();
     game = Game(players, playerService, gameId);
+    game.tmpName = 'controller';
+    game.createGame();
     var startingPartDecks = List<List<Part>>(3);
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i] = <Part>[];

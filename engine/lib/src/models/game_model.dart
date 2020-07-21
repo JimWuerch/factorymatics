@@ -62,7 +62,7 @@ GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
     case GameModelType.actionRequest:
       return ActionRequest.fromJson(game, json);
     case GameModelType.actionResponse:
-      return ActionResponse.fromJson(json);
+      return ActionResponse.fromJson(game, json);
     case GameModelType.createLobbyRequest:
       return CreateLobbyRequest.fromJson(json);
     case GameModelType.createLobbyResponse:

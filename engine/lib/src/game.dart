@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:engine/engine.dart';
 import 'package:engine/src/player/player_service.dart';
+import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
 import 'turn.dart';
@@ -15,6 +16,8 @@ class Game {
   static const int level3MarketSize = 2;
 
   List<PlayerData> players;
+
+  String tmpName;
 
   String gameId;
   int _nextObjectId = 0;
@@ -34,10 +37,10 @@ class Game {
   // ListState<Part> level2Sale;
   // ListState<Part> level3Sale;
 
-  List<Turn> gameTurns;
+  //List<Turn> gameTurns;
 
-  int _currentTurn;
-  Turn get currentTurn => _currentTurn != null ? gameTurns[_currentTurn] : null;
+  //int _currentTurn;
+  Turn currentTurn; // => _currentTurn != null ? gameTurns[_currentTurn] : null;
 
   int _currentPlayerIndex = 0;
   PlayerData get currentPlayer => players[_currentPlayerIndex];
@@ -112,11 +115,24 @@ class Game {
     }
   }
 
+  Part drawPart(int level) {
+    return partDecks[level].removeLast();
+  }
+
+  /// Puts [part] back on the bottom of its deck
+  void returnPart(Part part) {
+    partDecks[part.level].insert(part, 0);
+  }
+
   void refillMarket() {
-    for (var lvl = 0; lvl < 3; ++lvl) {
-      for (var i = saleParts[lvl].length; i < Game.level1MarketSize; i++) {
-        saleParts[lvl].add(partDecks[lvl].removeLast());
-      }
+    for (var i = saleParts[0].length; i < Game.level1MarketSize; i++) {
+      saleParts[0].add(drawPart(0));
+    }
+    for (var i = saleParts[1].length; i < Game.level2MarketSize; i++) {
+      saleParts[1].add(drawPart(1));
+    }
+    for (var i = saleParts[2].length; i < Game.level3MarketSize; i++) {
+      saleParts[2].add(drawPart(2));
     }
   }
 
@@ -126,7 +142,7 @@ class Game {
     return ret;
   }
 
-  ValidateResponseCode applyAction(GameAction action) {
+  Tuple2<ValidateResponseCode, GameAction> applyAction(GameAction action) {
     return currentTurn.processAction(action);
   }
 
@@ -145,11 +161,11 @@ class Game {
     refillResources();
     changeStack.clear();
 
-    var turn = Turn(this, getNextPlayer());
-    gameTurns.add(turn);
-    _currentTurn++;
+    currentTurn = Turn(this, getNextPlayer());
+    //gameTurns.add(turn);
+    //_currentTurn++;
 
-    turn.startTurn();
+    //turn.startTurn();
 
     return currentTurn;
   }
@@ -168,8 +184,8 @@ class Game {
 
   void startGame() {
     _currentPlayerIndex = -1; // so we can call get next
-    _currentTurn = -1;
-    gameTurns = <Turn>[];
+    // _currentTurn = -1;
+    // gameTurns = <Turn>[];
   }
 
   bool isInDeck(Part part) {
@@ -188,37 +204,6 @@ class Game {
       return saleParts[part.level].remove(part);
     }
     return false;
-  }
-
-  List<Turn> getTurns(int startIndex) {
-    if (startIndex < -1 || startIndex > gameTurns.length - 2) {
-      return <Turn>[];
-    }
-
-    return gameTurns.getRange(startIndex, gameTurns.length).toList();
-  }
-
-  bool replayTurns(List<Turn> turns) {
-    // validate we are ready
-    if (currentTurn.selectedAction != null) {
-      // shouldn't be replaying a turn that already has actions
-      return false;
-    }
-
-    for (var turn in turns) {
-      if (turn.player != currentTurn.player) {
-        // should match
-        return false;
-      }
-      for (var action in turn.actions) {
-        if (ValidateResponseCode.ok != turn.processAction(action)) {
-          // something went wrong
-          return false;
-        }
-      }
-    }
-
-    return true;
   }
 
   /// Returns playerIds unless non-authoritative, in which case player names are returned
@@ -240,7 +225,9 @@ class Game {
   }
 
   ResourceType acquireResource(int index) {
-    return availableResources.removeAt(index);
+    var ret = availableResources.removeAt(index);
+    availableResources.add(getFromWell());
+    return ret;
   }
 
   // List<String> _playerDataToStringList(List<PlayerData> players) {
@@ -266,6 +253,10 @@ class Game {
     ret['s3'] = partListToString(saleParts[2].toList());
     ret['cp'] = _currentPlayerIndex;
 
+    if (currentTurn != null) {
+      ret['turn'] = currentTurn.toJson();
+    }
+
     return ret;
   }
 
@@ -280,6 +271,12 @@ class Game {
     stringToResourceListState(json['res'] as String, game.availableResources);
 
     game._currentPlayerIndex = json['cp'] as int;
+
+    if (json.containsKey('turn')) {
+      game.currentTurn = Turn.fromJson(game, game.currentPlayer, json['turn'] as Map<String, dynamic>);
+    } else {
+      game.currentTurn = Turn(game, game.currentPlayer);
+    }
 
     return game;
   }
@@ -303,7 +300,8 @@ void partStringToList(String src, void Function(Part) addFn, Map<String, Part> a
 }
 
 void stringToResourceListState(String src, ListState<ResourceType> list) {
-  for (var i = 0; i < src.length; i++) {
-    list.add(ResourceType.values[int.parse(src.substring(i, i + 1))]);
+  var resources = stringToResourceList(src);
+  for (var resource in resources) {
+    list.add(resource);
   }
 }

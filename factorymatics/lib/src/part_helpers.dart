@@ -34,23 +34,27 @@ IconData actionToIcon(ActionType actionType) {
   }
 }
 
-Icon resourceToIcon(ResourceType resourceType, Color color) {
+IconData resourceToIconData(ResourceType resourceType) {
   switch (resourceType) {
     case ResourceType.none:
-      return Icon(Icons.cancel, color: color);
+      return Icons.cancel;
     case ResourceType.heart:
-      return Icon(MaterialCommunityIcons.cards_heart, color: color);
+      return MaterialCommunityIcons.cards_heart;
     case ResourceType.spade:
-      return Icon(MaterialCommunityIcons.cards_spade, color: color);
+      return MaterialCommunityIcons.cards_spade;
     case ResourceType.diamond:
-      return Icon(MaterialCommunityIcons.cards_diamond, color: color);
+      return MaterialCommunityIcons.cards_diamond;
     case ResourceType.club:
-      return Icon(MaterialCommunityIcons.cards_club, color: color);
+      return MaterialCommunityIcons.cards_club;
     case ResourceType.any:
-      return Icon(MaterialCommunityIcons.all_inclusive, color: color);
+      return MaterialCommunityIcons.all_inclusive;
     default:
-      return Icon(Fontisto.question, color: color);
+      return Fontisto.question;
   }
+}
+
+Icon resourceToIcon(ResourceType resourceType, Color color) {
+  return Icon(resourceToIconData(resourceType), color: color);
 }
 
 Color resourceToColor(ResourceType resourceType) {

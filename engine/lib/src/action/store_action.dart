@@ -3,14 +3,14 @@ import 'package:engine/engine.dart';
 class StoreAction extends GameAction {
   final Part part;
 
-  StoreAction(String player, this.part) : super(player);
+  StoreAction(String player, this.part, Part producedBy) : super(player, producedBy?.id);
 
   @override
   ActionType get actionType => ActionType.store;
 
   @override
   bool matches(GameAction action) {
-    return action is StoreAction;
+    return (action as StoreAction)?.part == part;
   }
 
   @override
@@ -24,23 +24,3 @@ class StoreAction extends GameAction {
       : part = game.allParts[json['part'] as String],
         super.fromJson(game, json);
 }
-
-// class RequestStoreAction extends GameAction {
-//   final int index;
-
-//   RequestStoreAction(String player, this.index) : super(player);
-
-//   @override
-//   ActionType get actionType => ActionType.requestStore;
-
-//   @override
-//   Map<String, dynamic> toJson() {
-//     var ret = super.toJson();
-//     ret['index'] = index;
-//     return ret;
-//   }
-
-//   RequestStoreAction.fromJson(Game game, Map<String, dynamic> json)
-//       : index = json['index'] as int,
-//         super.fromJson(game, json);
-// }

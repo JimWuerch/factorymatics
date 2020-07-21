@@ -99,7 +99,7 @@ class PlayerData {
 
   bool get hasResourceStorageSpace => resourceStorage > resourceCount();
 
-  bool get hasPartStorageSpace => partStorage > partCount();
+  bool get hasPartStorageSpace => partStorage > savedParts.length;
 
   bool hasResource(ResourceType resourceType) => resources[resourceType].value > 0;
 

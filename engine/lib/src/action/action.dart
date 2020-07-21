@@ -11,6 +11,7 @@ import 'vp_action.dart';
 export 'acquire_action.dart';
 export 'construct_action.dart';
 export 'convert_action.dart';
+export 'game_mode_action.dart';
 export 'internal_action.dart';
 export 'search_action.dart';
 export 'select_action_action.dart';
@@ -29,6 +30,7 @@ enum ActionType {
   selectAction,
   gameMode,
   internal,
+  searchActionResult,
   // requestStore,
   // requestConstruct,
   // requestAcquire,
@@ -43,8 +45,10 @@ abstract class GameAction {
   ActionType get actionType;
   final String owner;
   String get message => 'action';
+  // for actions that are the result of part activations
+  String producedBy;
 
-  GameAction(this.owner);
+  GameAction(this.owner, [this.producedBy]);
 
   /// Returns true if [action] is a similar action
   ///
@@ -53,13 +57,20 @@ abstract class GameAction {
   /// for both this and [action]
   bool matches(GameAction action);
 
-  Map<String, dynamic> toJson() => <String, dynamic>{
-        'type': ActionType.values.indexOf(actionType),
-        'owner': owner,
-      };
+  Map<String, dynamic> toJson() {
+    var ret = <String, dynamic>{
+      'type': ActionType.values.indexOf(actionType),
+      'owner': owner,
+    };
+    if (producedBy != null) {
+      ret['part'] = producedBy;
+    }
+    return ret;
+  }
 
   GameAction.fromJson(Game game, Map<String, dynamic> json)
-      : owner = game.playerService.getPlayer(json['owner'] as String).playerId;
+      : owner = game.playerService.getPlayer(json['owner'] as String).playerId,
+        producedBy = json['part'] as String;
 }
 
 GameAction actionFromJson(Game game, Map<String, dynamic> json) {
@@ -82,6 +93,8 @@ GameAction actionFromJson(Game game, Map<String, dynamic> json) {
       return VpAction.fromJson(game, json);
     case ActionType.selectAction:
       return SelectActionAction.fromJson(game, json);
+    case ActionType.searchActionResult:
+      return SearchActionResult.fromJson(game, json);
     // case ActionType.requestStore:
     //   return RequestStoreAction.fromJson(game, json);
     // case ActionType.requestConstruct:
