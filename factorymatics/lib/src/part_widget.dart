@@ -5,10 +5,11 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
-  PartWidget({this.part, this.enabled});
+  PartWidget({this.part, this.enabled, this.onTap});
 
   final Part part;
   final bool enabled;
+  final void Function(Part part) onTap;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -60,35 +61,40 @@ class _PartWidgetState extends State<PartWidget> {
       width: 200,
       child: Card(
         color: resourceToColor(widget.part.resource),
-        child: Padding(
-          padding: EdgeInsets.all(8),
-          child: Container(
-            color: widget.enabled ? Colors.white : Colors.grey[400],
-            child: Column(
-              children: <Widget>[
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      width: iconSize,
-                      height: iconSize,
-                      decoration: BoxDecoration(
-                        color: Colors.grey[300],
-                        //borderRadius: BorderRadius.all(Radius.circular(24.0)),
+        child: InkWell(
+          onTap: () {
+            if (widget.enabled) widget.onTap(widget.part);
+          },
+          child: Padding(
+            padding: EdgeInsets.all(8),
+            child: Container(
+              color: widget.enabled ? Colors.white : Colors.grey[400],
+              child: Column(
+                children: <Widget>[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        width: iconSize,
+                        height: iconSize,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[300],
+                          //borderRadius: BorderRadius.all(Radius.circular(24.0)),
+                        ),
+                        child: Icon(
+                          partTypeToIcon(widget.part.partType),
+                          color: Colors.black,
+                        ),
                       ),
-                      child: Icon(
-                        partTypeToIcon(widget.part.partType),
-                        color: Colors.black,
-                      ),
-                    ),
-                    Text('Cost: ${widget.part.cost}'),
-                    resourceToIcon(widget.part.resource, resourceToColor(widget.part.resource)),
-                    Text('VP: ${widget.part.vp}'),
-                  ],
-                ),
-                _triggersToIcons(widget.part.triggers),
-                Text('Products: ${widget.part.products.length}'),
-              ],
+                      Text('Cost: ${widget.part.cost}'),
+                      resourceToIcon(widget.part.resource, resourceToColor(widget.part.resource)),
+                      Text('VP: ${widget.part.vp}'),
+                    ],
+                  ),
+                  _triggersToIcons(widget.part.triggers),
+                  Text('Products: ${widget.part.products.length}'),
+                ],
+              ),
             ),
           ),
         ),

@@ -77,6 +77,10 @@ class GamePageModel {
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
 
+  bool get canUndo => game.changeStack.canUndo;
+
+  bool get canEndTurn => game.currentTurn?.turnState?.value == TurnState.selectedActionCompleted;
+
   Future<void> selectAction(ActionType actionType) async {
     switch (actionType) {
       case ActionType.store:
@@ -162,4 +166,26 @@ class GamePageModel {
     return;
     // response.responseCode;
   }
+
+  Future<void> partTapped(Part part) async {
+    GameAction action;
+    if (game.currentTurn.turnState.value == TurnState.actionSelected) {
+      if (game.currentTurn.selectedAction.value == ActionType.store) {
+        action = StoreAction(playerId, part, null);
+      }
+    }
+    if (action != null) {
+      var response = await client.postAction(game, action);
+      if (response.responseCode != ResponseCode.ok) {
+        return;
+        // response.responseCode;
+      }
+      await doGameUpdate();
+    }
+    return;
+  }
+
+  Future<void> doUndo() async {}
+
+  Future<void> doEndTurn() async {}
 }

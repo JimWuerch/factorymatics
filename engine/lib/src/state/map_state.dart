@@ -6,9 +6,13 @@ class MapState<K, V> extends GameStateBase {
   final Map<K, V> _map;
   Map<K, V> get map => _map;
 
-  MapState(Game game, String label, {StateVarCallback onChanged})
+  MapState(Game game, String label, {StateVarCallback onChanged, Map<K, V> starting})
       : _map = <K, V>{},
-        super(game, label, onChanged);
+        super(game, label, onChanged) {
+    if (starting != null) {
+      _map.addAll(starting);
+    }
+  }
 
   MapState.fromMap(Game game, String label, Map<K, V> map, {StateVarCallback onChanged})
       : _map = map,

@@ -29,6 +29,8 @@ IconData actionToIcon(ActionType actionType) {
       return partTypeToIcon(PartType.construct);
     case ActionType.search:
       return MaterialCommunityIcons.feature_search;
+    case ActionType.convert:
+      return Icons.arrow_forward_ios;
     default:
       throw ArgumentError('invalid action ${actionType.toString()}');
   }

@@ -26,7 +26,10 @@ class GameController {
       startingPartDecks[i] = <Part>[];
     }
     for (var part in game.allParts.values) {
-      startingPartDecks[part.level].add(part);
+      if (part.level != -1) {
+        // initial part is lvl -1
+        startingPartDecks[part.level].add(part);
+      }
     }
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i].shuffle();
@@ -45,7 +48,9 @@ class GameController {
     ret['l2'] = partListToString(game.partDecks[1].toList());
     ret['l3'] = partListToString(game.partDecks[2].toList());
     ret['well'] = resourceListToString(game.well.toList());
+    game.isAuthoritativeSave = true;
     ret['game'] = game.toJson();
+    game.isAuthoritativeSave = false;
 
     return ret;
   }

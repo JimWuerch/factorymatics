@@ -3,37 +3,107 @@ import 'package:engine/src/part/converter_part.dart';
 import 'package:engine/src/player/player.dart';
 
 class PlayerData {
-  //final String name;
+  static const int baseResourceStorage = 5;
+  static const int basePartStorage = 1;
+  static const int baseSearch = 3;
+
   final String id;
   final MapState<PartType, ListState<Part>> parts;
-  int _level3Parts = 0;
   final GameStateVar<int> _vpChits;
-  int get vpChits => _vpChits.value;
-  Map<ResourceType, GameStateVar<int>> resources;
-  int resourceStorage;
-  int partStorage;
-  int search;
-  Game game;
+  final Map<ResourceType, GameStateVar<int>> resources;
+  final Game game;
   final ListState<Part> savedParts;
 
-  PlayerData(this.game, String playerId)
-      : parts = MapState<PartType, ListState<Part>>(game, '$playerId:parts'),
-        savedParts = ListState<Part>(game, '$playerId:savedParts'),
-        _vpChits = GameStateVar(game, '$playerId:vpChits', 0),
-        // ignore: prefer_initializing_formals
-        id = playerId {
-    resources = <ResourceType, GameStateVar<int>>{};
+  int get vpChits => _vpChits.value;
+  int _level3Parts = 0;
+  // int resourceStorage;
+  // int partStorage;
+  // int search;
+
+  PlayerData(this.game, this.id)
+      : parts = MapState<PartType, ListState<Part>>(game, '$id:parts'),
+        savedParts = ListState<Part>(game, '$id:savedParts'),
+        _vpChits = GameStateVar<int>(game, '$id:vpChits', 0),
+        resources = <ResourceType, GameStateVar<int>>{} {
+    _initResources(resources);
+    _initParts(parts);
+  }
+
+  void _initResources(Map<ResourceType, GameStateVar<int>> resources) {
     for (var resource in ResourceType.values) {
       if (resource != ResourceType.none && resource != ResourceType.any) {
-        resources[resource] = GameStateVar(game, '$playerId:${resource.toString()}', 0);
+        resources[resource] = GameStateVar(game, '$id:${resource.toString()}', 0);
       }
     }
+  }
+
+  void _initParts(MapState<PartType, ListState<Part>> parts) {
     for (var p in PartType.values) {
-      parts[p] = ListState<Part>(game, '$playerId:$p:parts');
+      parts[p] = ListState<Part>(game, '$id:$p:parts');
     }
-    resourceStorage = 5;
-    partStorage = 1;
-    search = 3;
+  }
+
+  Map<String, dynamic> toJson() {
+    var ret = <String, dynamic>{};
+
+    if (game.isAuthoritativeSave) {
+      ret['id'] = id;
+    } else {
+      ret['id'] = game.playerService.getPlayer(id).name;
+    }
+    var allP = <String>[];
+    for (var plist in parts.values) {
+      for (var part in plist) {
+        allP.add(part.id);
+      }
+    }
+    ret['parts'] = allP;
+    ret['vp'] = _vpChits.value;
+    ret['hearts'] = resources[ResourceType.heart].value;
+    ret['clubs'] = resources[ResourceType.club].value;
+    ret['spades'] = resources[ResourceType.spade].value;
+    ret['diamonds'] = resources[ResourceType.diamond].value;
+    var savedP = <String>[];
+    for (var part in savedParts) {
+      savedP.add(part.id);
+    }
+    ret['saved'] = savedP;
+
+    return ret;
+  }
+
+  PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts) {
+    _initResources(resources);
+    _initParts(parts);
+  }
+
+  factory PlayerData.fromJson(Game game, Map<String, dynamic> json) {
+    var id = json['id'] as String;
+    var parts = MapState<PartType, ListState<Part>>(game, '$id:parts');
+    var vp = GameStateVar<int>(game, '$id:vpChits', json['vp'] as int);
+    var resources = <ResourceType, GameStateVar<int>>{};
+    var savedParts = ListState<Part>(game, '$id:savedParts');
+
+    var ret = PlayerData._fromJsonHelper(game, id, parts, vp, resources, savedParts);
+
+    var savedP = listFromJson<String>(json['saved']);
+    for (var part in savedP) {
+      var p = game.allParts[part];
+      ret.savedParts.add(p);
+    }
+
+    var partsList = listFromJson<String>(json['parts']);
+    for (var part in partsList) {
+      var p = game.allParts[part];
+      ret.parts[p.partType].add(p);
+    }
+
+    ret.resources[ResourceType.heart].value = json['hearts'] as int;
+    ret.resources[ResourceType.club].value = json['clubs'] as int;
+    ret.resources[ResourceType.spade].value = json['spades'] as int;
+    ret.resources[ResourceType.diamond].value = json['diamonds'] as int;
+
+    return ret;
   }
 
   void _doParts(void Function(Part) fn) {
@@ -52,6 +122,36 @@ class PlayerData {
   int partCount() {
     var ret = 0;
     _doParts((part) => ret++);
+    return ret;
+  }
+
+  int get resourceStorage {
+    var ret = baseResourceStorage;
+    _doParts((part) {
+      if (part is EnhancementPart) {
+        ret += part.resourceStorage;
+      }
+    });
+    return ret;
+  }
+
+  int get partStorage {
+    var ret = basePartStorage;
+    _doParts((part) {
+      if (part is EnhancementPart) {
+        ret += part.partStorage;
+      }
+    });
+    return ret;
+  }
+
+  int get search {
+    var ret = baseSearch;
+    _doParts((part) {
+      if (part is EnhancementPart) {
+        ret += part.search;
+      }
+    });
     return ret;
   }
 

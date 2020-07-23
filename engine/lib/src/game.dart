@@ -47,6 +47,9 @@ class Game {
 
   ChangeStack changeStack;
 
+  // set true if GameController is saving the game
+  bool isAuthoritativeSave = false;
+
   Game(List<String> playerNames, this.playerService, this.gameId) {
     uuidGen = Uuid();
     players = <PlayerData>[];
@@ -81,7 +84,7 @@ class Game {
     for (var player in players) {
       var startingPart = SimplePart(
           this, "0", -1, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
-      //allParts[startingPart.id] = startingPart;
+      allParts[startingPart.id] = startingPart;
       player.buyPart(startingPart, <ResourceType>[]);
     }
   }
@@ -252,6 +255,7 @@ class Game {
     ret['s2'] = partListToString(saleParts[1].toList());
     ret['s3'] = partListToString(saleParts[2].toList());
     ret['cp'] = _currentPlayerIndex;
+    ret['players'] = players.map<Map<String, dynamic>>((e) => e.toJson()).toList();
 
     if (currentTurn != null) {
       ret['turn'] = currentTurn.toJson();
@@ -271,6 +275,10 @@ class Game {
     stringToResourceListState(json['res'] as String, game.availableResources);
 
     game._currentPlayerIndex = json['cp'] as int;
+
+    var item = json['players'] as List<dynamic>;
+    game.players =
+        item.map<PlayerData>((dynamic json) => PlayerData.fromJson(game, json as Map<String, dynamic>)).toList();
 
     if (json.containsKey('turn')) {
       game.currentTurn = Turn.fromJson(game, game.currentPlayer, json['turn'] as Map<String, dynamic>);

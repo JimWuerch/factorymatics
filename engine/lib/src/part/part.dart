@@ -19,13 +19,22 @@ abstract class Part extends GameObject {
   final List<Product> products;
   final ResourceType resource;
   int get vp;
-  GameStateVar<bool> activated;
-  GameStateVar<bool> ready;
+  final GameStateVar<bool> activated;
+  final GameStateVar<bool> ready;
 
   Part(Game game, String id, this.level, this.partType, this.cost, this.triggers, this.products, this.resource)
       : activated = GameStateVar(game, 'part:$id:activated', true),
         ready = GameStateVar(game, 'part:$id:ready', false),
         super(id);
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  bool operator ==(Object other) =>
+      identical(this, other) || other is Part && runtimeType == other.runtimeType && id == other.id;
+
+  @override
+  // ignore: avoid_equals_and_hash_code_on_mutable_classes
+  int get hashCode => id.hashCode;
 
   // List<GameAction> getProducts(Game game, String playerId) {
   //   var ret = <GameAction>[];
