@@ -1,6 +1,6 @@
 import 'package:engine/engine.dart';
 
-enum GameModeType { startGame, endGame, startTurn, endTurn }
+enum GameModeType { startGame, endGame, startTurn, endTurn, undo }
 
 class GameModeAction extends GameAction {
   final GameModeType mode;
@@ -12,7 +12,10 @@ class GameModeAction extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    return (action as GameModeAction)?.mode == mode;
+    if (action is GameModeAction) {
+      return action.mode == mode;
+    }
+    return false;
   }
 
   @override

@@ -77,3 +77,15 @@ Color resourceToColor(ResourceType resourceType) {
       return Colors.lightGreen[600];
   }
 }
+
+IconData productToIcon(Product product) {
+  if (product is MysteryMeatProduct) {
+    return actionToIcon(ActionType.mysteryMeat);
+  } else if (product is AcquireProduct) {
+    return actionToIcon(ActionType.acquire);
+  } else if (product is VpProduct) {
+    return FontAwesome.gear;
+  } else {
+    return Fontisto.question;
+  }
+}

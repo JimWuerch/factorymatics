@@ -4,7 +4,7 @@ import 'map_change.dart';
 
 class MapState<K, V> extends GameStateBase {
   final Map<K, V> _map;
-  Map<K, V> get map => _map;
+  Map<K, V> get getMap => Map<K, V>.unmodifiable(_map);
 
   MapState(Game game, String label, {StateVarCallback onChanged, Map<K, V> starting})
       : _map = <K, V>{},

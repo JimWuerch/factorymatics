@@ -10,7 +10,10 @@ class SelectActionAction extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    return (action as SelectActionAction)?.selectedAction == selectedAction;
+    if (action is SelectActionAction) {
+      return action.selectedAction == selectedAction;
+    }
+    return false;
   }
 
   @override

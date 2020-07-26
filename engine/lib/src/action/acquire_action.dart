@@ -4,7 +4,7 @@ class AcquireAction extends GameAction {
   final int index;
   ResourceType acquiredResource; // set by the engine after processing
 
-  AcquireAction(String player, this.index, Part producedBy) : super(player, producedBy?.id);
+  AcquireAction(String player, this.index, Product producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.acquire;
@@ -28,7 +28,7 @@ class AcquireAction extends GameAction {
 }
 
 class MysteryMeatAction extends GameAction {
-  MysteryMeatAction(String player, Part producedBy) : super(player, producedBy?.id);
+  MysteryMeatAction(String player, Product producedBy) : super(player, producedBy);
 
   // not sent over the wire
   ResourceType resource;

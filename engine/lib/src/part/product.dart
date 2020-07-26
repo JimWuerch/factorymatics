@@ -3,21 +3,29 @@ import 'package:engine/src/action/convert_action.dart';
 import 'package:engine/src/action/vp_action.dart';
 
 abstract class Product {
-  Product();
-  GameAction produce(Game game, String player, Part producedBy);
+  Part part; // set in the part constructor
+  final GameStateVar<bool> activated;
+
+  Product(Game game) : activated = GameStateVar(game, 'product:activated', false);
+
+  GameAction produce(Game game, String player);
 }
 
 class MysteryMeatProduct extends Product {
+  MysteryMeatProduct(Game game) : super(game);
+
   @override
-  GameAction produce(Game game, String player, Part producedBy) {
-    return MysteryMeatAction(player, producedBy);
+  GameAction produce(Game game, String player) {
+    return MysteryMeatAction(player, this);
   }
 }
 
 class AcquireProduct extends Product {
+  AcquireProduct(Game game) : super(game);
+
   @override
-  GameAction produce(Game game, String player, Part producedBy) {
-    return AcquireAction(player, -1, producedBy);
+  GameAction produce(Game game, String player) {
+    return AcquireAction(player, -1, this);
   }
 }
 
@@ -25,32 +33,32 @@ class ConvertProduct extends Product {
   final ResourceType source;
   final ResourceType dest;
 
-  ConvertProduct(this.source, this.dest);
+  ConvertProduct(Game game, this.source, this.dest) : super(game);
 
   @override
-  GameAction produce(Game game, String player, Part producedBy) {
-    return ConvertAction(player, source, ResourceType.any, producedBy);
+  GameAction produce(Game game, String player) {
+    return ConvertAction(player, source, ResourceType.any, this);
   }
 }
 
 class VpProduct extends Product {
   final int vp;
 
-  VpProduct(this.vp);
+  VpProduct(Game game, this.vp) : super(game);
 
   @override
-  GameAction produce(Game game, String player, Part producedBy) {
-    return VpAction(player, vp, producedBy);
+  GameAction produce(Game game, String player) {
+    return VpAction(player, vp, this);
   }
 }
 
 class DoubleResourceProduct extends Product {
   final ResourceType resourceType;
 
-  DoubleResourceProduct(this.resourceType);
+  DoubleResourceProduct(Game game, this.resourceType) : super(game);
 
   @override
-  GameAction produce(Game game, String player, Part producedBy) {
-    return DoubleConvertAction(player, resourceType, producedBy);
+  GameAction produce(Game game, String player) {
+    return DoubleConvertAction(player, resourceType, this);
   }
 }

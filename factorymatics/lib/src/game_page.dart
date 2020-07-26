@@ -4,6 +4,7 @@ import 'package:factorymatics/src/part_helpers.dart';
 import 'package:factorymatics/src/part_widget.dart';
 import 'package:factorymatics/src/resource_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class GamePage extends StatefulWidget {
   final String title = 'Factorymatics';
@@ -18,6 +19,11 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
+
+    SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeRight,
+      DeviceOrientation.landscapeLeft,
+    ]);
 
     model = GamePageModel('wheee');
     model.init();
@@ -54,8 +60,13 @@ class _GamePageState extends State<GamePage> {
     var children = <Widget>[];
     switch (index) {
       case 0:
-        children.add(RaisedButton(
-          onPressed: null,
+        children.add(SizedBox(
+          width: 200,
+          child: RaisedButton.icon(
+            icon: Icon(partTypeToIcon(PartType.enhancement)),
+            label: Text(''),
+            onPressed: null,
+          ),
         ));
         for (var part in model.game.currentPlayer.parts[PartType.enhancement]) {
           children.add(PartWidget(
@@ -119,114 +130,112 @@ class _GamePageState extends State<GamePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: StreamBuilder<int>(
-            stream: model.notifier,
-            builder: (context, snapshot) {
-              if (!snapshot.hasData) {
-                return Text('loading...');
-              } else {
-                return Container(
-                  color: Colors.white,
-                  child: Column(
-                    // Column is also a layout widget. It takes a list of children and
-                    // arranges them vertically. By default, it sizes itself to fit its
-                    // children horizontally, and tries to be as tall as its parent.
-                    //
-                    // Invoke "debug painting" (press "p" in the console, choose the
-                    // "Toggle Debug Paint" action from the Flutter Inspector in Android
-                    // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-                    // to see the wireframe for each widget.
-                    //
-                    // Column has various properties to control how it sizes itself and
-                    // how it positions its children. Here we use mainAxisAlignment to
-                    // center the children vertically; the main axis here is the vertical
-                    // axis because Columns are vertical (the cross axis would be
-                    // horizontal).
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      ResourcePicker(
-                        resources: model.game.availableResources.toList(),
-                        enabled: model.isResourcePickerEnabled,
-                        onTap: _onResourceTapped,
-                      ),
-                      _makePartList(model.game.saleParts[2].list),
-                      _makePartList(model.game.saleParts[1].list),
-                      _makePartList(model.game.saleParts[0].list),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          RaisedButton(child: Text('Undo'), onPressed: model.canUndo ? _onUndoTapped : null),
-                          RaisedButton(child: Text('End Turn'), onPressed: model.canEndTurn ? _onEndTurnTapped : null),
-                        ],
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        children: <Widget>[
-                          _makeColumn(0),
-                          _makeColumn(1),
-                          _makeColumn(2),
-                          _makeColumn(3),
-                          _makeColumn(4),
-                          _makeColumn(5),
-                        ],
-                      )
-                      // Row(
-                      //   mainAxisAlignment: MainAxisAlignment.center,
-                      //   children: <Widget>[
-                      //     RaisedButton.icon(
-                      //       icon: Icon(actionToIcon(ActionType.store)),
-                      //       onPressed: model.isActionSelection && model.canStore
-                      //           ? () {
-                      //               _actionButtonPressed(ActionType.store);
-                      //             }
-                      //           : null,
-                      //       label: Text('Store'),
-                      //     ),
-                      //     RaisedButton.icon(
-                      //       icon: Icon(actionToIcon(ActionType.acquire)),
-                      //       onPressed: model.isActionSelection && model.canAcquire
-                      //           ? () {
-                      //               _actionButtonPressed(ActionType.acquire);
-                      //             }
-                      //           : null,
-                      //       label: Text('Aquire'),
-                      //     ),
-                      //     RaisedButton.icon(
-                      //       icon: Icon(actionToIcon(ActionType.construct)),
-                      //       onPressed: model.isActionSelection
-                      //           ? () {
-                      //               _actionButtonPressed(ActionType.construct);
-                      //             }
-                      //           : null,
-                      //       label: Text('Construct'),
-                      //     ),
-                      //     RaisedButton.icon(
-                      //       icon: Icon(actionToIcon(ActionType.search)),
-                      //       onPressed: model.isActionSelection
-                      //           ? () {
-                      //               _actionButtonPressed(ActionType.search);
-                      //             }
-                      //           : null,
-                      //       label: Text('Search'),
-                      //     ),
-                      //   ],
-                      // ),
-                    ],
+    return SafeArea(
+      child: StreamBuilder<Object>(
+          stream: model.notifier,
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return Center(child: Text('loading...'));
+            } else {
+              return Scaffold(
+                appBar: AppBar(
+                  // Here we take the value from the MyHomePage object that was created by
+                  // the App.build method, and use it to set our appbar title.
+                  title: Text(widget.title),
+                  actions: <Widget>[
+                    FlatButton(
+                      textColor: Colors.white,
+                      onPressed: model.canUndo ? _onUndoTapped : null,
+                      child: Text("Undo"),
+                      shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                    ),
+                    FlatButton(
+                      textColor: Colors.white,
+                      onPressed: model.canEndTurn ? _onEndTurnTapped : null,
+                      child: Text("End Turn"),
+                      shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                    ),
+                  ],
+                ),
+                body: SafeArea(
+                  child: Container(
+                    color: Colors.white,
+                    child: Column(
+                      // Column is also a layout widget. It takes a list of children and
+                      // arranges them vertically. By default, it sizes itself to fit its
+                      // children horizontally, and tries to be as tall as its parent.
+                      //
+                      // Invoke "debug painting" (press "p" in the console, choose the
+                      // "Toggle Debug Paint" action from the Flutter Inspector in Android
+                      // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+                      // to see the wireframe for each widget.
+                      //
+                      // Column has various properties to control how it sizes itself and
+                      // how it positions its children. Here we use mainAxisAlignment to
+                      // center the children vertically; the main axis here is the vertical
+                      // axis because Columns are vertical (the cross axis would be
+                      // horizontal).
+                      //mainAxisAlignment: MainAxisAlignment.center,
+                      children: <Widget>[
+                        Container(
+                          decoration: BoxDecoration(
+                              border: Border.all(width: 5, color: Colors.blue),
+                              borderRadius: BorderRadius.all(Radius.circular(20))),
+                          padding: EdgeInsets.only(left: 10, right: 10),
+                          width: 350,
+                          child: ResourcePicker(
+                            resources: model.game.availableResources.toList(),
+                            enabled: model.isResourcePickerEnabled,
+                            onTap: _onResourceTapped,
+                          ),
+                        ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Container(
+                          decoration: BoxDecoration(
+                              border: Border.all(width: 5, color: Colors.blue),
+                              borderRadius: BorderRadius.all(Radius.circular(20))),
+                          padding: EdgeInsets.all(10),
+                          width: 900,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: <Widget>[
+                              _makePartList(model.game.saleParts[2].list),
+                              _makePartList(model.game.saleParts[1].list),
+                              _makePartList(model.game.saleParts[0].list),
+                            ],
+                          ),
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          children: <Widget>[
+                            _makeColumn(0),
+                            _makeColumn(1),
+                            _makeColumn(2),
+                            _makeColumn(3),
+                            _makeColumn(4),
+                            _makeColumn(5),
+                          ],
+                        ),
+                        // Row(
+                        //   mainAxisAlignment: MainAxisAlignment.end,
+                        //   children: <Widget>[
+                        //     RaisedButton(child: Text('Undo'), onPressed: model.canUndo ? _onUndoTapped : null),
+                        //     SizedBox(width: 10),
+                        //     RaisedButton(
+                        //         child: Text('End Turn'), onPressed: model.canEndTurn ? _onEndTurnTapped : null),
+                        //     SizedBox(width: 10)
+                        //   ],
+                        // ),
+                      ],
+                    ),
                   ),
-                );
-              }
-            }),
-      ),
+                ),
+              );
+            }
+          }),
     );
   }
 

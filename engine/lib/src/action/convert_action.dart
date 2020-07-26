@@ -4,14 +4,17 @@ class ConvertAction extends GameAction {
   final ResourceType source;
   final ResourceType destination;
 
-  ConvertAction(String player, this.source, this.destination, Part producedBy) : super(player, producedBy?.id);
+  ConvertAction(String player, this.source, this.destination, Product producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.convert;
 
   @override
   bool matches(GameAction action) {
-    return (action as ConvertAction)?.source == source;
+    if (action is ConvertAction) {
+      return action.source == source;
+    }
+    return false;
   }
 
   @override
@@ -31,7 +34,7 @@ class ConvertAction extends GameAction {
 class DoubleConvertAction extends GameAction {
   final ResourceType source;
 
-  DoubleConvertAction(String player, this.source, Part producedBy) : super(player, producedBy?.id);
+  DoubleConvertAction(String player, this.source, Product producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.doubleConvert;

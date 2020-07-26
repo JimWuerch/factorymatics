@@ -12,20 +12,20 @@ class ListChange<T> extends Change {
   ListChange.add(this.state, this.item, this.index)
       : operation = ListChangeOperation.add,
         oldItem = null {
-    execute();
+    state.game.changeStack.add(this);
   }
 
   ListChange.remove(this.state, this.index)
       : item = state[index],
         operation = ListChangeOperation.remove,
         oldItem = null {
-    execute();
+    state.game.changeStack.add(this);
   }
 
   ListChange.update(this.state, this.item, this.index)
       : operation = ListChangeOperation.update,
         oldItem = state[index] {
-    execute();
+    state.game.changeStack.add(this);
   }
 
   @override

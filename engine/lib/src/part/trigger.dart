@@ -2,7 +2,7 @@ import 'package:engine/engine.dart';
 import 'package:engine/src/action/construct_action.dart';
 import 'package:engine/src/action/convert_action.dart';
 
-enum TriggerType { store, acquire, construct, convert, purchased, constructLevel }
+enum TriggerType { store, acquire, construct, convert, purchased, constructLevel, constructFromStore }
 
 abstract class Trigger {
   final TriggerType triggerType;
@@ -60,6 +60,16 @@ class ConstructLevelTrigger extends Trigger {
       return action.part.level == level;
     }
     return false;
+  }
+}
+
+class ConstructFromStoreTrigger extends Trigger {
+  ConstructFromStoreTrigger() : super(TriggerType.constructFromStore);
+
+  @override
+  bool isTriggeredBy(GameAction action) {
+    // The game engine will have to handle where the construct came from
+    return action is ConstructAction;
   }
 }
 

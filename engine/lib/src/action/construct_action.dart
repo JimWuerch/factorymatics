@@ -4,7 +4,7 @@ class ConstructAction extends GameAction {
   final Part part;
   final List<ResourceType> payment;
 
-  ConstructAction(String player, this.part, this.payment, Part producedBy) : super(player, producedBy?.id);
+  ConstructAction(String player, this.part, this.payment, Product producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.construct;

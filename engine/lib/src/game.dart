@@ -50,13 +50,18 @@ class Game {
   // set true if GameController is saving the game
   bool isAuthoritativeSave = false;
 
+  // this is only set for the client, it is not used or accurate for the server
+  bool canUndo;
+
   Game(List<String> playerNames, this.playerService, this.gameId) {
     uuidGen = Uuid();
     players = <PlayerData>[];
+    changeStack = ChangeStack(); // we'll throw this away
     for (var p in playerNames) {
       var playerId = playerService != null ? playerService.getPlayer(p).playerId : p;
       players.add(PlayerData(this, playerId));
     }
+    changeStack.clear();
 
     allParts = <String, Part>{};
 
@@ -82,10 +87,7 @@ class Game {
 
     // give players their starting parts
     for (var player in players) {
-      var startingPart = SimplePart(
-          this, "0", -1, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0);
-      allParts[startingPart.id] = startingPart;
-      player.buyPart(startingPart, <ResourceType>[]);
+      player.buyPart(allParts[Part.startingPartId], <ResourceType>[]);
     }
   }
 
@@ -257,6 +259,11 @@ class Game {
     ret['cp'] = _currentPlayerIndex;
     ret['players'] = players.map<Map<String, dynamic>>((e) => e.toJson()).toList();
 
+    if (!isAuthoritativeSave) {
+      // only the client uses this value, it's not saved/restored on the server
+      ret['canUndo'] = changeStack.canUndo;
+    }
+
     if (currentTurn != null) {
       ret['turn'] = currentTurn.toJson();
     }
@@ -268,7 +275,8 @@ class Game {
     var gameId = json['gameId'] as String;
 
     var game = Game(players, playerService, gameId);
-    game.changeStack = ChangeStack(); // we'll discard this
+    var changeStack = ChangeStack(); // we'll discard this
+    game.changeStack = changeStack;
     partStringToList(json['s1'] as String, (part) => game.saleParts[0].add(part), game.allParts);
     partStringToList(json['s2'] as String, (part) => game.saleParts[1].add(part), game.allParts);
     partStringToList(json['s3'] as String, (part) => game.saleParts[2].add(part), game.allParts);
@@ -285,6 +293,13 @@ class Game {
     } else {
       game.currentTurn = Turn(game, game.currentPlayer);
     }
+
+    if (json.containsKey('canUndo')) {
+      game.canUndo = json['canUndo'] as bool;
+    }
+
+    // game.changeStack will be pointed at turn.changeStack, so we can clear our local copy
+    changeStack.clear();
 
     return game;
   }

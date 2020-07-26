@@ -38,14 +38,10 @@ class GamePageModel {
       }
     }
     await doGameUpdate();
-
-    if (isOurTurn && (game.currentTurn.turnState.value == TurnState.notStarted)) {
-      doStartTurn();
-      await doGameUpdate();
-    }
   }
 
-  Future<void> doGameUpdate() async {
+  /// Update the game state.  Set [nonNotify] to true to prevent listeners from getting notified
+  Future<void> doGameUpdate({bool noNotify = false}) async {
     var response = await client.postRequest(JoinGameRequest(gameId, playerId));
     if (response.responseCode != ResponseCode.ok) {
       _notifierController.addError(null);
@@ -55,6 +51,11 @@ class GamePageModel {
       game.tmpName = 'client';
       if (game.currentTurn != null) {
         availableActions = game.currentTurn.getAvailableActions();
+      }
+      // start turn if it's our turn
+      if (isOurTurn && (game.currentTurn.turnState.value == TurnState.notStarted)) {
+        doStartTurn();
+        await doGameUpdate(noNotify: true);
       }
       _notifierController.add(1);
     } else {
@@ -77,7 +78,7 @@ class GamePageModel {
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
 
-  bool get canUndo => game.changeStack.canUndo;
+  bool get canUndo => game.canUndo;
 
   bool get canEndTurn => game.currentTurn?.turnState?.value == TurnState.selectedActionCompleted;
 
@@ -131,40 +132,32 @@ class GamePageModel {
 
   bool get canAcquire => game.currentTurn?.player?.hasResourceStorageSpace ?? false;
 
-  Future<ResponseCode> _selectStore() async {
-    var response = await client.postAction(game, SelectActionAction(playerId, ActionType.store));
+  Future<ResponseCode> _postAction(GameAction action) async {
+    var response = await client.postAction(game, action);
     if (response.responseCode != ResponseCode.ok) {
       return response.responseCode;
     }
     await doGameUpdate();
 
     return response.responseCode;
+  }
+
+  Future<ResponseCode> _selectStore() async {
+    return await _postAction(SelectActionAction(playerId, ActionType.store));
   }
 
   Future<void> _selectAcquire() async {
-    var response = await client.postAction(game, SelectActionAction(playerId, ActionType.acquire));
-    if (response.responseCode != ResponseCode.ok) {
-      return response.responseCode;
-    }
-    await doGameUpdate();
-
-    return response.responseCode;
+    return await _postAction(SelectActionAction(playerId, ActionType.acquire));
   }
 
-  Future<void> _selectConstruct() async {}
+  Future<void> _selectConstruct() async {
+    return await _postAction(SelectActionAction(playerId, ActionType.construct));
+  }
 
   Future<void> _selectSearch() async {}
 
   Future<void> resourceSelected(int index) async {
-    var response = await client.postAction(game, AcquireAction(playerId, index, null));
-    if (response.responseCode != ResponseCode.ok) {
-      return;
-      // response.responseCode;
-    }
-    await doGameUpdate();
-
-    return;
-    // response.responseCode;
+    return await _postAction(AcquireAction(playerId, index, null));
   }
 
   Future<void> partTapped(Part part) async {
@@ -172,6 +165,8 @@ class GamePageModel {
     if (game.currentTurn.turnState.value == TurnState.actionSelected) {
       if (game.currentTurn.selectedAction.value == ActionType.store) {
         action = StoreAction(playerId, part, null);
+      } else if (game.currentTurn.selectedAction.value == ActionType.construct) {
+        //action = ConstructAction(playerId, part, payment, null)
       }
     }
     if (action != null) {
@@ -185,7 +180,11 @@ class GamePageModel {
     return;
   }
 
-  Future<void> doUndo() async {}
+  Future<void> doUndo() async {
+    await _postAction(GameModeAction(playerId, GameModeType.undo));
+  }
 
-  Future<void> doEndTurn() async {}
+  Future<void> doEndTurn() async {
+    await _postAction(GameModeAction(playerId, GameModeType.endTurn));
+  }
 }

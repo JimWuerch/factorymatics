@@ -13,7 +13,7 @@ class MapChange<K, V> extends Change {
     remove = false;
     oldValue = state[key];
     existed = state.containsKey(key);
-    execute();
+    state.game.changeStack.add(this);
   }
 
   MapChange.remove(this.state, this.key) {
@@ -21,7 +21,7 @@ class MapChange<K, V> extends Change {
     remove = true;
     oldValue = state[key];
     existed = true;
-    execute();
+    state.game.changeStack.add(this);
   }
 
   @override

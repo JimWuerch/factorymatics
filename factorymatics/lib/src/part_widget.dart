@@ -45,6 +45,10 @@ class _PartWidgetState extends State<PartWidget> {
         case TriggerType.constructLevel:
           items.add(Icon(Icons.add_shopping_cart));
           break;
+        case TriggerType.constructFromStore:
+          items.add(Icon(Icons.add_shopping_cart));
+          items.add(Icon(partTypeToIcon(PartType.storage)));
+          break;
       }
       if (index < triggers.length - 1) {
         items.add(Icon(MaterialCommunityIcons.slash_forward));
@@ -52,6 +56,25 @@ class _PartWidgetState extends State<PartWidget> {
     }
     return Row(children: items);
   }
+
+  // List<Widget> _productsToList(Part part) {
+  //   var list = <Widget>[];
+  //   for (var product in part.products) {
+  //     if (product is ConvertProduct) {
+  //       list.add(Row(
+  //         children: <Widget>[
+  //           resourceToIcon(, resourceToColor(t.resourceType)),
+  //         Icon(partTypeToIcon(PartType.converter)),
+  //         Icon(FontAwesome.question_circle),
+  //         ],
+  //       ));
+  //     } else {
+  //     list.add(Card(
+  //       child: ListTile(title: Icon(),)),
+  //     ));
+  //     }
+  //   }
+  // }
 
   @override
   Widget build(BuildContext context) {

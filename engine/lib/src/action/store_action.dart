@@ -3,14 +3,17 @@ import 'package:engine/engine.dart';
 class StoreAction extends GameAction {
   final Part part;
 
-  StoreAction(String player, this.part, Part producedBy) : super(player, producedBy?.id);
+  StoreAction(String player, this.part, Product producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.store;
 
   @override
   bool matches(GameAction action) {
-    return (action as StoreAction)?.part == part;
+    if (action is StoreAction) {
+      return action.part == part;
+    }
+    return false;
   }
 
   @override

@@ -1,6 +1,5 @@
 import 'package:engine/engine.dart';
 import 'package:engine/src/part/converter_part.dart';
-import 'package:engine/src/player/player.dart';
 
 class PlayerData {
   static const int baseResourceStorage = 5;
@@ -15,24 +14,20 @@ class PlayerData {
   final ListState<Part> savedParts;
 
   int get vpChits => _vpChits.value;
-  int _level3Parts = 0;
-  // int resourceStorage;
-  // int partStorage;
-  // int search;
 
   PlayerData(this.game, this.id)
       : parts = MapState<PartType, ListState<Part>>(game, '$id:parts'),
         savedParts = ListState<Part>(game, '$id:savedParts'),
         _vpChits = GameStateVar<int>(game, '$id:vpChits', 0),
         resources = <ResourceType, GameStateVar<int>>{} {
-    _initResources(resources);
+    initResourceMap(game, resources, id);
     _initParts(parts);
   }
 
-  void _initResources(Map<ResourceType, GameStateVar<int>> resources) {
+  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int>> resources, String label) {
     for (var resource in ResourceType.values) {
       if (resource != ResourceType.none && resource != ResourceType.any) {
-        resources[resource] = GameStateVar(game, '$id:${resource.toString()}', 0);
+        resources[resource] = GameStateVar(game, '$label:${resource.toString()}', 0);
       }
     }
   }
@@ -59,10 +54,7 @@ class PlayerData {
     }
     ret['parts'] = allP;
     ret['vp'] = _vpChits.value;
-    ret['hearts'] = resources[ResourceType.heart].value;
-    ret['clubs'] = resources[ResourceType.club].value;
-    ret['spades'] = resources[ResourceType.spade].value;
-    ret['diamonds'] = resources[ResourceType.diamond].value;
+    ret['res'] = resourceMapStateToString(resources);
     var savedP = <String>[];
     for (var part in savedParts) {
       savedP.add(part.id);
@@ -73,7 +65,7 @@ class PlayerData {
   }
 
   PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts) {
-    _initResources(resources);
+    initResourceMap(game, resources, id);
     _initParts(parts);
   }
 
@@ -98,10 +90,11 @@ class PlayerData {
       ret.parts[p.partType].add(p);
     }
 
-    ret.resources[ResourceType.heart].value = json['hearts'] as int;
-    ret.resources[ResourceType.club].value = json['clubs'] as int;
-    ret.resources[ResourceType.spade].value = json['spades'] as int;
-    ret.resources[ResourceType.diamond].value = json['diamonds'] as int;
+    var res = stringToResourceMap(json['res'] as String);
+    ret.resources[ResourceType.heart].reinitialize(res[ResourceType.heart]);
+    ret.resources[ResourceType.club].reinitialize(res[ResourceType.club]);
+    ret.resources[ResourceType.spade].reinitialize(res[ResourceType.spade]);
+    ret.resources[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
 
     return ret;
   }
@@ -115,7 +108,7 @@ class PlayerData {
   }
 
   void resetPartActivations() {
-    _doParts((part) => part.activated.reinitialize(false));
+    _doParts((part) => part.resetActivations());
     _doParts((part) => part.ready.reinitialize(false));
   }
 
@@ -155,6 +148,58 @@ class PlayerData {
     return ret;
   }
 
+  int get level3PartCount {
+    var ret = 0;
+    _doParts((part) {
+      if (part.level == 2) ret++;
+    });
+    return ret;
+  }
+
+  bool get canStore {
+    for (var part in parts[PartType.enhancement]) {
+      if (part is DisallowStorePart) return false;
+    }
+    return true;
+  }
+
+  bool get canSearch {
+    for (var part in parts[PartType.enhancement]) {
+      if (part is DisallowSearchPart) return false;
+    }
+    return true;
+  }
+
+  int get constructFromStoreDiscount {
+    var discount = 0;
+    for (var part in parts[PartType.enhancement]) {
+      if (part is ConstructFromStoreDiscountPart) {
+        discount += part.constructFromStoreDiscount;
+      }
+    }
+    return discount;
+  }
+
+  int get constructFromSearchDiscount {
+    var discount = 0;
+    for (var part in parts[PartType.enhancement]) {
+      if (part is ConstructFromSearchDiscountPart) {
+        discount += part.constructFromSearchDiscount;
+      }
+    }
+    return discount;
+  }
+
+  int get constructLevel2Discount {
+    var discount = 0;
+    for (var part in parts[PartType.enhancement]) {
+      if (part is Level2ConstructDiscountPart) {
+        discount += part.level2ConstructDiscount;
+      }
+    }
+    return discount;
+  }
+
   int resourceCount() {
     var ret = 0;
     resources.forEach((key, value) {
@@ -168,12 +213,9 @@ class PlayerData {
   void buyPart(Part part, List<ResourceType> payment) {
     parts[part.partType].add(part);
     for (var resource in payment) {
-      if (resources[resource].value < 1) throw ArgumentError('can\'t afford part.');
       resources[resource].value = resources[resource].value - 1;
       game.addToWell(resource);
     }
-
-    if (part.level == 3) _level3Parts++;
   }
 
   void savePart(Part part) {
@@ -185,8 +227,6 @@ class PlayerData {
     if (!savedParts.contains(part)) throw ArgumentError('can\'t unsave part.  Part not in storage.');
     savedParts.remove(part);
   }
-
-  bool get isGameEnded => parts.length > 15 || _level3Parts > 3;
 
   int get score {
     var ret = 0;
@@ -211,18 +251,26 @@ class PlayerData {
     resources[resource].value = resources[resource].value - 1;
   }
 
-  bool canAfford(Part part) {
-    if (part.resource == ResourceType.any && part.cost <= resourceCount()) {
+  bool canAfford(Part part, int discount) {
+    if (part.resource == ResourceType.any && (part.cost - discount) <= resourceCount()) {
       return true;
     } else {
-      return part.cost <= resources[part.resource].value;
+      return (part.cost - discount) <= resources[part.resource].value;
     }
   }
 
   bool canConvert(ResourceType resourceType) {
     for (var part in parts[PartType.converter]) {
-      if (!part.activated.value && (part as ConverterPart).canConvert(resourceType)) {
-        return true;
+      if (part is ConverterPart) {
+        if (!part.products[0].activated.value && part.canConvert(resourceType)) {
+          return true;
+        }
+      } else if (part is MultipleConverterPart) {
+        for (var i = 0; i < MultipleConverterPart.numberOfParts; ++i) {
+          if (!part.products[i].activated.value && part.canConvert(i, resourceType)) {
+            return true;
+          }
+        }
       }
     }
     return false;

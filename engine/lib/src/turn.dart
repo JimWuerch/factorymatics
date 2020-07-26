@@ -19,6 +19,7 @@ class Turn {
   final GameStateVar<TurnState> turnState;
   final GameStateVar<ActionType> selectedAction;
   final ChangeStack changeStack;
+  final Map<ResourceType, GameStateVar<int>> convertedResources;
   bool isGameEndTriggered;
   List<Part> searchedParts;
 
@@ -26,8 +27,9 @@ class Turn {
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', TurnState.notStarted),
         selectedAction = GameStateVar(game, 'selectedAction', null),
+        convertedResources = <ResourceType, GameStateVar<int>>{},
         isGameEndTriggered = false {
-    // do stuff
+    PlayerData.initResourceMap(game, convertedResources, 'cRes');
   }
 
   Map<String, dynamic> toJson() {
@@ -45,15 +47,24 @@ class Turn {
       }
       ret['searchedParts'] = p;
     }
+    var convertedResString = resourceMapStateToString(convertedResources);
+    if (convertedResString.isNotEmpty) {
+      ret['convRes'] = convertedResString;
+    }
 
     return ret;
   }
 
-  Turn._fromJsonHelper(this.game, this.player, TurnState state, ActionType selected, this.searchedParts)
+  Turn._fromJsonHelper(
+      this.game, this.player, TurnState state, ActionType selected, this.searchedParts, this.convertedResources)
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', state),
         selectedAction = GameStateVar(game, 'selectedAction', selected),
-        isGameEndTriggered = false;
+        isGameEndTriggered = false {
+    if (state != TurnState.notStarted) {
+      game.changeStack = changeStack;
+    }
+  }
 
   factory Turn.fromJson(Game game, PlayerData player, Map<String, dynamic> json) {
     //var player = game.getPlayerFromId(json['player'] as String);
@@ -70,11 +81,23 @@ class Turn {
         searchedParts.add(game.allParts[p]);
       }
     }
-    return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts);
+    var res = stringToResourceMap(json['res'] as String);
+    var convRes = <ResourceType, GameStateVar<int>>{};
+    PlayerData.initResourceMap(game, convRes, 'cRes');
+    convRes[ResourceType.heart].reinitialize(res[ResourceType.heart]);
+    convRes[ResourceType.club].reinitialize(res[ResourceType.club]);
+    convRes[ResourceType.spade].reinitialize(res[ResourceType.spade]);
+    convRes[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
+
+    return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts, convRes);
   }
 
   List<GameAction> getAvailableActions() {
     var ret = <GameAction>[];
+
+    if (changeStack.canUndo) {
+      ret.add(GameModeAction(player.id, GameModeType.undo));
+    }
 
     if (turnState.value == TurnState.ended) {
       return ret;
@@ -100,9 +123,11 @@ class Turn {
 
     // converter actions are available at this point
     for (var part in player.parts[PartType.converter]) {
-      if (!part.activated.value && part.ready.value) {
+      if (part.ready.value) {
         for (var product in part.products) {
-          _addAllAvailableActions(ret, part, product.produce(game, player.id, part));
+          if (!product.activated.value) {
+            _addAllAvailableActions(ret, part, product.produce(game, player.id));
+          }
         }
       }
     }
@@ -127,9 +152,11 @@ class Turn {
 
       // store actions
       for (var part in player.parts[PartType.storage]) {
-        if (!part.activated.value && part.ready.value) {
+        if (part.ready.value) {
           for (var product in part.products) {
-            _addAllAvailableActions(ret, part, product.produce(game, player.id, part));
+            if (!product.activated.value) {
+              _addAllAvailableActions(ret, part, product.produce(game, player.id));
+            }
           }
         }
       }
@@ -141,7 +168,7 @@ class Turn {
   void _addSearchedPartActions(List<GameAction> actions) {
     if (searchedParts == null) return;
     for (var part in searchedParts) {
-      if (player.canAfford(part)) {
+      if (player.canAfford(part, player.constructFromSearchDiscount)) {
         actions.add(ConstructAction(player.id, part, null, null));
       }
       if (player.hasPartStorageSpace) {
@@ -164,7 +191,7 @@ class Turn {
 
         case ActionType.construct:
           // add all buildings we can currently afford
-          _addAffordablePartActions(actions, null);
+          _addAffordablePartActions(actions, null, 0);
           break;
 
         case ActionType.search:
@@ -186,13 +213,13 @@ class Turn {
         actions.add(action);
       }
     } else if (action is DoubleConvertAction) {
-      if (player.hasResource(action.source) && player.hasResourceStorageSpace) {
+      if (player.hasResource(action.source)) {
         actions.add(action);
       }
     }
   }
 
-  void _addStorePartActions(List<GameAction> actions, Part producedBy) {
+  void _addStorePartActions(List<GameAction> actions, Product producedBy) {
     if (player.hasPartStorageSpace) {
       for (var i = 0; i < 3; ++i) {
         for (var part in game.saleParts[i]) {
@@ -202,16 +229,19 @@ class Turn {
     }
   }
 
-  void _addAffordablePartActions(List<GameAction> actions, Part producedBy) {
+  void _addAffordablePartActions(List<GameAction> actions, Product producedBy, int discount) {
     for (var i = 0; i < 3; ++i) {
       for (var part in game.saleParts[i]) {
-        if (player.canAfford(part)) {
+        if (part.level == 1) discount += player.constructLevel2Discount;
+        if (player.canAfford(part, discount)) {
           actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
         }
       }
     }
     for (var part in player.savedParts) {
-      if (player.canAfford(part)) {
+      if (part.level == 1) discount += player.constructLevel2Discount;
+      discount += player.constructFromStoreDiscount;
+      if (player.canAfford(part, discount)) {
         actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
       }
     }
@@ -227,7 +257,7 @@ class Turn {
   void endTurn() {
     turnState.value = TurnState.ended;
     changeStack.clear();
-    isGameEndTriggered = player.isGameEnded;
+    isGameEndTriggered = (player.partCount() > 15) || (player.level3PartCount > 3);
     game.changeStack = null;
     game.endTurn();
   }
@@ -356,13 +386,25 @@ class Turn {
           if (action.mode == GameModeType.startTurn) {
             startTurn();
             return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+          } else if (action.mode == GameModeType.endTurn) {
+            endTurn();
+            return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+          } else if (action.mode == GameModeType.undo) {
+            if (changeStack.canUndo) {
+              changeStack.undo();
+              return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+            } else {
+              return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+            }
           }
         }
         return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
       case ActionType.selectAction:
+        changeStack.group();
         var a = action as SelectActionAction;
         selectedAction.value = a.selectedAction;
         turnState.value = TurnState.actionSelected;
+        changeStack.commit();
         return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
       case ActionType.store:
         return _doStore(action as StoreAction);
@@ -395,7 +437,7 @@ class Turn {
 
   void _doTriggers(GameAction gameAction, PartType partType) {
     for (var part in player.parts[partType]) {
-      if (!part.activated.value && !part.ready.value) {
+      if (!part.ready.value) {
         for (var trigger in part.triggers) {
           if (trigger.isTriggeredBy(gameAction)) {
             part.ready.value = true;
@@ -446,7 +488,7 @@ class Turn {
     }
 
     if (action.producedBy != null) {
-      game.allParts[action.producedBy].activated.value = true;
+      action.producedBy.activated.value = true;
     }
 
     _doTriggers(action, PartType.storage);
@@ -465,7 +507,7 @@ class Turn {
 
     // do this first so we don't trigger ourself
     if (action.producedBy != null) {
-      game.allParts[action.producedBy].activated.value = true;
+      action.producedBy.activated.value = true;
     }
     _doTriggers(action, PartType.construct);
 
@@ -504,7 +546,7 @@ class Turn {
     player.storeResource(action.acquiredResource);
 
     if (action.producedBy != null) {
-      game.allParts[action.producedBy].activated.value = true;
+      action.producedBy.activated.value = true;
     }
 
     _doTriggers(action, PartType.acquire);
@@ -546,7 +588,7 @@ class Turn {
     changeStack.group();
 
     player.removeResource(action.source);
-    player.storeResource(action.destination);
+    convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
 
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -556,7 +598,8 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    player.storeResource(action.source);
+    player.removeResource(action.source);
+    convertedResources[action.source].value = convertedResources[action.source].value + 2;
 
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);

@@ -45,8 +45,9 @@ abstract class GameAction {
   ActionType get actionType;
   final String owner;
   String get message => 'action';
+
   // for actions that are the result of part activations
-  String producedBy;
+  Product producedBy;
 
   GameAction(this.owner, [this.producedBy]);
 
@@ -63,14 +64,21 @@ abstract class GameAction {
       'owner': owner,
     };
     if (producedBy != null) {
-      ret['part'] = producedBy;
+      ret['part'] = producedBy.part.id;
+      ret['pi'] = producedBy.part.getProductIndex(producedBy);
     }
     return ret;
   }
 
   GameAction.fromJson(Game game, Map<String, dynamic> json)
-      : owner = game.playerService.getPlayer(json['owner'] as String).playerId,
-        producedBy = json['part'] as String;
+      : owner = game.playerService.getPlayer(json['owner'] as String).playerId {
+    if (json.containsKey('part')) {
+      var part = game.allParts[json['part'] as String];
+      if (json.containsKey('pi')) {
+        producedBy = part.productFromIndex(json['pi'] as int);
+      }
+    }
+  }
 }
 
 GameAction actionFromJson(Game game, Map<String, dynamic> json) {

@@ -3,14 +3,17 @@ import 'package:engine/engine.dart';
 class VpAction extends GameAction {
   final int vp;
 
-  VpAction(String player, this.vp, Part producedBy) : super(player, producedBy?.id);
+  VpAction(String player, this.vp, Product producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.vp;
 
   @override
   bool matches(GameAction action) {
-    return (action as VpAction)?.vp == vp;
+    if (action is VpAction) {
+      return action.vp == vp;
+    }
+    return false;
   }
 
   @override
