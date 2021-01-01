@@ -21,7 +21,7 @@ class GameController {
     game = Game(players, playerService, gameId);
     game.tmpName = 'controller';
     game.createGame();
-    var startingPartDecks = List<List<Part>>(3);
+    var startingPartDecks = List<List<Part>>.filled(3, null);
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i] = <Part>[];
     }
@@ -64,7 +64,7 @@ class GameController {
 
     game.changeStack = ChangeStack(); // will be discarded
 
-    var startingPartDecks = List<List<Part>>(3);
+    var startingPartDecks = List<List<Part>>.filled(3, null);
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i] = <Part>[];
     }

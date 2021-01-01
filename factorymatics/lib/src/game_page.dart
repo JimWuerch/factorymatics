@@ -3,6 +3,7 @@ import 'package:factorymatics/src/game_page_model.dart';
 import 'package:factorymatics/src/part_helpers.dart';
 import 'package:factorymatics/src/part_widget.dart';
 import 'package:factorymatics/src/resource_picker.dart';
+import 'package:factorymatics/src/resource_storage_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -207,9 +208,17 @@ class _GamePageState extends State<GamePage> {
                             ],
                           ),
                         ),
+                        SizedBox(
+                          height: 10,
+                        ),
+                        ResourceStorageWidget(resources: model.getAvailableResources()),
+                        SizedBox(
+                          height: 10,
+                        ),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
                           children: <Widget>[
                             _makeColumn(0),
                             _makeColumn(1),

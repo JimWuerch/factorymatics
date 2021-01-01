@@ -82,6 +82,15 @@ class GamePageModel {
 
   bool get canEndTurn => game.currentTurn?.turnState?.value == TurnState.selectedActionCompleted;
 
+  Map<ResourceType, int> getAvailableResources() {
+    var ret = <ResourceType, int>{};
+    var player = game.getPlayerFromId(playerName);
+    for (var item in player.resources.entries) {
+      ret[item.key] = item.value.value;
+    }
+    return ret;
+  }
+
   Future<void> selectAction(ActionType actionType) async {
     switch (actionType) {
       case ActionType.store:

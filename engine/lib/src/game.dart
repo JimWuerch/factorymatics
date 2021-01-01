@@ -76,10 +76,10 @@ class Game {
     // we'll discard this changeStack
     changeStack = ChangeStack();
 
-    partDecks = List<ListState<Part>>(3);
+    partDecks = List<ListState<Part>>.filled(3, null);
     well = ListState<ResourceType>(this, 'well');
     availableResources = ListState(this, 'availableResources');
-    saleParts = List<ListState<Part>>(3);
+    saleParts = List<ListState<Part>>.filled(3, null);
     for (var i = 0; i < 3; ++i) {
       saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
     }
