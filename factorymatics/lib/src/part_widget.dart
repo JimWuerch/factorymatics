@@ -37,7 +37,7 @@ class _PartWidgetState extends State<PartWidget> {
           var t = trigger as ConvertTrigger;
           items.add(resourceToIcon(t.resourceType, resourceToColor(t.resourceType)));
           items.add(Icon(partTypeToIcon(PartType.converter)));
-          items.add(Icon(FontAwesome.question_circle));
+          //items.add(Icon(FontAwesome.question_circle));
           break;
         case TriggerType.purchased:
           items.add(Icon(Icons.monetization_on));
@@ -57,24 +57,33 @@ class _PartWidgetState extends State<PartWidget> {
     return Row(children: items);
   }
 
-  // List<Widget> _productsToList(Part part) {
-  //   var list = <Widget>[];
-  //   for (var product in part.products) {
-  //     if (product is ConvertProduct) {
-  //       list.add(Row(
-  //         children: <Widget>[
-  //           resourceToIcon(, resourceToColor(t.resourceType)),
-  //         Icon(partTypeToIcon(PartType.converter)),
-  //         Icon(FontAwesome.question_circle),
-  //         ],
-  //       ));
-  //     } else {
-  //     list.add(Card(
-  //       child: ListTile(title: Icon(),)),
-  //     ));
-  //     }
-  //   }
-  // }
+  List<Widget> _productsToList(Part part) {
+    var list = <Widget>[];
+    for (var product in part.products) {
+      switch (product.productType) {
+        case ProductType.convert:
+          list.add(Icon(FontAwesome.question_circle));
+
+          break;
+        case ProductType.aquire:
+          list.add(Icon(partTypeToIcon(PartType.acquire), color: Colors.black));
+          break;
+        case ProductType.doubleResource:
+          break;
+        case ProductType.freeConstruct:
+          break;
+        case ProductType.mysteryMeat:
+          break;
+        case ProductType.search:
+          break;
+        case ProductType.vp:
+          break;
+        default:
+          throw InvalidOperationError('Unknown product type ${product.productType}');
+      }
+    }
+    return list;
+  }
 
   @override
   Widget build(BuildContext context) {

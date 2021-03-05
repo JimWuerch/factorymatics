@@ -49,7 +49,8 @@ IconData resourceToIconData(ResourceType resourceType) {
     case ResourceType.club:
       return MaterialCommunityIcons.cards_club;
     case ResourceType.any:
-      return MaterialCommunityIcons.all_inclusive;
+      //return MaterialCommunityIcons.all_inclusive;
+      return FontAwesome.question_circle;
     default:
       return Fontisto.question;
   }
@@ -72,7 +73,8 @@ Color resourceToColor(ResourceType resourceType) {
     case ResourceType.club:
       return Colors.blue[800];
     case ResourceType.any:
-      return Colors.pink[300];
+      //return Colors.pink[300];
+      return Colors.black;
     default:
       return Colors.lightGreen[600];
   }
