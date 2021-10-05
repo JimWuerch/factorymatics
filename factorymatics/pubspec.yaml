@@ -15,16 +15,16 @@ dependencies:
     path: ../engine
   server:
     path: ../server
-  tuple: ^1.0.3
+  tuple: ^2.0.0-nullsafety.0
 
-  cupertino_icons: ^0.1.3
-  flutter_vector_icons: ^0.2.1
+  cupertino_icons: ^1.0.2
+  flutter_vector_icons: ^0.3.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   
-  integration_test: ^1.0.1
+  #integration_test: ^1.0.2+3
   flutter_driver:
     sdk: flutter  
 
