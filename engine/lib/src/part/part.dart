@@ -1,9 +1,6 @@
 import 'package:engine/engine.dart';
 import 'package:engine/src/part/converter_part.dart';
 
-import 'product.dart';
-import 'trigger.dart';
-
 export 'enhancement_part.dart';
 export 'product.dart';
 export 'simple_part.dart';
@@ -38,6 +35,38 @@ abstract class Part extends GameObject {
     }
   }
 
+  // for serialization, we just need to know which parts
+  // have been activated
+  String getProductsState() {
+    var ret = "P";
+    for (var product in products) {
+      if (product.activated.value) {
+        ret += "1";
+      } else {
+        ret += "0";
+      }
+    }
+    return ret;
+  }
+
+  // The string is the letter P followed by a 1 or 0 for each product
+  void setProductsState(String states) {
+    if (states[0] != 'P') throw ArgumentError("states must start with P");
+    for (var index = 0; index < products.length; ++index) {
+      products[index].activated.reinitialize(states[index + 1] == '1');
+    }
+  }
+
+  String getPartSerializeString() {
+    return '${ready.value ? '1' : '0'}:${getProductsState()}';
+  }
+
+  void setPartFromSerializeString(String state) {
+    var index = state.indexOf(':');
+    ready.reinitialize(state.substring(0, index) == '1');
+    setProductsState(state.substring(index + 1));
+  }
+
   Product productFromIndex(int index) {
     return products[index];
   }
@@ -49,8 +78,7 @@ abstract class Part extends GameObject {
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
-  bool operator ==(Object other) =>
-      identical(this, other) || other is Part && runtimeType == other.runtimeType && id == other.id;
+  bool operator ==(Object other) => identical(this, other) || other is Part && runtimeType == other.runtimeType && id == other.id;
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
@@ -66,56 +94,32 @@ void createParts(Game game) {
   var partId = 1;
 
   // the starting level 0 part
-  parts.add(SimplePart(game, Part.startingPartId, -1, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct(game)],
-      ResourceType.none, 0));
+  parts.add(SimplePart(game, Part.startingPartId, -1, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct(game)], ResourceType.none, 0));
 
   // level 1 parts
   //game.partDecks[0] = ListState<Part>(game, 'level0Parts')
   parts
-    ..add(ConverterPart(game, (partId++).toString(), 0, 1, ConvertTrigger(ResourceType.club),
-        ConvertProduct(game, ResourceType.club, ResourceType.any), ResourceType.heart, 1))
+    ..add(ConverterPart(game, (partId++).toString(), 0, 1, ConvertTrigger(ResourceType.club), ConvertProduct(game, ResourceType.club, ResourceType.any), ResourceType.heart, 1))
     ..add(EnhancementPart(game, (partId++).toString(), 0, 1, ResourceType.heart, 1, 1, 0, 1))
-    ..add(SimplePart(game, (partId++).toString(), 0, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct(game)],
-        ResourceType.heart, 1))
-    ..add(SimplePart(game, (partId++).toString(), 0, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)],
-        [AcquireProduct(game)], ResourceType.heart, 1))
-    ..add(SimplePart(game, (partId++).toString(), 0, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)],
-        [MysteryMeatProduct(game)], ResourceType.diamond, 1));
+    ..add(SimplePart(game, (partId++).toString(), 0, PartType.storage, 1, [StoreTrigger()], [MysteryMeatProduct(game)], ResourceType.heart, 1))
+    ..add(SimplePart(game, (partId++).toString(), 0, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)], [AcquireProduct(game)], ResourceType.heart, 1))
+    ..add(SimplePart(game, (partId++).toString(), 0, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)], [MysteryMeatProduct(game)], ResourceType.diamond, 1));
 
   //game.partDecks[1] = ListState<Part>(game, 'level1Parts')
   parts
     ..add(EnhancementPart(game, (partId++).toString(), 1, 3, ResourceType.club, 3, 2, 1, 2))
-    ..add(SimplePart(
-        game,
-        (partId++).toString(),
-        1,
-        PartType.acquire,
-        2,
-        [AcquireTrigger(ResourceType.club), AcquireTrigger(ResourceType.spade)],
-        [MysteryMeatProduct(game)],
-        ResourceType.heart,
-        2))
-    ..add(SimplePart(
-        game,
-        (partId++).toString(),
-        1,
-        PartType.construct,
-        3,
-        [ConstructTrigger(ResourceType.spade), ConstructTrigger(ResourceType.heart)],
-        [VpProduct(game, 1)],
-        ResourceType.club,
-        3))
-    ..add(ConverterPart(game, (partId++).toString(), 1, 3, ConvertTrigger(ResourceType.diamond),
-        DoubleResourceProduct(game, ResourceType.diamond), ResourceType.spade, 3));
+    ..add(SimplePart(game, (partId++).toString(), 1, PartType.acquire, 2, [AcquireTrigger(ResourceType.club), AcquireTrigger(ResourceType.spade)], [MysteryMeatProduct(game)],
+        ResourceType.heart, 2))
+    ..add(SimplePart(game, (partId++).toString(), 1, PartType.construct, 3, [ConstructTrigger(ResourceType.spade), ConstructTrigger(ResourceType.heart)], [VpProduct(game, 1)],
+        ResourceType.club, 3))
+    ..add(ConverterPart(game, (partId++).toString(), 1, 3, ConvertTrigger(ResourceType.diamond), DoubleResourceProduct(game, ResourceType.diamond), ResourceType.spade, 3));
 
   //game.partDecks[2] = ListState<Part>(game, 'level2Parts')
   parts
-    ..add(SimplePart(game, (partId++).toString(), 2, PartType.storage, 4, [StoreTrigger()],
-        [MysteryMeatProduct(game), MysteryMeatProduct(game), MysteryMeatProduct(game)], ResourceType.club, 4))
-    ..add(ConverterPart(game, (partId++).toString(), 2, 4, ConvertTrigger(ResourceType.any),
-        ConvertProduct(game, ResourceType.any, ResourceType.any), ResourceType.diamond, 4))
-    ..add(SimplePart(game, (partId++).toString(), 2, PartType.construct, 6, [ConstructLevelTrigger(2)],
-        [AcquireProduct(game), AcquireProduct(game)], ResourceType.heart, 6));
+    ..add(SimplePart(game, (partId++).toString(), 2, PartType.storage, 4, [StoreTrigger()], [MysteryMeatProduct(game), MysteryMeatProduct(game), MysteryMeatProduct(game)],
+        ResourceType.club, 4))
+    ..add(ConverterPart(game, (partId++).toString(), 2, 4, ConvertTrigger(ResourceType.any), ConvertProduct(game, ResourceType.any, ResourceType.any), ResourceType.diamond, 4))
+    ..add(SimplePart(game, (partId++).toString(), 2, PartType.construct, 6, [ConstructLevelTrigger(2)], [AcquireProduct(game), AcquireProduct(game)], ResourceType.heart, 6));
 
   // save all the parts into the parts dictionary
   for (var part in parts) {

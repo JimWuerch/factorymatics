@@ -1,5 +1,8 @@
+import 'dart:collection';
+
 import 'package:engine/engine.dart';
 import 'package:engine/src/part/converter_part.dart';
+import 'package:tuple/tuple.dart';
 
 class PlayerData {
   static const int baseResourceStorage = 5;
@@ -49,7 +52,7 @@ class PlayerData {
     var allP = <String>[];
     for (var plist in parts.values) {
       for (var part in plist) {
-        allP.add(part.id);
+        allP.add("${part.id}:${part.getPartSerializeString()}");
       }
     }
     ret['parts'] = allP;
@@ -85,8 +88,11 @@ class PlayerData {
     }
 
     var partsList = listFromJson<String>(json['parts']);
-    for (var part in partsList) {
-      var p = game.allParts[part];
+    for (var partCode in partsList) {
+      var i = partCode.indexOf(':');
+      var partId = partCode.substring(0, i);
+      var p = game.allParts[partId];
+      p.setPartFromSerializeString(partCode.substring(i + 1));
       ret.parts[p.partType].add(p);
     }
 
@@ -274,6 +280,108 @@ class PlayerData {
       }
     }
     return false;
+  }
+
+  // for each ResourceType, calc the max available, using available converters
+  // returns the max attainable for each type, and a list (in order) of the Products
+  // used to generate the result.  As there may be more than one way to get a total, all
+  // ways to get the total are returned.
+  // if [needed] is specified, then stop the search after getting that many resources
+  Map<ResourceType, Tuple2<int, List<List<Product>>>> getMaxResources(int needed) {
+    var max = <ResourceType, Tuple2<int, List<List<Product>>>>{};
+    var pool = <ResourceType, int>{};
+    for (var resourceType in resources.keys) {
+      if (resourceType == ResourceType.none) continue;
+      // set up our initial pool
+      //if (resourceType == ResourceType.any || resourceType == ResourceType.none) continue;
+      max[resourceType] = Tuple2<int, List<List<Product>>>(resources[resourceType].value, <List<Product>>[]);
+      pool[resourceType] = resources[resourceType].value;
+    }
+
+    // fix the ResourceType.any max
+    max[ResourceType.any] = Tuple2<int, List<List<Product>>>(_getResourceCount(pool), <List<Product>>[]);
+
+    // make a Set of available converters
+    var products = <Product>{};
+    for (var part in parts[PartType.converter]) {
+      if (!part.ready.value) continue;
+      for (var index = 0; index < part.products.length; ++index) {
+        if (!part.products[index].activated.value) {
+          products.add(part.products[index]);
+        }
+      }
+    }
+
+    _findMaxResources(max, products, pool, <Product>[], needed);
+
+    return max;
+  }
+
+  int _getResourceCount(Map<ResourceType, int> pool) {
+    var total = 0;
+    for (var rt in ResourceType.values) {
+      if (rt == ResourceType.any || rt == ResourceType.none) continue;
+      total += pool[rt];
+    }
+    return total;
+  }
+
+  // recursively try all permutations of products
+  void _findMaxResources(Map<ResourceType, Tuple2<int, List<List<Product>>>> max, Set<Product> conv, Map<ResourceType, int> pool, List<Product> history, int needed) {
+    for (var c in conv) {
+      if (c.productType == ProductType.convert) {
+        var cv = c as ConvertProduct;
+        if (pool[cv.source] > 0) {
+          // we have a matching resource, so use it
+          var history2 = List<Product>.of(history);
+          history2.add(c);
+          pool[cv.source]--;
+          for (var rt in ResourceType.values) {
+            if (rt == cv.source || rt == ResourceType.any || rt == ResourceType.none) continue;
+            var p2 = Map<ResourceType, int>.of(pool);
+            p2[rt]++;
+            var conv2 = Set<Product>.of(conv);
+            conv2.remove(c);
+            if (max[rt].item1 < p2[rt]) {
+              max[rt] = Tuple2<int, List<List<Product>>>(p2[rt], <List<Product>>[history2]);
+            } else if (max[rt].item1 == p2[rt]) {
+              max[rt].item2.add(history2);
+            }
+            if (needed != 0 && p2[rt] < needed) {
+              _findMaxResources(max, conv2, p2, history2, needed);
+            }
+          }
+        }
+      } else if (c.productType == ProductType.doubleResource) {
+        var cv = c as DoubleResourceProduct;
+        if (pool[cv.resourceType] > 0) {
+          // we have a matching resource, so use it
+          var history2 = List<Product>.of(history);
+          history2.add(c);
+          pool[cv.resourceType]--;
+          var p2 = Map<ResourceType, int>.of(pool);
+          p2[cv.resourceType] += 2;
+          var conv2 = Set<Product>.of(conv);
+          conv2.remove(c);
+          if (max[cv.resourceType].item1 < p2[cv.resourceType]) {
+            max[cv.resourceType] = Tuple2<int, List<List<Product>>>(p2[cv.resourceType], <List<Product>>[history2]);
+          } else if (max[cv.resourceType].item1 == p2[cv.resourceType]) {
+            max[cv.resourceType].item2.add(history2);
+          }
+          var total = _getResourceCount(p2);
+          if (max[ResourceType.any].item1 < total) {
+            max[ResourceType.any] = Tuple2<int, List<List<Product>>>(total, <List<Product>>[history2]);
+          } else if (max[ResourceType.any].item1 == p2[ResourceType.any]) {
+            max[ResourceType.any].item2.add(history2);
+          }
+          if (needed != 0 && p2[cv.resourceType] < needed) {
+            _findMaxResources(max, conv2, p2, history2, needed);
+          }
+        }
+      } else {
+        throw InvalidOperationError("found non converter type when counting resources");
+      }
+    }
   }
 
   bool isInStorage(Part part) {

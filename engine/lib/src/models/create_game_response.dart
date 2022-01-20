@@ -1,6 +1,6 @@
 import 'package:engine/engine.dart';
 
-import 'game_model.dart';
+//import 'game_model.dart';
 
 class CreateGameResponse extends ResponseModel {
   final List<String> players;

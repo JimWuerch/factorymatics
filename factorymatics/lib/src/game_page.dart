@@ -34,7 +34,7 @@ class _GamePageState extends State<GamePage> {
     var widgets = <Widget>[];
     var enabledParts = model.getEnabledParts();
     for (var part in parts) {
-      widgets.add(PartWidget(part: part, enabled: enabledParts.contains(part.id), onTap: _onPartTapped));
+      widgets.add(PartWidget(part: part, enabled: enabledParts.contains(part.id), onTap: _onPartTapped, onProductTap: null));
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -45,7 +45,7 @@ class _GamePageState extends State<GamePage> {
   Widget _makeActionButton(ActionType actionType, bool isEnabled, String label) {
     return SizedBox(
       width: 200,
-      child: RaisedButton.icon(
+      child: ElevatedButton.icon(
         icon: Icon(actionToIcon(actionType)),
         onPressed: model.isActionSelection && isEnabled
             ? () {
@@ -63,7 +63,7 @@ class _GamePageState extends State<GamePage> {
       case 0:
         children.add(SizedBox(
           width: 200,
-          child: RaisedButton.icon(
+          child: ElevatedButton.icon(
             icon: Icon(partTypeToIcon(PartType.enhancement)),
             label: Text(''),
             onPressed: null,
@@ -88,28 +88,19 @@ class _GamePageState extends State<GamePage> {
       case 2:
         children.add(_makeActionButton(ActionType.store, model.canStore, 'Store'));
         for (var part in model.game.currentPlayer.parts[PartType.storage]) {
-          children.add(PartWidget(
-            part: part,
-            enabled: false,
-          ));
+          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped));
         }
         break;
       case 3:
         children.add(_makeActionButton(ActionType.acquire, model.canAcquire, 'Acquire'));
         for (var part in model.game.currentPlayer.parts[PartType.acquire]) {
-          children.add(PartWidget(
-            part: part,
-            enabled: false,
-          ));
+          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped));
         }
         break;
       case 4:
         children.add(_makeActionButton(ActionType.construct, true, 'Construct'));
         for (var part in model.game.currentPlayer.parts[PartType.construct]) {
-          children.add(PartWidget(
-            part: part,
-            enabled: false,
-          ));
+          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped));
         }
         break;
       case 5:
@@ -144,17 +135,24 @@ class _GamePageState extends State<GamePage> {
                   // the App.build method, and use it to set our appbar title.
                   title: Text(widget.title),
                   actions: <Widget>[
-                    FlatButton(
-                      textColor: Colors.white,
+                    TextButton(
+                      //textColor: Colors.white,
+                      style: TextButton.styleFrom(
+                        primary: Colors.white, // foreground
+                      ),
                       onPressed: model.canUndo ? _onUndoTapped : null,
                       child: Text("Undo"),
-                      shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                      //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
                     ),
-                    FlatButton(
-                      textColor: Colors.white,
+                    TextButton(
+                      //textColor: Colors.white,
+                      style: TextButton.styleFrom(
+                        primary: Colors.white, // foreground
+                      ),
+
                       onPressed: model.canEndTurn ? _onEndTurnTapped : null,
                       child: Text("End Turn"),
-                      shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                      //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
                     ),
                   ],
                 ),
@@ -179,9 +177,7 @@ class _GamePageState extends State<GamePage> {
                       //mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(width: 5, color: Colors.blue),
-                              borderRadius: BorderRadius.all(Radius.circular(20))),
+                          decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
                           padding: EdgeInsets.only(left: 10, right: 10),
                           width: 350,
                           child: ResourcePicker(
@@ -194,9 +190,7 @@ class _GamePageState extends State<GamePage> {
                           height: 10,
                         ),
                         Container(
-                          decoration: BoxDecoration(
-                              border: Border.all(width: 5, color: Colors.blue),
-                              borderRadius: BorderRadius.all(Radius.circular(20))),
+                          decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
                           padding: EdgeInsets.all(10),
                           width: 900,
                           child: Column(
@@ -260,6 +254,11 @@ class _GamePageState extends State<GamePage> {
   Future<void> _onPartTapped(Part part) async {
     print('Tapped part ${part.id}');
     model.partTapped(part);
+  }
+
+  Future<void> _onProductTapped(Product product) async {
+    print('Tapped product ${product.productType}');
+    model.productTapped(product);
   }
 
   Future<void> _onUndoTapped() async {

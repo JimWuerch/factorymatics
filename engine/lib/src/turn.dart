@@ -1,5 +1,4 @@
 import 'package:engine/engine.dart';
-import 'package:engine/src/action/game_mode_action.dart';
 import 'package:tuple/tuple.dart';
 
 enum ValidateResponseCode { ok, notAllowed, noStorage, cantAfford, partNotForSale, unknownAction, outOfTurn }
@@ -55,8 +54,7 @@ class Turn {
     return ret;
   }
 
-  Turn._fromJsonHelper(
-      this.game, this.player, TurnState state, ActionType selected, this.searchedParts, this.convertedResources)
+  Turn._fromJsonHelper(this.game, this.player, TurnState state, ActionType selected, this.searchedParts, this.convertedResources)
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', state),
         selectedAction = GameStateVar(game, 'selectedAction', selected),
@@ -608,7 +606,10 @@ class Turn {
   Tuple2<ValidateResponseCode, GameAction> _doMysteryMeat(MysteryMeatAction action) {
     var ret = ValidateResponseCode.ok;
 
+    changeStack.group();
+    action.resource = game.getFromWell();
     player.storeResource(action.resource);
+    changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }

@@ -31,6 +31,8 @@ IconData actionToIcon(ActionType actionType) {
       return MaterialCommunityIcons.feature_search;
     case ActionType.convert:
       return Icons.arrow_forward_ios;
+    case ActionType.mysteryMeat:
+      return Icons.question_mark;
     default:
       throw ArgumentError('invalid action ${actionType.toString()}');
   }

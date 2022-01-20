@@ -5,11 +5,12 @@ import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
-  PartWidget({this.part, this.enabled, this.onTap});
+  PartWidget({this.part, this.enabled, this.onTap, this.onProductTap});
 
   final Part part;
   final bool enabled;
   final void Function(Part part) onTap;
+  final void Function(Product product) onProductTap;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -26,12 +27,10 @@ class _PartWidgetState extends State<PartWidget> {
           items.add(Icon(partTypeToIcon(PartType.storage)));
           break;
         case TriggerType.acquire:
-          items.add(
-              Icon(partTypeToIcon(PartType.acquire), color: resourceToColor((trigger as AcquireTrigger).resourceType)));
+          items.add(Icon(partTypeToIcon(PartType.acquire), color: resourceToColor((trigger as AcquireTrigger).resourceType)));
           break;
         case TriggerType.construct:
-          items.add(Icon(partTypeToIcon(PartType.construct),
-              color: resourceToColor((trigger as ConstructTrigger).resourceType)));
+          items.add(Icon(partTypeToIcon(PartType.construct), color: resourceToColor((trigger as ConstructTrigger).resourceType)));
           break;
         case TriggerType.convert:
           var t = trigger as ConvertTrigger;
@@ -57,33 +56,44 @@ class _PartWidgetState extends State<PartWidget> {
     return Row(children: items);
   }
 
-  List<Widget> _productsToList(Part part) {
-    var list = <Widget>[];
-    for (var product in part.products) {
-      switch (product.productType) {
-        case ProductType.convert:
-          list.add(Icon(FontAwesome.question_circle));
-
-          break;
-        case ProductType.aquire:
-          list.add(Icon(partTypeToIcon(PartType.acquire), color: Colors.black));
-          break;
-        case ProductType.doubleResource:
-          break;
-        case ProductType.freeConstruct:
-          break;
-        case ProductType.mysteryMeat:
-          break;
-        case ProductType.search:
-          break;
-        case ProductType.vp:
-          break;
-        default:
-          throw InvalidOperationError('Unknown product type ${product.productType}');
-      }
+  Widget _productsToIcons(List<Product> products) {
+    var items = <Widget>[];
+    for (var product in products) {
+      items.add(IconButton(
+        icon: Icon(productToIcon(widget.part.products[0])),
+        onPressed: widget.part.ready.value && !product.activated.value && (widget.onProductTap != null) ? () async => await widget.onProductTap(product) : null,
+      ));
     }
-    return list;
+    return Row(children: items);
   }
+
+  // List<Widget> _productsToList(Part part) {
+  //   var list = <Widget>[];
+  //   for (var product in part.products) {
+  //     switch (product.productType) {
+  //       case ProductType.convert:
+  //         list.add(Icon(FontAwesome.question_circle));
+
+  //         break;
+  //       case ProductType.aquire:
+  //         list.add(Icon(partTypeToIcon(PartType.acquire), color: Colors.black));
+  //         break;
+  //       case ProductType.doubleResource:
+  //         break;
+  //       case ProductType.freeConstruct:
+  //         break;
+  //       case ProductType.mysteryMeat:
+  //         break;
+  //       case ProductType.search:
+  //         break;
+  //       case ProductType.vp:
+  //         break;
+  //       default:
+  //         throw InvalidOperationError('Unknown product type ${product.productType}');
+  //     }
+  //   }
+  //   return list;
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -124,7 +134,8 @@ class _PartWidgetState extends State<PartWidget> {
                     ],
                   ),
                   _triggersToIcons(widget.part.triggers),
-                  Text('Products: ${widget.part.products.length}'),
+                  //Text('Products: ${widget.part.products.length}'),
+                  _productsToIcons(widget.part.products),
                 ],
               ),
             ),

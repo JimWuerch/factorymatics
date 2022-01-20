@@ -72,9 +72,7 @@ class GamePageModel {
 
   bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
 
-  bool get isResourcePickerEnabled =>
-      game.currentTurn?.selectedAction?.value == ActionType.acquire &&
-      game.currentTurn?.turnState?.value == TurnState.actionSelected;
+  bool get isResourcePickerEnabled => game.currentTurn?.selectedAction?.value == ActionType.acquire && game.currentTurn?.turnState?.value == TurnState.actionSelected;
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
 
@@ -178,6 +176,21 @@ class GamePageModel {
         //action = ConstructAction(playerId, part, payment, null)
       }
     }
+    if (action != null) {
+      var response = await client.postAction(game, action);
+      if (response.responseCode != ResponseCode.ok) {
+        return;
+        // response.responseCode;
+      }
+      await doGameUpdate();
+    }
+    return;
+  }
+
+  Future<void> productTapped(Product product) async {
+    GameAction action;
+    action = product.produce(game, playerId);
+
     if (action != null) {
       var response = await client.postAction(game, action);
       if (response.responseCode != ResponseCode.ok) {

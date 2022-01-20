@@ -1,6 +1,4 @@
 import 'package:engine/engine.dart';
-import 'package:engine/src/action/convert_action.dart';
-import 'package:engine/src/action/vp_action.dart';
 
 enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, store, freeConstruct }
 

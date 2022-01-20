@@ -1,11 +1,11 @@
 import 'dart:math';
 
 import 'package:engine/engine.dart';
-import 'package:engine/src/player/player_service.dart';
+//import 'package:engine/src/player/player_service.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
 
-import 'turn.dart';
+//import 'turn.dart';
 
 export 'turn.dart';
 
@@ -285,8 +285,7 @@ class Game {
     game._currentPlayerIndex = json['cp'] as int;
 
     var item = json['players'] as List<dynamic>;
-    game.players =
-        item.map<PlayerData>((dynamic json) => PlayerData.fromJson(game, json as Map<String, dynamic>)).toList();
+    game.players = item.map<PlayerData>((dynamic json) => PlayerData.fromJson(game, json as Map<String, dynamic>)).toList();
 
     if (json.containsKey('turn')) {
       game.currentTurn = Turn.fromJson(game, game.currentPlayer, json['turn'] as Map<String, dynamic>);
