@@ -87,7 +87,7 @@ class Game {
 
     // give players their starting parts
     for (var player in players) {
-      player.buyPart(allParts[Part.startingPartId], <ResourceType>[]);
+      player.buyPart(allParts[Part.startingPartId]);
     }
   }
 

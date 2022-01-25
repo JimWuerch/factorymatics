@@ -5,6 +5,7 @@ import 'server.dart';
 abstract class Client {
   Stream<GameAction> get inbound;
   Future<ResponseModel> postAction(Game game, GameAction action);
+  List<Future<ResponseModel>> postActionList(Game game, List<GameAction> actions);
   Future<ResponseModel> postRequest(GameModel model);
   //Future<bool> createGame(String gameId);
 }
@@ -31,6 +32,15 @@ class LocalClient extends Client {
   @override
   Future<ResponseModel> postAction(Game game, GameAction action) {
     return postRequest(ActionRequest(game, owner, action));
+  }
+
+  @override
+  List<Future<ResponseModel>> postActionList(Game game, List<GameAction> actions) {
+    var ret = <Future<ResponseModel>>[];
+    for (var action in actions) {
+      ret.add(postRequest(ActionRequest(game, owner, action)));
+    }
+    return ret;
   }
 
   @override

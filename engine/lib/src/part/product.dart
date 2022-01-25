@@ -1,6 +1,6 @@
 import 'package:engine/engine.dart';
 
-enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, store, freeConstruct }
+enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, store, freeConstruct, spend }
 
 abstract class Product {
   final ProductType productType;
@@ -10,6 +10,12 @@ abstract class Product {
   Product(Game game, this.productType) : activated = GameStateVar(game, 'product:activated', false);
 
   GameAction produce(Game game, String player);
+}
+
+abstract class ConverterBaseProduct extends Product {
+  ResourceType get sourceResource;
+
+  ConverterBaseProduct(Game game, ProductType productType) : super(game, productType);
 }
 
 class MysteryMeatProduct extends Product {
@@ -30,11 +36,14 @@ class AcquireProduct extends Product {
   }
 }
 
-class ConvertProduct extends Product {
+class ConvertProduct extends ConverterBaseProduct {
   final ResourceType source;
   final ResourceType dest;
 
   ConvertProduct(Game game, this.source, this.dest) : super(game, ProductType.convert);
+
+  @override
+  ResourceType get sourceResource => source;
 
   @override
   GameAction produce(Game game, String player) {
@@ -53,10 +62,13 @@ class VpProduct extends Product {
   }
 }
 
-class DoubleResourceProduct extends Product {
+class DoubleResourceProduct extends ConverterBaseProduct {
   final ResourceType resourceType;
 
   DoubleResourceProduct(Game game, this.resourceType) : super(game, ProductType.doubleResource);
+
+  @override
+  ResourceType get sourceResource => resourceType;
 
   @override
   GameAction produce(Game game, String player) {
@@ -90,5 +102,21 @@ class FreeConstructProduct extends Product {
   @override
   GameAction produce(Game game, String player) {
     throw UnimplementedError();
+  }
+}
+
+/// SpendResourceProduct is used only when describing possible ways
+/// to spend resources.  It's returned as a Product in PlayerData.getMaxResources()
+class SpendResourceProduct extends ConverterBaseProduct {
+  final ResourceType resourceType;
+
+  SpendResourceProduct(Game game, this.resourceType) : super(game, ProductType.spend);
+
+  @override
+  ResourceType get sourceResource => resourceType;
+
+  @override
+  GameAction produce(Game game, String player) {
+    throw InvalidOperationError('Spend product should not be produced');
   }
 }

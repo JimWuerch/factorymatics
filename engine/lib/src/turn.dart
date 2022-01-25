@@ -166,7 +166,7 @@ class Turn {
   void _addSearchedPartActions(List<GameAction> actions) {
     if (searchedParts == null) return;
     for (var part in searchedParts) {
-      if (player.canAfford(part, player.constructFromSearchDiscount)) {
+      if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources)) {
         actions.add(ConstructAction(player.id, part, null, null));
       }
       if (player.hasPartStorageSpace) {
@@ -231,7 +231,7 @@ class Turn {
     for (var i = 0; i < 3; ++i) {
       for (var part in game.saleParts[i]) {
         if (part.level == 1) discount += player.constructLevel2Discount;
-        if (player.canAfford(part, discount)) {
+        if (player.canAfford(part, discount, convertedResources)) {
           actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
         }
       }
@@ -239,7 +239,7 @@ class Turn {
     for (var part in player.savedParts) {
       if (part.level == 1) discount += player.constructLevel2Discount;
       discount += player.constructFromStoreDiscount;
-      if (player.canAfford(part, discount)) {
+      if (player.canAfford(part, discount, convertedResources)) {
         actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
       }
     }
@@ -254,6 +254,9 @@ class Turn {
 
   void endTurn() {
     turnState.value = TurnState.ended;
+    for (var item in convertedResources.values) {
+      item.value = 0;
+    }
     changeStack.clear();
     isGameEndTriggered = (player.partCount() > 15) || (player.level3PartCount > 3);
     game.changeStack = null;
@@ -520,7 +523,17 @@ class Turn {
       }
     }
 
-    player.buyPart(action.part, action.payment);
+    // TODO - make player pay for the part
+    player.buyPart(action.part);
+    for (var resource in action.payment) {
+      if (convertedResources[resource].value > 0) {
+        convertedResources[resource].value--;
+      } else if (player.resources[resource].value > 0) {
+        player.removeResource(resource);
+      } else {
+        throw InvalidOperationError('Player ${player.id} failed to spend ${resource.name}');
+      }
+    }
 
     if (turnState == TurnState.searchSelected) {
       ret = _doSearchCompleted(action.part);

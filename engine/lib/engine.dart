@@ -4,6 +4,7 @@
 library engine;
 
 export 'src/action/action.dart';
+export 'src/calc_resources.dart';
 export 'src/common/common.dart';
 export 'src/engine_base.dart';
 export 'src/error/invalid_operation_error.dart';

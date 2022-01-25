@@ -125,6 +125,7 @@ class GamePageModel {
 
   HashSet<String> getEnabledParts() {
     var ret = HashSet<String>();
+    //Map<ResourceType, List<List<Product>>> max;
     for (var action in availableActions) {
       if (action is StoreAction) {
         ret.add(action.part.id);
@@ -174,6 +175,31 @@ class GamePageModel {
         action = StoreAction(playerId, part, null);
       } else if (game.currentTurn.selectedAction.value == ActionType.construct) {
         //action = ConstructAction(playerId, part, payment, null)
+        var paths = game.currentPlayer.getPayments(part);
+        if (paths.isEmpty) {
+          throw InvalidOperationError('No way to pay for part ${part.id}');
+        }
+
+        var index = 0;
+        if (paths.length != 1) {
+          // more than 1 way to pay, ask user for which one
+          // index = GetHowToPayFromUser();
+        }
+
+        // run the converters for the selected payment path
+        for (var used in paths[index].history) {
+          if (used.product.productType != ProductType.spend) {
+            var act = used.product.produce(game, playerId);
+            var response = await client.postAction(game, act);
+            if (response.responseCode != ResponseCode.ok) {
+              print('converter failed');
+              return;
+            }
+          }
+        }
+
+        var payment = paths[index].getCost().toList();
+        action = ConstructAction(playerId, part, payment, null);
       }
     }
     if (action != null) {
