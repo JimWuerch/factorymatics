@@ -20,13 +20,12 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.landscapeRight,
       DeviceOrientation.landscapeLeft,
     ]);
 
-    model = GamePageModel('wheee');
+    model = GamePageModel('wheee', context);
     model.init();
   }
 

@@ -121,11 +121,10 @@ class Turn {
 
     // converter actions are available at this point
     for (var part in player.parts[PartType.converter]) {
-      if (part.ready.value) {
-        for (var product in part.products) {
-          if (!product.activated.value) {
-            _addAllAvailableActions(ret, part, product.produce(game, player.id));
-          }
+      part.ready.value = true;
+      for (var product in part.products) {
+        if (!product.activated.value) {
+          _addAllAvailableActions(ret, part, product.produce(game, player.id));
         }
       }
     }

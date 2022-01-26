@@ -47,7 +47,7 @@ class ConvertProduct extends ConverterBaseProduct {
 
   @override
   GameAction produce(Game game, String player) {
-    return ConvertAction(player, source, ResourceType.any, this);
+    return ConvertAction(player, source, dest, this);
   }
 }
 

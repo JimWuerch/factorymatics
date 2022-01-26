@@ -3,6 +3,9 @@ import 'dart:collection';
 
 import 'package:engine/engine.dart';
 import 'package:factorymatics/src/client.dart';
+import 'package:flutter/cupertino.dart';
+
+import 'dialogs/ask_payment_dialog.dart';
 
 class GamePageModel {
   Game game;
@@ -15,8 +18,9 @@ class GamePageModel {
   List<String> players;
   String playerName = 'bob';
   List<GameAction> availableActions = <GameAction>[];
+  final BuildContext gamePageContext;
 
-  GamePageModel(this.gameId);
+  GamePageModel(this.gameId, this.gamePageContext);
 
   Future<void> init() async {
     playerService = PlayerService.createService();
@@ -40,7 +44,7 @@ class GamePageModel {
     await doGameUpdate();
   }
 
-  /// Update the game state.  Set [nonNotify] to true to prevent listeners from getting notified
+  /// Update the game state.  Set [noNotify] to true to prevent listeners from getting notified
   Future<void> doGameUpdate({bool noNotify = false}) async {
     var response = await client.postRequest(JoinGameRequest(gameId, playerId));
     if (response.responseCode != ResponseCode.ok) {
@@ -181,9 +185,12 @@ class GamePageModel {
         }
 
         var index = 0;
-        if (paths.length != 1) {
+        if (paths.length != 7) {
           // more than 1 way to pay, ask user for which one
-          // index = GetHowToPayFromUser();
+          index = await showAskPaymentDialog(gamePageContext, paths);
+          if (index == null) {
+            return;
+          }
         }
 
         // run the converters for the selected payment path
@@ -192,19 +199,24 @@ class GamePageModel {
             var act = used.product.produce(game, playerId);
             var response = await client.postAction(game, act);
             if (response.responseCode != ResponseCode.ok) {
-              print('converter failed');
-              return;
+              _notifierController.addError(null);
             }
           }
         }
 
-        var payment = paths[index].getCost().toList();
+        List<ResourceType> payment;
+        if (part.resource == ResourceType.any) {
+          payment = paths[index].getCost().toList();
+        } else {
+          payment = List<ResourceType>.filled(part.cost, part.resource);
+        }
         action = ConstructAction(playerId, part, payment, null);
       }
     }
     if (action != null) {
       var response = await client.postAction(game, action);
       if (response.responseCode != ResponseCode.ok) {
+        _notifierController.addError(null);
         return;
         // response.responseCode;
       }
@@ -235,4 +247,6 @@ class GamePageModel {
   Future<void> doEndTurn() async {
     await _postAction(GameModeAction(playerId, GameModeType.endTurn));
   }
+
+  Future<int> _getSpendChoice(List<SpendHistory> paths) async {}
 }
