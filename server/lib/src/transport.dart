@@ -14,6 +14,18 @@ class LocalServerTransport implements GameTransport {
 
   LocalServerTransport(this.server);
 
+  Future<ResponseModel> receiveLocalRequest(Map<String, dynamic> json) {
+    var gameModelType = gameModelTypeFromJson(json);
+    Game game;
+    if (gameModelType == GameModelType.actionRequest || gameModelType == GameModelType.actionResponse || gameModelType == GameModelType.joinGameResponse) {
+      var gameId = gameIdFromJson(json);
+      var gameController = server.games.find(gameId);
+      game = gameController.game;
+    }
+    var model = gameModelFromJson(game, json);
+    return sendRequest(model);
+  }
+
   @override
   Future<ResponseModel> sendRequest(GameModel model) async {
     return server.handleRequest(model);
@@ -30,7 +42,9 @@ class LocalClientTransport implements GameTransport {
 
   @override
   Future<ResponseModel> sendRequest(GameModel model) async {
-    return serverTransport.sendRequest(model);
+    var json = model.toJson();
+    return serverTransport.receiveLocalRequest(json);
+    //return serverTransport.sendRequest(model);
   }
 
   @override

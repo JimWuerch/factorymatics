@@ -24,8 +24,9 @@ abstract class Part extends GameObject {
       : ready = GameStateVar(game, 'part:$id:ready', false),
         super(id) {
     // take ownership of the products
-    for (var product in products) {
-      product.part = this;
+    for (var index = 0; index < products.length; ++index) {
+      products[index].part = this;
+      products[index].prodIndex = index;
     }
   }
 

@@ -2,26 +2,28 @@ import 'package:engine/engine.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
+import 'game_page_model.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
-  PartWidget({this.part, this.enabled, this.onTap, this.onProductTap});
+  PartWidget({this.part, this.enabled, this.onTap, this.onProductTap, this.model});
 
   final Part part;
   final bool enabled;
   final void Function(Part part) onTap;
   final void Function(Product product) onProductTap;
+  final GamePageModel model;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
 }
 
 class _PartWidgetState extends State<PartWidget> {
-  Widget _triggersToIcons(List<Trigger> triggers) {
+  Widget _triggersToIcons(Part part) {
     var items = <Widget>[];
     items.add(Text('Triggers: '));
-    for (var index = 0; index < triggers.length; ++index) {
-      var trigger = triggers[index];
+    for (var index = 0; index < part.triggers.length; ++index) {
+      var trigger = part.triggers[index];
       switch (trigger.triggerType) {
         case TriggerType.store:
           items.add(Icon(partTypeToIcon(PartType.storage)));
@@ -36,7 +38,13 @@ class _PartWidgetState extends State<PartWidget> {
           var t = trigger as ConvertTrigger;
           items.add(resourceToIcon(t.resourceType, resourceToColor(t.resourceType)));
           items.add(Icon(partTypeToIcon(PartType.converter)));
-          //items.add(Icon(FontAwesome.question_circle));
+          if (part.products[0].productType == ProductType.convert) {
+            items.add(Icon(productTypeToIcon(ProductType.convert)));
+            //items.add(Icon(FontAwesome.question_circle));
+          } else if (part.products[0].productType == ProductType.doubleResource) {
+            items.add(resourceToIcon((part.products[0] as DoubleResourceProduct).sourceResource, resourceToColor((part.products[0] as DoubleResourceProduct).sourceResource)));
+            items.add(resourceToIcon((part.products[0] as DoubleResourceProduct).sourceResource, resourceToColor((part.products[0] as DoubleResourceProduct).sourceResource)));
+          }
           break;
         case TriggerType.purchased:
           items.add(Icon(Icons.monetization_on));
@@ -49,19 +57,35 @@ class _PartWidgetState extends State<PartWidget> {
           items.add(Icon(partTypeToIcon(PartType.storage)));
           break;
       }
-      if (index < triggers.length - 1) {
+      if (index < part.triggers.length - 1) {
         items.add(Icon(MaterialCommunityIcons.slash_forward));
       }
     }
     return Row(children: items);
   }
 
+  Widget _productWidget(Product product) {
+    if (product is DoubleResourceProduct) {
+      return Row(
+        children: [
+          resourceToIcon(product.sourceResource, resourceToColor(product.sourceResource)),
+          resourceToIcon(product.sourceResource, resourceToColor(product.sourceResource)),
+        ],
+      );
+    } else {
+      return Icon(productToIcon(product));
+    }
+  }
+
   Widget _productsToIcons(List<Product> products) {
     var items = <Widget>[];
     for (var product in products) {
-      items.add(IconButton(
-        icon: Icon(productToIcon(widget.part.products[0])),
-        onPressed: widget.part.ready.value && !product.activated.value && (widget.onProductTap != null) ? () async => await widget.onProductTap(product) : null,
+      if (product is DoubleResourceProduct || product is ConvertProduct || product is VpProduct) continue;
+      items.add(ElevatedButton(
+        child: _productWidget(widget.part.products[0]),
+        onPressed: !widget.model.isResourcePickerEnabled && widget.part.ready.value && !product.activated.value && (widget.onProductTap != null)
+            ? () async => await widget.onProductTap(product)
+            : null,
       ));
     }
     return Row(children: items);
@@ -133,7 +157,7 @@ class _PartWidgetState extends State<PartWidget> {
                       Text('VP: ${widget.part.vp}'),
                     ],
                   ),
-                  _triggersToIcons(widget.part.triggers),
+                  _triggersToIcons(widget.part),
                   //Text('Products: ${widget.part.products.length}'),
                   _productsToIcons(widget.part.products),
                 ],

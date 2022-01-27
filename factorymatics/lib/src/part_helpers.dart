@@ -32,7 +32,7 @@ IconData actionToIcon(ActionType actionType) {
     case ActionType.convert:
       return Icons.arrow_forward_ios;
     case ActionType.mysteryMeat:
-      return Icons.question_mark;
+      return MaterialCommunityIcons.cloud_question;
     default:
       throw ArgumentError('invalid action ${actionType.toString()}');
   }
@@ -83,12 +83,29 @@ Color resourceToColor(ResourceType resourceType) {
 }
 
 IconData productToIcon(Product product) {
-  if (product is MysteryMeatProduct) {
+  return productTypeToIcon(product.productType);
+  // if (product is MysteryMeatProduct) {
+  //   return actionToIcon(ActionType.mysteryMeat);
+  // } else if (product is AcquireProduct) {
+  //   return actionToIcon(ActionType.acquire);
+  // } else if (product is VpProduct) {
+  //   return FontAwesome.gear;
+  // } else if (product is ConvertProduct) {
+  //   return FontAwesome.question_circle;
+  // } else {
+  //   return Fontisto.question;
+  // }
+}
+
+IconData productTypeToIcon(ProductType productType) {
+  if (productType == ProductType.mysteryMeat) {
     return actionToIcon(ActionType.mysteryMeat);
-  } else if (product is AcquireProduct) {
+  } else if (productType == ProductType.aquire) {
     return actionToIcon(ActionType.acquire);
-  } else if (product is VpProduct) {
+  } else if (productType == ProductType.vp) {
     return FontAwesome.gear;
+  } else if (productType == ProductType.convert) {
+    return FontAwesome.question_circle;
   } else {
     return Fontisto.question;
   }

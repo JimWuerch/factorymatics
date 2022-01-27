@@ -31,6 +31,7 @@ enum ActionType {
   gameMode,
   internal,
   searchActionResult,
+  requestAcquire,
   // requestStore,
   // requestConstruct,
   // requestAcquire,
@@ -65,7 +66,7 @@ abstract class GameAction {
     };
     if (producedBy != null) {
       ret['part'] = producedBy.part.id;
-      ret['pi'] = producedBy.part.getProductIndex(producedBy);
+      ret['pi'] = producedBy.prodIndex;
     }
     return ret;
   }
@@ -74,7 +75,7 @@ abstract class GameAction {
     if (json.containsKey('part')) {
       var part = game.allParts[json['part'] as String];
       if (json.containsKey('pi')) {
-        producedBy = part.productFromIndex(json['pi'] as int);
+        producedBy = part.products[json['pi'] as int];
       }
     }
   }
@@ -102,6 +103,10 @@ GameAction actionFromJson(Game game, Map<String, dynamic> json) {
       return SelectActionAction.fromJson(game, json);
     case ActionType.searchActionResult:
       return SearchActionResult.fromJson(game, json);
+    case ActionType.gameMode:
+      return GameModeAction.fromJson(game, json);
+    case ActionType.requestAcquire:
+      return RequestAcquireAction.fromJson(game, json);
     // case ActionType.requestStore:
     //   return RequestStoreAction.fromJson(game, json);
     // case ActionType.requestConstruct:

@@ -9,6 +9,7 @@ enum TurnState {
   actionSelected, // received SelectActionAction
   searchSelected, // if the selectedAction is search, this state is waiting for the deck choice
   selectedActionCompleted, // ready to handle triggered actions
+  acquireRequested, // acquire request as result of product triggered
   ended, // received end turn action
 }
 
@@ -140,6 +141,11 @@ class Turn {
       _addSearchedPartActions(ret);
     }
 
+    if (turnState.value == TurnState.acquireRequested) {
+      _addAllAvailableActions(ret, null, AcquireAction(player.id, -1, null));
+      return ret;
+    }
+
     if (turnState.value == TurnState.selectedActionCompleted) {
       // we know an action has been selected and completed, so now we can add all
       // the actions that triggered parts produce
@@ -147,12 +153,21 @@ class Turn {
       // allowed to end the turn now
       ret.add(GameModeAction(player.id, GameModeType.endTurn));
 
-      // store actions
-      for (var part in player.parts[PartType.storage]) {
-        if (part.ready.value) {
-          for (var product in part.products) {
-            if (!product.activated.value) {
-              _addAllAvailableActions(ret, part, product.produce(game, player.id));
+      // triggered actions
+      for (var partList in player.parts.values) {
+        for (var part in partList) {
+          if (part.partType == PartType.storage || part.partType == PartType.acquire || part.partType == PartType.construct) {
+            if (part.ready.value) {
+              for (var product in part.products) {
+                if (!product.activated.value) {
+                  if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
+                    if (!player.hasResourceStorageSpace) {
+                      continue;
+                    }
+                  }
+                  _addAllAvailableActions(ret, part, product.produce(game, player.id));
+                }
+              }
             }
           }
         }
@@ -213,6 +228,8 @@ class Turn {
       if (player.hasResource(action.source)) {
         actions.add(action);
       }
+    } else if (action is RequestAcquireAction) {
+      actions.add(action);
     }
   }
 
@@ -430,6 +447,8 @@ class Turn {
       case ActionType.vp:
         return _doVp(action as VpAction);
         break;
+      case ActionType.requestAcquire:
+        return _doRequestAcquire(action as RequestAcquireAction);
       default:
         return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.unknownAction, null);
     }
@@ -550,24 +569,29 @@ class Turn {
 
   Tuple2<ValidateResponseCode, GameAction> _doAcquire(AcquireAction action) {
     var ret = ValidateResponseCode.ok;
-    changeStack.group();
 
-    action.acquiredResource = game.acquireResource(action.index);
-    player.storeResource(action.acquiredResource);
+    if (player.hasResourceStorageSpace) {
+      changeStack.group();
 
-    if (action.producedBy != null) {
-      action.producedBy.activated.value = true;
+      action.acquiredResource = game.acquireResource(action.index);
+      player.storeResource(action.acquiredResource);
+
+      if (action.producedBy != null) {
+        action.producedBy.activated.value = true;
+      }
+
+      _doTriggers(action, PartType.acquire);
+
+      if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.acquireRequested) {
+        turnState.value = TurnState.selectedActionCompleted;
+      }
+
+      changeStack.commit();
+      // since we revealed info, no more undo
+      changeStack.clear();
+    } else {
+      ret = ValidateResponseCode.noStorage;
     }
-
-    _doTriggers(action, PartType.acquire);
-
-    if (turnState.value == TurnState.actionSelected) {
-      turnState.value = TurnState.selectedActionCompleted;
-    }
-
-    changeStack.commit();
-    // since we revealed info, no more undo
-    changeStack.clear();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
@@ -599,7 +623,7 @@ class Turn {
 
     player.removeResource(action.source);
     convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
-
+    action.producedBy.activated.value = true;
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -610,7 +634,7 @@ class Turn {
 
     player.removeResource(action.source);
     convertedResources[action.source].value = convertedResources[action.source].value + 2;
-
+    action.producedBy.activated.value = true;
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -618,18 +642,34 @@ class Turn {
   Tuple2<ValidateResponseCode, GameAction> _doMysteryMeat(MysteryMeatAction action) {
     var ret = ValidateResponseCode.ok;
 
-    changeStack.group();
-    action.resource = game.getFromWell();
-    player.storeResource(action.resource);
-    changeStack.commit();
-
+    if (player.hasResourceStorageSpace) {
+      changeStack.group();
+      action.resource = game.getFromWell();
+      player.storeResource(action.resource);
+      action.producedBy.activated.value = true;
+      changeStack.commit();
+    } else {
+      ValidateResponseCode.noStorage;
+    }
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
 
   Tuple2<ValidateResponseCode, GameAction> _doVp(VpAction action) {
     var ret = ValidateResponseCode.ok;
-
+    changeStack.group();
     player.giveVpChit();
+    action.producedBy.activated.value = true;
+    changeStack.commit();
+
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+  }
+
+  Tuple2<ValidateResponseCode, GameAction> _doRequestAcquire(RequestAcquireAction action) {
+    var ret = ValidateResponseCode.ok;
+    changeStack.group();
+    turnState.value = TurnState.acquireRequested;
+    action.producedBy.activated.value = true;
+    changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }

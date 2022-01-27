@@ -5,6 +5,7 @@ enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, sto
 abstract class Product {
   final ProductType productType;
   Part part; // set in the part constructor
+  int prodIndex; // also set in the part constructor
   final GameStateVar<bool> activated;
 
   Product(Game game, this.productType) : activated = GameStateVar(game, 'product:activated', false);
@@ -32,7 +33,7 @@ class AcquireProduct extends Product {
 
   @override
   GameAction produce(Game game, String player) {
-    return AcquireAction(player, -1, this);
+    return RequestAcquireAction(player, this);
   }
 }
 

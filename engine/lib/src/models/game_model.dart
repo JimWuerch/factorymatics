@@ -18,7 +18,7 @@ enum GameModelType {
   joinGameRequest,
   joinGameResponse,
   createLobbyRequest,
-  createLobbyResponse
+  createLobbyResponse,
 }
 enum ResponseCode { ok, error, failedValidation }
 
@@ -44,16 +44,19 @@ abstract class GameModel {
         'owner': ownerId,
       };
 
-  GameModel.fromJson(Map<String, dynamic> json)
-      : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String);
+  GameModel.fromJson(Map<String, dynamic> json) : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String);
 }
 
 String gameIdFromJson(Map<String, dynamic> json) {
   return json['gameId'] as String;
 }
 
+GameModelType gameModelTypeFromJson(Map<String, dynamic> json) {
+  return GameModelType.values[json['type'] as int];
+}
+
 GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
-  var type = GameModelType.values[json['type'] as int];
+  var type = gameModelTypeFromJson(json);
   switch (type) {
     case GameModelType.createGameRequest:
       return CreateGameRequest.fromJson(json);
@@ -67,6 +70,10 @@ GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
       return CreateLobbyRequest.fromJson(json);
     case GameModelType.createLobbyResponse:
       return CreateLobbyResponse.fromJson(json);
+    case GameModelType.joinGameRequest:
+      return JoinGameRequest.fromJson(json);
+    case GameModelType.joinGameResponse:
+      return JoinGameResponse.fromJson(game, json);
     default:
       throw InvalidOperationError('Unknown model type $type');
   }

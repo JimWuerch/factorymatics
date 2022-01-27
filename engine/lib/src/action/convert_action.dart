@@ -41,7 +41,10 @@ class DoubleConvertAction extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    return (action as DoubleConvertAction)?.source == source;
+    if (action is DoubleConvertAction) {
+      return action.source == source;
+    }
+    return false;
   }
 
   @override

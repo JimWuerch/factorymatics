@@ -8,24 +8,22 @@ List<Widget> _makeChoices(BuildContext context, List<SpendHistory> paths) {
   var list = <Widget>[];
   var index = 0;
   for (var path in paths) {
-    var cost = path.getCost().toList();
     var items = <Widget>[];
     var first = true;
     for (var used in path.history) {
       if (used.product.productType == ProductType.spend) {
         if (!first) {
-          items.add(Text(' , '));
+          items.add(Icon(MaterialCommunityIcons.plus_thick));
         } else {
           first = false;
         }
         items.add(resourceToIcon(used.product.sourceResource, resourceToColor(used.product.sourceResource)));
       }
     }
-    //items.add(Icon(MaterialCommunityIcons.arrow_right_thick));
     for (var used in path.history) {
       if (used.product.productType == ProductType.convert) {
         if (!first) {
-          items.add(Text(' , '));
+          items.add(Icon(MaterialCommunityIcons.plus_thick));
         } else {
           first = false;
         }
@@ -34,7 +32,7 @@ List<Widget> _makeChoices(BuildContext context, List<SpendHistory> paths) {
         items.add(resourceToIcon((used.product as ConvertProduct).dest, resourceToColor((used.product as ConvertProduct).dest)));
       } else if (used.product.productType == ProductType.doubleResource) {
         if (!first) {
-          items.add(Text(' , '));
+          items.add(Icon(MaterialCommunityIcons.plus_thick));
         } else {
           first = false;
         }

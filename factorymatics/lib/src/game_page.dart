@@ -33,7 +33,13 @@ class _GamePageState extends State<GamePage> {
     var widgets = <Widget>[];
     var enabledParts = model.getEnabledParts();
     for (var part in parts) {
-      widgets.add(PartWidget(part: part, enabled: enabledParts.contains(part.id), onTap: _onPartTapped, onProductTap: null));
+      widgets.add(PartWidget(
+        part: part,
+        enabled: enabledParts.contains(part.id),
+        onTap: _onPartTapped,
+        onProductTap: null,
+        model: model,
+      ));
     }
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -58,6 +64,7 @@ class _GamePageState extends State<GamePage> {
 
   Column _makeColumn(int index) {
     var children = <Widget>[];
+    var enabledParts = model.getEnabledParts();
     switch (index) {
       case 0:
         children.add(SizedBox(
@@ -72,6 +79,7 @@ class _GamePageState extends State<GamePage> {
           children.add(PartWidget(
             part: part,
             enabled: false,
+            model: model,
           ));
         }
         break;
@@ -81,34 +89,32 @@ class _GamePageState extends State<GamePage> {
           children.add(PartWidget(
             part: part,
             enabled: false,
+            model: model,
           ));
         }
         break;
       case 2:
         children.add(_makeActionButton(ActionType.store, model.canStore, 'Store'));
         for (var part in model.game.currentPlayer.parts[PartType.storage]) {
-          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped));
+          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped, model: model));
         }
         break;
       case 3:
         children.add(_makeActionButton(ActionType.acquire, model.canAcquire, 'Acquire'));
         for (var part in model.game.currentPlayer.parts[PartType.acquire]) {
-          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped));
+          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped, model: model));
         }
         break;
       case 4:
         children.add(_makeActionButton(ActionType.construct, true, 'Construct'));
         for (var part in model.game.currentPlayer.parts[PartType.construct]) {
-          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped));
+          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped, model: model));
         }
         break;
       case 5:
         children.add(_makeActionButton(ActionType.search, true, ''));
         for (var part in model.game.currentPlayer.savedParts) {
-          children.add(PartWidget(
-            part: part,
-            enabled: false,
-          ));
+          children.add(PartWidget(part: part, enabled: enabledParts.contains(part.id), onTap: _onPartTapped, onProductTap: null, model: model));
         }
         break;
     }
@@ -156,82 +162,84 @@ class _GamePageState extends State<GamePage> {
                   ],
                 ),
                 body: SafeArea(
-                  child: Container(
-                    color: Colors.white,
-                    child: Column(
-                      // Column is also a layout widget. It takes a list of children and
-                      // arranges them vertically. By default, it sizes itself to fit its
-                      // children horizontally, and tries to be as tall as its parent.
-                      //
-                      // Invoke "debug painting" (press "p" in the console, choose the
-                      // "Toggle Debug Paint" action from the Flutter Inspector in Android
-                      // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-                      // to see the wireframe for each widget.
-                      //
-                      // Column has various properties to control how it sizes itself and
-                      // how it positions its children. Here we use mainAxisAlignment to
-                      // center the children vertically; the main axis here is the vertical
-                      // axis because Columns are vertical (the cross axis would be
-                      // horizontal).
-                      //mainAxisAlignment: MainAxisAlignment.center,
-                      children: <Widget>[
-                        Container(
-                          decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
-                          padding: EdgeInsets.only(left: 10, right: 10),
-                          width: 350,
-                          child: ResourcePicker(
-                            resources: model.game.availableResources.toList(),
-                            enabled: model.isResourcePickerEnabled,
-                            onTap: _onResourceTapped,
+                  child: SingleChildScrollView(
+                    child: Container(
+                      color: Colors.white,
+                      child: Column(
+                        // Column is also a layout widget. It takes a list of children and
+                        // arranges them vertically. By default, it sizes itself to fit its
+                        // children horizontally, and tries to be as tall as its parent.
+                        //
+                        // Invoke "debug painting" (press "p" in the console, choose the
+                        // "Toggle Debug Paint" action from the Flutter Inspector in Android
+                        // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
+                        // to see the wireframe for each widget.
+                        //
+                        // Column has various properties to control how it sizes itself and
+                        // how it positions its children. Here we use mainAxisAlignment to
+                        // center the children vertically; the main axis here is the vertical
+                        // axis because Columns are vertical (the cross axis would be
+                        // horizontal).
+                        //mainAxisAlignment: MainAxisAlignment.center,
+                        children: <Widget>[
+                          Container(
+                            decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
+                            padding: EdgeInsets.only(left: 10, right: 10),
+                            width: 350,
+                            child: ResourcePicker(
+                              resources: model.game.availableResources.toList(),
+                              enabled: model.isResourcePickerEnabled,
+                              onTap: _onResourceTapped,
+                            ),
                           ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Container(
-                          decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
-                          padding: EdgeInsets.all(10),
-                          width: 900,
-                          child: Column(
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Container(
+                            decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
+                            padding: EdgeInsets.all(10),
+                            width: 900,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: <Widget>[
+                                _makePartList(model.game.saleParts[2].list),
+                                _makePartList(model.game.saleParts[1].list),
+                                _makePartList(model.game.saleParts[0].list),
+                              ],
+                            ),
+                          ),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          ResourceStorageWidget(resources: model.getAvailableResources()),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Row(
                             mainAxisAlignment: MainAxisAlignment.center,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
                             children: <Widget>[
-                              _makePartList(model.game.saleParts[2].list),
-                              _makePartList(model.game.saleParts[1].list),
-                              _makePartList(model.game.saleParts[0].list),
+                              _makeColumn(0),
+                              _makeColumn(1),
+                              _makeColumn(2),
+                              _makeColumn(3),
+                              _makeColumn(4),
+                              _makeColumn(5),
                             ],
                           ),
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        ResourceStorageWidget(resources: model.getAvailableResources()),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: <Widget>[
-                            _makeColumn(0),
-                            _makeColumn(1),
-                            _makeColumn(2),
-                            _makeColumn(3),
-                            _makeColumn(4),
-                            _makeColumn(5),
-                          ],
-                        ),
-                        // Row(
-                        //   mainAxisAlignment: MainAxisAlignment.end,
-                        //   children: <Widget>[
-                        //     RaisedButton(child: Text('Undo'), onPressed: model.canUndo ? _onUndoTapped : null),
-                        //     SizedBox(width: 10),
-                        //     RaisedButton(
-                        //         child: Text('End Turn'), onPressed: model.canEndTurn ? _onEndTurnTapped : null),
-                        //     SizedBox(width: 10)
-                        //   ],
-                        // ),
-                      ],
+                          // Row(
+                          //   mainAxisAlignment: MainAxisAlignment.end,
+                          //   children: <Widget>[
+                          //     RaisedButton(child: Text('Undo'), onPressed: model.canUndo ? _onUndoTapped : null),
+                          //     SizedBox(width: 10),
+                          //     RaisedButton(
+                          //         child: Text('End Turn'), onPressed: model.canEndTurn ? _onEndTurnTapped : null),
+                          //     SizedBox(width: 10)
+                          //   ],
+                          // ),
+                        ],
+                      ),
                     ),
                   ),
                 ),

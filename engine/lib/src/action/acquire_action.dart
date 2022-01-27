@@ -27,6 +27,21 @@ class AcquireAction extends GameAction {
         super.fromJson(game, json);
 }
 
+class RequestAcquireAction extends GameAction {
+  RequestAcquireAction(String player, Product producedBy) : super(player, producedBy);
+
+  @override
+  ActionType get actionType => ActionType.requestAcquire;
+
+  @override
+  bool matches(GameAction action) {
+    // we match all RequestAcquireAction
+    return action is RequestAcquireAction;
+  }
+
+  RequestAcquireAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
+}
+
 class MysteryMeatAction extends GameAction {
   MysteryMeatAction(String player, Product producedBy) : super(player, producedBy);
 

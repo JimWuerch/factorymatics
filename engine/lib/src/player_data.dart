@@ -4,7 +4,7 @@ import 'package:engine/src/part/converter_part.dart';
 import 'package:tuple/tuple.dart';
 
 class PlayerData {
-  static const int baseResourceStorage = 5;
+  static const int baseResourceStorage = 10;
   static const int basePartStorage = 1;
   static const int baseSearch = 3;
 

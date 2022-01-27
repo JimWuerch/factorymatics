@@ -257,6 +257,8 @@ class CalcResources {
             }
             var history2 = SpendHistory.of(history);
             var newProd = ConvertProduct(null, cv.source, rt);
+            newProd.part = cv.part;
+            newProd.prodIndex = cv.prodIndex;
             var ip2 = ResourcePool.of(inputPool);
             var op2 = ResourcePool.of(outputPool);
             if (inputPool.count(cv.source) > 0) {

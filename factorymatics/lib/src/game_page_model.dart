@@ -19,6 +19,7 @@ class GamePageModel {
   String playerName = 'bob';
   List<GameAction> availableActions = <GameAction>[];
   final BuildContext gamePageContext;
+  //bool isAcquireProductActive = false;
 
   GamePageModel(this.gameId, this.gamePageContext);
 
@@ -61,6 +62,14 @@ class GamePageModel {
         doStartTurn();
         await doGameUpdate(noNotify: true);
       }
+      // // setup the acquire action
+      // isAcquireProductActive = false;
+      // for (var action in availableActions) {
+      //   if (action is AcquireAction) {
+      //     isAcquireProductActive = true;
+      //     break;
+      //   }
+      // }
       _notifierController.add(1);
     } else {
       _notifierController.addError(null);
@@ -76,7 +85,8 @@ class GamePageModel {
 
   bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
 
-  bool get isResourcePickerEnabled => game.currentTurn?.selectedAction?.value == ActionType.acquire && game.currentTurn?.turnState?.value == TurnState.actionSelected;
+  bool get isResourcePickerEnabled => ((game.currentTurn?.selectedAction?.value == ActionType.acquire && game.currentTurn?.turnState?.value == TurnState.actionSelected) ||
+      game.currentTurn?.turnState?.value == TurnState.acquireRequested);
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
 
@@ -226,6 +236,8 @@ class GamePageModel {
   }
 
   Future<void> productTapped(Product product) async {
+    // acquire is handled elsewhere
+    //if (product.productType == ProductType.aquire) return;
     GameAction action;
     action = product.produce(game, playerId);
 
@@ -247,6 +259,4 @@ class GamePageModel {
   Future<void> doEndTurn() async {
     await _postAction(GameModeAction(playerId, GameModeType.endTurn));
   }
-
-  Future<int> _getSpendChoice(List<SpendHistory> paths) async {}
 }
