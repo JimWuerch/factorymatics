@@ -131,13 +131,19 @@ class Game {
 
   void refillMarket() {
     for (var i = saleParts[0].length; i < Game.level1MarketSize; i++) {
-      saleParts[0].add(drawPart(0));
+      if (!partDecks[0].isEmpty) {
+        saleParts[0].add(drawPart(0));
+      }
     }
     for (var i = saleParts[1].length; i < Game.level2MarketSize; i++) {
-      saleParts[1].add(drawPart(1));
+      if (!partDecks[1].isEmpty) {
+        saleParts[1].add(drawPart(1));
+      }
     }
     for (var i = saleParts[2].length; i < Game.level3MarketSize; i++) {
-      saleParts[2].add(drawPart(2));
+      if (!partDecks[2].isEmpty) {
+        saleParts[2].add(drawPart(2));
+      }
     }
   }
 

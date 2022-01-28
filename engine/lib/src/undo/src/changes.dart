@@ -16,17 +16,22 @@ abstract class Change {
   void execute();
 
   void undo();
+
+  @override
+  String toString() {
+    return label;
+  }
 }
 
 abstract class ChangeGroupBase {
   _ChangeGroup _openGroup;
   bool get isGrouping => _openGroup != null;
 
-  void add(Change change) {
+  void add(Change change, {String label}) {
     if (isGrouping) {
-      _openGroup.add(change);
+      _openGroup.add(change, label: label);
     } else {
-      _add(change);
+      _add(change, label: label);
     }
   }
 
@@ -98,6 +103,9 @@ class _ChangeGroup extends ChangeGroupBase implements Change {
 
   @override
   void _add(Change change, {String label, bool doExecute = true}) {
+    if (label != null) {
+      change.label = label;
+    }
     _changes.add(change);
     if (doExecute) {
       change.execute();

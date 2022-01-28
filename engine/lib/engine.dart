@@ -3,6 +3,9 @@
 /// More dartdocs go here.
 library engine;
 
+import 'package:logging/logging.dart';
+export 'package:logging/logging.dart';
+
 export 'src/action/action.dart';
 export 'src/calc_resources.dart';
 export 'src/common/common.dart';
@@ -19,3 +22,5 @@ export 'src/player_data.dart';
 export 'src/resource/resource.dart';
 export 'src/state/game_state.dart';
 export 'src/undo/undo.dart';
+
+final log = Logger("engine");

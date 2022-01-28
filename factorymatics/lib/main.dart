@@ -1,7 +1,13 @@
 import 'package:factorymatics/src/game_page.dart';
+import 'package:factorymatics/src/main_page.dart';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 
 void main() {
+  //Logger.root.level = Level.ALL; // defaults to Level.INFO
+  Logger.root.onRecord.listen((record) {
+    print('${record.level.name}: ${record.time}: ${record.message}');
+  });
   runApp(MyApp());
 }
 
@@ -27,7 +33,7 @@ class MyApp extends StatelessWidget {
         // closer together (more dense) than on mobile platforms.
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: GamePage(),
+      home: MainPage(),
     );
   }
 }

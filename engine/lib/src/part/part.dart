@@ -106,6 +106,15 @@ void createParts(Game game) {
     ..add(SimplePart(game, (partId++).toString(), 0, PartType.construct, 1, [ConstructTrigger(ResourceType.spade)], [AcquireProduct(game)], ResourceType.heart, 1))
     ..add(SimplePart(game, (partId++).toString(), 0, PartType.acquire, 1, [AcquireTrigger(ResourceType.spade)], [MysteryMeatProduct(game)], ResourceType.diamond, 1));
 
+  var testPartId = 100;
+  // remove these test parts when we add real ones
+  // parts
+  //   ..add(ConverterPart(game, (testPartId++).toString(), 0, 1, ConvertTrigger(ResourceType.heart), ConvertProduct(game, ResourceType.heart, ResourceType.any), ResourceType.club, 1))
+  //   ..add(ConverterPart(game, (testPartId++).toString(), 0, 1, ConvertTrigger(ResourceType.diamond), ConvertProduct(game, ResourceType.diamond, ResourceType.any), ResourceType.spade, 1))
+  //   ..add(ConverterPart(game, (testPartId++).toString(), 0, 1, ConvertTrigger(ResourceType.spade), ConvertProduct(game, ResourceType.spade, ResourceType.any), ResourceType.diamond, 1))
+  //   ..add(SimplePart(game, (testPartId++).toString(), 0, PartType.acquire, 1, [ConstructTrigger(ResourceType.club), ConstructTrigger(ResourceType.heart)], [VpProduct(game, 1)],
+  //       ResourceType.heart, 2));
+
   //game.partDecks[1] = ListState<Part>(game, 'level1Parts')
   parts
     ..add(EnhancementPart(game, (partId++).toString(), 1, 3, ResourceType.club, 3, 2, 1, 2))
@@ -114,6 +123,12 @@ void createParts(Game game) {
     ..add(SimplePart(game, (partId++).toString(), 1, PartType.construct, 3, [ConstructTrigger(ResourceType.spade), ConstructTrigger(ResourceType.heart)], [VpProduct(game, 1)],
         ResourceType.club, 3))
     ..add(ConverterPart(game, (partId++).toString(), 1, 3, ConvertTrigger(ResourceType.diamond), DoubleResourceProduct(game, ResourceType.diamond), ResourceType.spade, 3));
+
+  // remove these test parts
+  parts
+    ..add(ConverterPart(game, (testPartId++).toString(), 1, 3, ConvertTrigger(ResourceType.heart), DoubleResourceProduct(game, ResourceType.heart), ResourceType.club, 3))
+    ..add(ConverterPart(game, (testPartId++).toString(), 1, 3, ConvertTrigger(ResourceType.club), DoubleResourceProduct(game, ResourceType.club), ResourceType.diamond, 3))
+    ..add(ConverterPart(game, (testPartId++).toString(), 1, 3, ConvertTrigger(ResourceType.spade), DoubleResourceProduct(game, ResourceType.spade), ResourceType.heart, 3));
 
   //game.partDecks[2] = ListState<Part>(game, 'level2Parts')
   parts

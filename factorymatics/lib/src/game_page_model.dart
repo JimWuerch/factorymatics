@@ -62,14 +62,6 @@ class GamePageModel {
         doStartTurn();
         await doGameUpdate(noNotify: true);
       }
-      // // setup the acquire action
-      // isAcquireProductActive = false;
-      // for (var action in availableActions) {
-      //   if (action is AcquireAction) {
-      //     isAcquireProductActive = true;
-      //     break;
-      //   }
-      // }
       _notifierController.add(1);
     } else {
       _notifierController.addError(null);

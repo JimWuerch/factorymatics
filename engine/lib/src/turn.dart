@@ -122,7 +122,6 @@ class Turn {
 
     // converter actions are available at this point
     for (var part in player.parts[PartType.converter]) {
-      part.ready.value = true;
       for (var product in part.products) {
         if (!product.activated.value) {
           _addAllAvailableActions(ret, part, product.produce(game, player.id));
@@ -199,6 +198,7 @@ class Turn {
 
         case ActionType.acquire:
           actions.add(AcquireAction(player.id, -1, null));
+          //actions.add(RequestAcquireAction(player.id, null));
           break;
 
         case ActionType.construct:
@@ -264,6 +264,12 @@ class Turn {
   void startTurn() {
     game.changeStack = changeStack;
     player.resetPartActivations();
+    // converters don't rely on previous triggers, so enable them
+    for (var part in player.parts[PartType.converter]) {
+      if (!part.ready.value) {
+        part.ready.value = true;
+      }
+    }
     turnState.value = TurnState.started;
     changeStack.clear();
   }
@@ -541,7 +547,7 @@ class Turn {
       }
     }
 
-    // TODO - make player pay for the part
+    // make player pay for the part
     player.buyPart(action.part);
     for (var resource in action.payment) {
       if (convertedResources[resource].value > 0) {
@@ -549,9 +555,15 @@ class Turn {
       } else if (player.resources[resource].value > 0) {
         player.removeResource(resource);
       } else {
-        throw InvalidOperationError('Player ${player.id} failed to spend ${resource.name}');
+        log.severe('Player ${player.id} failed to spend ${resource.name}');
+        changeStack.discard();
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
       }
+      game.addToWell(resource);
     }
+
+    // we can use the new part this turn
+    action.part.ready.value = true;
 
     if (turnState == TurnState.searchSelected) {
       ret = _doSearchCompleted(action.part);
@@ -648,6 +660,7 @@ class Turn {
       player.storeResource(action.resource);
       action.producedBy.activated.value = true;
       changeStack.commit();
+      changeStack.clear();
     } else {
       ValidateResponseCode.noStorage;
     }
