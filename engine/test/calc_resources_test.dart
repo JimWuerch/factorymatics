@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:engine/engine.dart';
 import 'package:test/test.dart';
 
@@ -84,7 +82,7 @@ void main() {
     });
 
     test('Test getPayments dedup', () {
-      var tp = TestProducts();
+      //var tp = TestProducts();
       var products = <ConverterBaseProduct>[];
       // products.add(tp.clubConverter);
       // products.add(tp.clubConverter);

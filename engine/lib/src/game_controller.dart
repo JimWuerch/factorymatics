@@ -16,7 +16,7 @@ class GameController {
   }
 
   void setupGame(List<String> playerIds, PlayerService playerService, String gameId) {
-    var players = playerIds.toList();
+    var players = List<String>.of(playerIds);
     players.shuffle();
     game = Game(players, playerService, gameId);
     game.tmpName = 'controller';
@@ -58,9 +58,9 @@ class GameController {
   void loadGame(PlayerService playerService, String jsonString) {
     var json = jsonDecode(jsonString) as Map<String, dynamic>;
 
-    var playerIds = listFromJson<String>(json);
+    //var playerIds = listFromJson<String>(json);
 
-    game = Game.fromJson(playerIds, playerService, json);
+    game = Game.fromJson(playerService, json);
 
     game.changeStack = ChangeStack(); // will be discarded
 
@@ -81,9 +81,9 @@ class GameController {
   }
 
   /// Restores game state from json string [src].  Used by the client to update.
-  static Game restoreGame(List<String> players, PlayerService playerService, String src) {
+  static Game restoreGame(PlayerService playerService, String src) {
     var json = jsonDecode(src) as Map<String, dynamic>;
-    return Game.fromJson(players, playerService, json);
+    return Game.fromJson(playerService, json);
   }
 
   String getSaveString() {

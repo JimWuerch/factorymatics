@@ -280,7 +280,7 @@ class Turn {
       item.value = 0;
     }
     changeStack.clear();
-    isGameEndTriggered = (player.partCount() > 15) || (player.level3PartCount > 3);
+    isGameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
     game.changeStack = null;
     game.endTurn();
   }
@@ -563,7 +563,9 @@ class Turn {
     }
 
     // we can use the new part this turn
-    action.part.ready.value = true;
+    if (action.part.partType == PartType.converter) {
+      action.part.ready.value = true;
+    }
 
     if (turnState == TurnState.searchSelected) {
       ret = _doSearchCompleted(action.part);

@@ -1,4 +1,5 @@
 import 'package:engine/engine.dart';
+import 'package:factorymatics/src/game_info_model.dart';
 import 'package:factorymatics/src/game_page_model.dart';
 import 'package:factorymatics/src/part_helpers.dart';
 import 'package:factorymatics/src/part_widget.dart';
@@ -9,6 +10,9 @@ import 'package:flutter/services.dart';
 
 class GamePage extends StatefulWidget {
   final String title = 'Factorymatics';
+  final GameInfoModel gameInfoModel;
+
+  GamePage(this.gameInfoModel);
 
   @override
   _GamePageState createState() => _GamePageState();
@@ -25,7 +29,7 @@ class _GamePageState extends State<GamePage> {
       DeviceOrientation.landscapeLeft,
     ]);
 
-    model = GamePageModel('wheee', context);
+    model = GamePageModel(widget.gameInfoModel, context);
     model.init();
   }
 
@@ -273,17 +277,14 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future<void> _onResourceTapped(int index) async {
-    print('Tapped $index');
     model.resourceSelected(index);
   }
 
   Future<void> _onPartTapped(Part part) async {
-    print('Tapped part ${part.id}');
     model.partTapped(part);
   }
 
   Future<void> _onProductTapped(Product product) async {
-    print('Tapped product ${product.productType}');
     model.productTapped(product);
   }
 
@@ -292,6 +293,34 @@ class _GamePageState extends State<GamePage> {
   }
 
   Future<void> _onEndTurnTapped() async {
+    var unused = model.unusedProducts();
+    if (unused > 0) {
+      if (!await showDialog<bool>(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text('End Turn'),
+            content: Text('You have $unused unused products.  Do you want to end your turn?'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, true);
+                },
+                child: const Text('OK'),
+              ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: const Text('Cancel'),
+              ),
+            ],
+          );
+        },
+      )) {
+        return;
+      }
+    }
     model.doEndTurn();
   }
 }

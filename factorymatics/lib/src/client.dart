@@ -13,17 +13,20 @@ abstract class Client {
 class LocalClient extends Client {
   final LocalServer server;
   final LocalClientTransport clientTransport;
-  final String owner;
+  //final String owner;
 
-  LocalClient._create(this.server, this.owner, this.clientTransport);
+  LocalClient._create(this.server, this.clientTransport);
 
-  factory LocalClient(String owner) {
+  factory LocalClient(List<String> players) {
     var server = LocalServer();
     var clientTransport = LocalClientTransport(server.transport);
 
-    server.server.createPlayer('bob', 'id1');
+    for (var element in players) {
+      server.server.createPlayer(element, element);
+    }
+    //server.server.createPlayer('bob', 'id1');
 
-    return LocalClient._create(server, owner, clientTransport);
+    return LocalClient._create(server, clientTransport);
   }
 
   @override
@@ -31,14 +34,14 @@ class LocalClient extends Client {
 
   @override
   Future<ResponseModel> postAction(Game game, GameAction action) {
-    return postRequest(ActionRequest(game, owner, action));
+    return postRequest(ActionRequest(game, action));
   }
 
   @override
   List<Future<ResponseModel>> postActionList(Game game, List<GameAction> actions) {
     var ret = <Future<ResponseModel>>[];
     for (var action in actions) {
-      ret.add(postRequest(ActionRequest(game, owner, action)));
+      ret.add(postRequest(ActionRequest(game, action)));
     }
     return ret;
   }

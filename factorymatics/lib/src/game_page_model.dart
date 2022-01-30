@@ -3,59 +3,62 @@ import 'dart:collection';
 
 import 'package:engine/engine.dart';
 import 'package:factorymatics/src/client.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:factorymatics/src/game_info_model.dart';
+import 'package:flutter/material.dart';
 
 import 'dialogs/ask_payment_dialog.dart';
 
 class GamePageModel {
   Game game;
-  String gameId;
-  LocalClient client;
-  String playerId = 'id1';
+
+  String playerId; // = 'id1';
+  String playerName; // = 'bob';
   final StreamController<int> _notifierController = StreamController<int>.broadcast();
   Stream<int> get notifier => _notifierController.stream;
-  PlayerService playerService;
-  List<String> players;
-  String playerName = 'bob';
   List<GameAction> availableActions = <GameAction>[];
   final BuildContext gamePageContext;
-  //bool isAcquireProductActive = false;
+  final GameInfoModel gameInfoModel;
 
-  GamePageModel(this.gameId, this.gamePageContext);
+  GamePageModel(this.gameInfoModel, this.gamePageContext);
 
   Future<void> init() async {
-    playerService = PlayerService.createService();
-    client = LocalClient(playerId);
-    var response = await client.postRequest(CreateLobbyRequest(playerId, 'game_name', 'bob', ''));
-    if (response.responseCode != ResponseCode.ok) {
-      _notifierController.addError(null);
-    }
-    gameId = (response as CreateLobbyResponse).gameId;
-    response = await client.postRequest(CreateGameRequest(gameId, playerId));
-    if (response.responseCode != ResponseCode.ok) {
-      _notifierController.addError(null);
-    }
-    var createGameResponse = response as CreateGameResponse;
-    if (createGameResponse != null) {
-      players = createGameResponse.players;
-      for (var player in createGameResponse.players) {
-        playerService.addPlayer(player, player);
-      }
-    }
     await doGameUpdate();
   }
 
   /// Update the game state.  Set [noNotify] to true to prevent listeners from getting notified
   Future<void> doGameUpdate({bool noNotify = false}) async {
-    var response = await client.postRequest(JoinGameRequest(gameId, playerId));
+    var response = await gameInfoModel.client.postRequest(JoinGameRequest(gameInfoModel.gameId, playerId));
     if (response.responseCode != ResponseCode.ok) {
       _notifierController.addError(null);
     }
     if (response is JoinGameResponse) {
-      game = GameController.restoreGame(players, null, response.gameState);
+      game = GameController.restoreGame(null, response.gameState);
       game.tmpName = 'client';
       if (game.currentTurn != null) {
         availableActions = game.currentTurn.getAvailableActions();
+      }
+      if (gameInfoModel.client is LocalClient) {
+        if (game.currentPlayer.id != playerId) {
+          playerId = game.currentPlayer.id;
+          playerName = game.currentPlayer.id;
+          await showDialog<void>(
+            context: gamePageContext,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('New Turn'),
+                content: Text('Player $playerName\'s turn'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    child: const Text('OK'),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       }
       // start turn if it's our turn
       if (isOurTurn && (game.currentTurn.turnState.value == TurnState.notStarted)) {
@@ -69,7 +72,7 @@ class GamePageModel {
   }
 
   Future<void> doStartTurn() async {
-    var startTurnResponse = await client.postAction(game, GameModeAction(playerId, GameModeType.startTurn));
+    var startTurnResponse = await gameInfoModel.client.postAction(game, GameModeAction(playerId, GameModeType.startTurn));
     if (startTurnResponse.responseCode != ResponseCode.ok) {
       _notifierController.addError(null);
     }
@@ -147,7 +150,7 @@ class GamePageModel {
   bool get canAcquire => game.currentTurn?.player?.hasResourceStorageSpace ?? false;
 
   Future<ResponseCode> _postAction(GameAction action) async {
-    var response = await client.postAction(game, action);
+    var response = await gameInfoModel.client.postAction(game, action);
     if (response.responseCode != ResponseCode.ok) {
       return response.responseCode;
     }
@@ -199,7 +202,7 @@ class GamePageModel {
         for (var used in paths[index].history) {
           if (used.product.productType != ProductType.spend) {
             var act = used.product.produce(game, playerId);
-            var response = await client.postAction(game, act);
+            var response = await gameInfoModel.client.postAction(game, act);
             if (response.responseCode != ResponseCode.ok) {
               _notifierController.addError(null);
             }
@@ -216,7 +219,7 @@ class GamePageModel {
       }
     }
     if (action != null) {
-      var response = await client.postAction(game, action);
+      var response = await gameInfoModel.client.postAction(game, action);
       if (response.responseCode != ResponseCode.ok) {
         _notifierController.addError(null);
         return;
@@ -234,7 +237,7 @@ class GamePageModel {
     action = product.produce(game, playerId);
 
     if (action != null) {
-      var response = await client.postAction(game, action);
+      var response = await gameInfoModel.client.postAction(game, action);
       if (response.responseCode != ResponseCode.ok) {
         return;
         // response.responseCode;
@@ -250,5 +253,9 @@ class GamePageModel {
 
   Future<void> doEndTurn() async {
     await _postAction(GameModeAction(playerId, GameModeType.endTurn));
+  }
+
+  int unusedProducts() {
+    return game.currentPlayer.unusedProductCount();
   }
 }

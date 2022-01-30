@@ -67,8 +67,7 @@ class GameServer {
       case GameModelType.actionRequest:
         var request = model as ActionRequest;
         var response = doAction(request.gameId, request.action);
-        return ActionResponse(request.gameId, request.ownerId,
-            response.item1 == ValidateResponseCode.ok ? ResponseCode.ok : ResponseCode.error, response.item2);
+        return ActionResponse(request.gameId, request.ownerId, response.item1 == ValidateResponseCode.ok ? ResponseCode.ok : ResponseCode.error, response.item2);
 
       case GameModelType.joinGameRequest:
         var request = model as JoinGameRequest;
@@ -81,6 +80,11 @@ class GameServer {
         playerService.addPlayer(request.playerName, request.ownerId);
         var lobby = createGameLobby(request.ownerId);
         return CreateLobbyResponse(lobby, request.ownerId, ResponseCode.ok);
+
+      case GameModelType.joinLobbyRequest:
+        var request = model as JoinLobbyRequest;
+        joinPlayerToGame(request.gameId, request.playerName);
+        return JoinLobbyResponse(request.gameId, request.ownerId, ResponseCode.ok);
 
       default:
         return null;

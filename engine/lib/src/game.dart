@@ -54,8 +54,8 @@ class Game {
   bool canUndo;
 
   Game(List<String> playerNames, this.playerService, this.gameId) {
-    uuidGen = Uuid();
-    players = <PlayerData>[];
+    _initialize();
+
     changeStack = ChangeStack(); // we'll throw this away
     for (var p in playerNames) {
       var playerId = playerService != null ? playerService.getPlayer(p).playerId : p;
@@ -63,13 +63,30 @@ class Game {
     }
     changeStack.clear();
 
-    allParts = <String, Part>{};
-
     _createGame();
+    _giveStartingParts();
+  }
+
+  Game._fromSerialize(this.gameId, this.playerService) {
+    _initialize();
+    _createGame();
+  }
+
+  void _initialize() {
+    allParts = <String, Part>{};
+    uuidGen = Uuid();
+    players = <PlayerData>[];
   }
 
   String getUuid() {
     return uuidGen.v4();
+  }
+
+  void _giveStartingParts() {
+    // give players their starting parts
+    for (var player in players) {
+      player.buyPart(allParts[Part.startingPartId]);
+    }
   }
 
   void _createGame() {
@@ -84,11 +101,6 @@ class Game {
       saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
     }
     createParts(this);
-
-    // give players their starting parts
-    for (var player in players) {
-      player.buyPart(allParts[Part.startingPartId]);
-    }
   }
 
   void assignStartingDecks(List<List<Part>> decks) {
@@ -277,10 +289,10 @@ class Game {
     return ret;
   }
 
-  factory Game.fromJson(List<String> players, PlayerService playerService, Map<String, dynamic> json) {
+  factory Game.fromJson(PlayerService playerService, Map<String, dynamic> json) {
     var gameId = json['gameId'] as String;
 
-    var game = Game(players, playerService, gameId);
+    var game = Game._fromSerialize(gameId, playerService);
     var changeStack = ChangeStack(); // we'll discard this
     game.changeStack = changeStack;
     partStringToList(json['s1'] as String, (part) => game.saleParts[0].add(part), game.allParts);

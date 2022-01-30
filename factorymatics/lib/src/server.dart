@@ -26,7 +26,7 @@ class LocalServer extends Server {
 
   @override
   Future<ResponseModel> postAction(GameAction action) async {
-    return await transport.sendRequest(ActionRequest(_game, 'bob', action));
+    return await transport.sendRequest(ActionRequest(_game, action));
   }
 
   void handleAction(GameAction action) {
