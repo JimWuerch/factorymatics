@@ -11,6 +11,7 @@ enum TurnState {
   selectedActionCompleted, // ready to handle triggered actions
   acquireRequested, // acquire request as result of product triggered
   ended, // received end turn action
+  gameEnded, // end of game detected, no more allowed actions
 }
 
 class Turn {
@@ -279,8 +280,12 @@ class Turn {
     for (var item in convertedResources.values) {
       item.value = 0;
     }
-    changeStack.clear();
     isGameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
+    if (isGameEndTriggered) {
+      turnState.value = TurnState.gameEnded;
+    }
+
+    changeStack.clear();
     game.changeStack = null;
     game.endTurn();
   }

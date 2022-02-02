@@ -16,25 +16,25 @@ class ResourceStorageWidget extends StatelessWidget {
           Row(
             children: [
               resourceToIcon(ResourceType.heart, resourceToColor(ResourceType.heart)),
-              Text(' : ${resources[ResourceType.heart]} ')
+              Text(' : ${resources[ResourceType.heart]} '),
             ],
           ),
           Row(
             children: [
               resourceToIcon(ResourceType.diamond, resourceToColor(ResourceType.diamond)),
-              Text(' : ${resources[ResourceType.diamond]} ')
+              Text(' : ${resources[ResourceType.diamond]} '),
             ],
           ),
           Row(
             children: [
               resourceToIcon(ResourceType.spade, resourceToColor(ResourceType.spade)),
-              Text(' : ${resources[ResourceType.spade]} ')
+              Text(' : ${resources[ResourceType.spade]} '),
             ],
           ),
           Row(
             children: [
               resourceToIcon(ResourceType.club, resourceToColor(ResourceType.club)),
-              Text(' : ${resources[ResourceType.club]} ')
+              Text(' : ${resources[ResourceType.club]} '),
             ],
           ),
         ],

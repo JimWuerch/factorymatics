@@ -21,7 +21,10 @@ class PartWidget extends StatefulWidget {
 class _PartWidgetState extends State<PartWidget> {
   Widget _triggersToIcons(Part part) {
     var items = <Widget>[];
-    items.add(Text('Triggers: '));
+    items.add(Text(
+      'Triggers: ',
+      style: const TextStyle(fontWeight: FontWeight.bold),
+    ));
     for (var index = 0; index < part.triggers.length; ++index) {
       var trigger = part.triggers[index];
       switch (trigger.triggerType) {
@@ -72,6 +75,8 @@ class _PartWidgetState extends State<PartWidget> {
           resourceToIcon(product.sourceResource, resourceToColor(product.sourceResource)),
         ],
       );
+    } else if (product is VpProduct) {
+      return Text('+1 VP', style: const TextStyle(fontWeight: FontWeight.bold));
     } else {
       return Icon(productToIcon(product));
     }
@@ -81,11 +86,14 @@ class _PartWidgetState extends State<PartWidget> {
     var items = <Widget>[];
     for (var product in products) {
       if (product is DoubleResourceProduct || product is ConvertProduct || product is VpProduct) continue;
-      items.add(ElevatedButton(
-        child: _productWidget(widget.part.products[0]),
-        onPressed: !widget.model.isResourcePickerEnabled && widget.part.ready.value && !product.activated.value && (widget.onProductTap != null)
-            ? () async => await widget.onProductTap(product)
-            : null,
+      items.add(Tooltip(
+        message: productTooltipString(product.productType),
+        child: ElevatedButton(
+          child: _productWidget(product),
+          onPressed: !widget.model.isResourcePickerEnabled && widget.part.ready.value && !product.activated.value && (widget.onProductTap != null)
+              ? () async => await widget.onProductTap(product)
+              : null,
+        ),
       ));
     }
     return Row(children: items);
@@ -134,7 +142,8 @@ class _PartWidgetState extends State<PartWidget> {
           child: Padding(
             padding: EdgeInsets.all(8),
             child: Container(
-              color: widget.enabled ? Colors.white : Colors.grey[400],
+              //color: widget.enabled ? Colors.white : Colors.grey[400],
+              color: widget.enabled ? Colors.white : resourceToColor(widget.part.resource),
               child: Column(
                 children: <Widget>[
                   Row(
@@ -144,7 +153,8 @@ class _PartWidgetState extends State<PartWidget> {
                         width: iconSize,
                         height: iconSize,
                         decoration: BoxDecoration(
-                          color: Colors.grey[300],
+                          //color: Colors.grey[300],
+                          color: widget.enabled ? Colors.white : resourceToColor(widget.part.resource),
                           //borderRadius: BorderRadius.all(Radius.circular(24.0)),
                         ),
                         child: Icon(
@@ -152,9 +162,9 @@ class _PartWidgetState extends State<PartWidget> {
                           color: Colors.black,
                         ),
                       ),
-                      Text('Cost: ${widget.part.cost}'),
+                      Text('Cost: ${widget.part.cost}', style: const TextStyle(fontWeight: FontWeight.bold)),
                       resourceToIcon(widget.part.resource, resourceToColor(widget.part.resource)),
-                      Text('VP: ${widget.part.vp}'),
+                      Text('VP: ${widget.part.vp}', style: const TextStyle(fontWeight: FontWeight.bold)),
                     ],
                   ),
                   _triggersToIcons(widget.part),

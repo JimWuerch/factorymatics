@@ -195,9 +195,12 @@ class Game {
 
   void endTurn() {
     // check for game end
-
-    // if game not over, next turn
-    startNextTurn();
+    if (currentTurn.isGameEndTriggered) {
+      // do stuff here?
+    } else {
+      // if game not over, next turn
+      startNextTurn();
+    }
   }
 
   void createGame() {

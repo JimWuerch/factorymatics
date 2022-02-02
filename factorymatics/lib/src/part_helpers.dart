@@ -110,3 +110,26 @@ IconData productTypeToIcon(ProductType productType) {
     return Fontisto.question;
   }
 }
+
+String productTooltipString(ProductType productType) {
+  switch (productType) {
+    case ProductType.aquire:
+      return "Acquire a resource";
+    case ProductType.convert:
+      return "Convert a resource to a different type";
+    case ProductType.doubleResource:
+      return "Double a resource";
+    case ProductType.freeConstruct:
+      return "Construct a level 1 part for free";
+    case ProductType.mysteryMeat:
+      return "Acquire a random resource from the well";
+    case ProductType.search:
+      return "Perform the search action";
+    case ProductType.store:
+      return "Move a part into storage";
+    case ProductType.vp:
+      return "Gain a victory point";
+    default:
+      return "Unknown product";
+  }
+}

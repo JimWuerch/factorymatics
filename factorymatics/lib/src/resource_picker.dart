@@ -11,6 +11,8 @@ class ResourcePicker extends StatelessWidget {
 
   List<Widget> _makeTargets() {
     var ret = <Widget>[];
+    ret.add(Icon(partTypeToIcon(PartType.acquire)));
+    ret.add(Text('  '));
     for (var i = 0; i < resources.length; ++i) {
       ret.add(IconButton(
         icon: Icon(resourceToIconData(resources[i]), color: resourceToColor(resources[i])),

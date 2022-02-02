@@ -190,7 +190,7 @@ class GamePageModel {
         }
 
         var index = 0;
-        if (paths.length != 7) {
+        if (paths.length != 1) {
           // more than 1 way to pay, ask user for which one
           index = await showAskPaymentDialog(gamePageContext, paths);
           if (index == null) {

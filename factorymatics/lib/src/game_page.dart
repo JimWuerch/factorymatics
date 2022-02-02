@@ -182,6 +182,10 @@ class _GamePageState extends State<GamePage> {
                         //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
                       ),
                     ],
+                    bottom: PreferredSize(
+                      preferredSize: Size.fromHeight(0.0),
+                      child: ResourceStorageWidget(resources: model.getAvailableResources()),
+                    ),
                   ),
                   body: SafeArea(
                     child: SingleChildScrollView(
@@ -233,10 +237,10 @@ class _GamePageState extends State<GamePage> {
                             SizedBox(
                               height: 10,
                             ),
-                            ResourceStorageWidget(resources: model.getAvailableResources()),
-                            SizedBox(
-                              height: 10,
-                            ),
+                            // ResourceStorageWidget(resources: model.getAvailableResources()),
+                            // SizedBox(
+                            //   height: 10,
+                            // ),
                             Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.baseline,
