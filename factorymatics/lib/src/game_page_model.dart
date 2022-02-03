@@ -13,6 +13,7 @@ class GamePageModel {
 
   String playerId; // = 'id1';
   String playerName; // = 'bob';
+  PlayerData displayPlayer;
   final StreamController<int> _notifierController = StreamController<int>.broadcast();
   Stream<int> get notifier => _notifierController.stream;
   List<GameAction> availableActions = <GameAction>[];
@@ -38,6 +39,7 @@ class GamePageModel {
         availableActions = game.currentTurn.getAvailableActions();
       }
       if (gameInfoModel.client is LocalClient) {
+        displayPlayer = game.currentPlayer;
         if (game.currentPlayer.id != playerId) {
           playerId = game.currentPlayer.id;
           playerName = game.currentPlayer.id;
@@ -59,24 +61,27 @@ class GamePageModel {
             },
           );
         }
+      } else {
+        // not a local game
+        displayPlayer = game.getPlayerFromId(playerId);
       }
       // start turn if it's our turn
-      if (isOurTurn && (game.currentTurn.turnState.value == TurnState.notStarted)) {
-        doStartTurn();
-        await doGameUpdate(noNotify: true);
-      }
+      // if (isOurTurn && (game.currentTurn.turnState.value == TurnState.notStarted)) {
+      //   doStartTurn();
+      //   await doGameUpdate(noNotify: true);
+      // }
       _notifierController.add(1);
     } else {
       _notifierController.addError(null);
     }
   }
 
-  Future<void> doStartTurn() async {
-    var startTurnResponse = await gameInfoModel.client.postAction(game, GameModeAction(playerId, GameModeType.startTurn));
-    if (startTurnResponse.responseCode != ResponseCode.ok) {
-      _notifierController.addError(null);
-    }
-  }
+  // Future<void> doStartTurn() async {
+  //   var startTurnResponse = await gameInfoModel.client.postAction(game, GameModeAction(playerId, GameModeType.startTurn));
+  //   if (startTurnResponse.responseCode != ResponseCode.ok) {
+  //     _notifierController.addError(null);
+  //   }
+  // }
 
   bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
 
@@ -84,15 +89,16 @@ class GamePageModel {
       game.currentTurn?.turnState?.value == TurnState.acquireRequested);
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
+  bool get isActivePlayer => displayPlayer.id == game.currentPlayer.id;
 
-  bool get canUndo => game.canUndo;
+  bool get canUndo => game.canUndo && isOurTurn;
 
-  bool get canEndTurn => game.currentTurn?.turnState?.value == TurnState.selectedActionCompleted;
+  bool get canEndTurn => isOurTurn && game.currentTurn?.turnState?.value == TurnState.selectedActionCompleted;
 
   Map<ResourceType, int> getAvailableResources() {
     var ret = <ResourceType, int>{};
-    var player = game.getPlayerFromId(playerName);
-    for (var item in player.resources.entries) {
+    //var player = game.getPlayerFromId(displayPlayer.id)
+    for (var item in displayPlayer.resources.entries) {
       ret[item.key] = item.value.value;
     }
     return ret;
@@ -145,9 +151,11 @@ class GamePageModel {
     return ret;
   }
 
-  bool get canStore => game.currentTurn?.player?.hasPartStorageSpace ?? false;
+  bool get canStore => game.currentPlayer.hasPartStorageSpace;
 
-  bool get canAcquire => game.currentTurn?.player?.hasResourceStorageSpace ?? false;
+  bool get canAcquire => game.currentPlayer.hasResourceStorageSpace;
+
+  bool get canConstruct => game.currentTurn.getAffordableParts(0).isNotEmpty;
 
   Future<ResponseCode> _postAction(GameAction action) async {
     var response = await gameInfoModel.client.postAction(game, action);

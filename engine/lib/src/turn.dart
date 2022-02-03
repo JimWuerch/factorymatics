@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:engine/engine.dart';
 import 'package:tuple/tuple.dart';
 
@@ -244,12 +246,13 @@ class Turn {
     }
   }
 
-  void _addAffordablePartActions(List<GameAction> actions, Product producedBy, int discount) {
+  HashSet<Part> getAffordableParts(int discount) {
+    var items = HashSet<Part>();
     for (var i = 0; i < 3; ++i) {
       for (var part in game.saleParts[i]) {
         if (part.level == 1) discount += player.constructLevel2Discount;
         if (player.canAfford(part, discount, convertedResources)) {
-          actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
+          items.add(part);
         }
       }
     }
@@ -257,8 +260,16 @@ class Turn {
       if (part.level == 1) discount += player.constructLevel2Discount;
       discount += player.constructFromStoreDiscount;
       if (player.canAfford(part, discount, convertedResources)) {
-        actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
+        items.add(part);
       }
+    }
+    return items;
+  }
+
+  void _addAffordablePartActions(List<GameAction> actions, Product producedBy, int discount) {
+    var parts = getAffordableParts(discount);
+    for (var part in parts) {
+      actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy));
     }
   }
 
@@ -465,12 +476,38 @@ class Turn {
     }
   }
 
-  void _doTriggers(GameAction gameAction, PartType partType) {
+  void _doTriggers(Game game, GameAction gameAction, PartType partType) {
     for (var part in player.parts[partType]) {
       if (!part.ready.value) {
         for (var trigger in part.triggers) {
           if (trigger.isTriggeredBy(gameAction)) {
             part.ready.value = true;
+            _fixResourceAcquireProducts(player);
+            _doTriggeredVpProducts(game, part, gameAction.owner);
+          }
+        }
+      }
+    }
+  }
+
+  // don't make the user manually trigger VP actions
+  void _doTriggeredVpProducts(Game game, Part part, String playerId) {
+    for (var product in part.products) {
+      if (!product.activated.value && product is VpProduct) {
+        _doVp((product.produce(game, playerId)) as VpAction);
+      }
+    }
+  }
+
+  // if any products require resource storage space,
+  // disable them if the player has no space
+  void _fixResourceAcquireProducts(PlayerData player) {
+    if (player.hasResourceStorageSpace) return;
+    for (var partList in player.parts.values) {
+      for (var part in partList) {
+        for (var product in part.products) {
+          if (!product.activated.value && (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat)) {
+            product.activated.value = true;
           }
         }
       }
@@ -521,7 +558,7 @@ class Turn {
       action.producedBy.activated.value = true;
     }
 
-    _doTriggers(action, PartType.storage);
+    _doTriggers(game, action, PartType.storage);
 
     if (turnState.value == TurnState.actionSelected) {
       turnState.value = TurnState.selectedActionCompleted;
@@ -539,7 +576,7 @@ class Turn {
     if (action.producedBy != null) {
       action.producedBy.activated.value = true;
     }
-    _doTriggers(action, PartType.construct);
+    _doTriggers(game, action, PartType.construct);
 
     if (turnState.value != TurnState.searchSelected) {
       if (game.isForSale(action.part) || game.isInDeck(action.part)) {
@@ -599,7 +636,7 @@ class Turn {
         action.producedBy.activated.value = true;
       }
 
-      _doTriggers(action, PartType.acquire);
+      _doTriggers(game, action, PartType.acquire);
 
       if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.acquireRequested) {
         turnState.value = TurnState.selectedActionCompleted;
@@ -666,6 +703,7 @@ class Turn {
       action.resource = game.getFromWell();
       player.storeResource(action.resource);
       action.producedBy.activated.value = true;
+      _fixResourceAcquireProducts(player);
       changeStack.commit();
       changeStack.clear();
     } else {

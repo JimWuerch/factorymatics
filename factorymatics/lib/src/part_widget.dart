@@ -25,6 +25,21 @@ class _PartWidgetState extends State<PartWidget> {
       'Triggers: ',
       style: const TextStyle(fontWeight: FontWeight.bold),
     ));
+    if (part is EnhancementPart) {
+      if (part.resourceStorage > 0) {
+        items.add(Icon(partTypeToIcon(PartType.acquire)));
+        items.add(Text(':${part.resourceStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)));
+      }
+      if (part.partStorage > 0) {
+        items.add(Icon(partTypeToIcon(PartType.storage)));
+        items.add(Text(':${part.partStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)));
+      }
+      if (part.search > 0) {
+        items.add(Icon(actionToIcon(ActionType.search)));
+        items.add(Text(':${part.search}', style: const TextStyle(fontWeight: FontWeight.bold)));
+      }
+      return Row(children: items);
+    }
     for (var index = 0; index < part.triggers.length; ++index) {
       var trigger = part.triggers[index];
       switch (trigger.triggerType) {
@@ -85,7 +100,7 @@ class _PartWidgetState extends State<PartWidget> {
   Widget _productsToIcons(List<Product> products) {
     var items = <Widget>[];
     for (var product in products) {
-      if (product is DoubleResourceProduct || product is ConvertProduct || product is VpProduct) continue;
+      if (product is DoubleResourceProduct || product is ConvertProduct) continue;
       items.add(Tooltip(
         message: productTooltipString(product.productType),
         child: ElevatedButton(

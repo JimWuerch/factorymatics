@@ -185,10 +185,7 @@ class Game {
     changeStack.clear();
 
     currentTurn = Turn(this, getNextPlayer());
-    //gameTurns.add(turn);
-    //_currentTurn++;
-
-    //turn.startTurn();
+    currentTurn.startTurn();
 
     return currentTurn;
   }
