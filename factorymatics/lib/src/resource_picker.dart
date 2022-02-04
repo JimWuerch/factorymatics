@@ -25,7 +25,7 @@ class ResourcePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: enabled ? Colors.lightBlueAccent : Colors.white,
+      color: enabled ? Colors.lightBlueAccent : Colors.transparent,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: _makeTargets(),

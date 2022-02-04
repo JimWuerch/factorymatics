@@ -39,7 +39,12 @@ class GamePageModel {
         availableActions = game.currentTurn.getAvailableActions();
       }
       if (gameInfoModel.client is LocalClient) {
-        displayPlayer = game.currentPlayer;
+        if (displayPlayer == null) {
+          displayPlayer = game.currentPlayer;
+        } else {
+          // we make a new game object so we need to refresh the player object
+          displayPlayer = game.getPlayerFromId(displayPlayer.id);
+        }
         if (game.currentPlayer.id != playerId) {
           playerId = game.currentPlayer.id;
           playerName = game.currentPlayer.id;
@@ -185,6 +190,11 @@ class GamePageModel {
     return await _postAction(AcquireAction(playerId, index, null));
   }
 
+  Future<void> playerNameTapped(String playerId) async {
+    displayPlayer = game.getPlayerFromId(playerId);
+    return await doGameUpdate();
+  }
+
   Future<void> partTapped(Part part) async {
     GameAction action;
     if (game.currentTurn.turnState.value == TurnState.actionSelected) {
@@ -260,6 +270,7 @@ class GamePageModel {
   }
 
   Future<void> doEndTurn() async {
+    displayPlayer = null;
     await _postAction(GameModeAction(playerId, GameModeType.endTurn));
   }
 

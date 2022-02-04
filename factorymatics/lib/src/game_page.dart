@@ -3,6 +3,7 @@ import 'package:factorymatics/src/game_info_model.dart';
 import 'package:factorymatics/src/game_page_model.dart';
 import 'package:factorymatics/src/part_helpers.dart';
 import 'package:factorymatics/src/part_widget.dart';
+import 'package:factorymatics/src/player_list_widget.dart';
 import 'package:factorymatics/src/resource_picker.dart';
 import 'package:factorymatics/src/resource_storage_widget.dart';
 import 'package:flutter/material.dart';
@@ -131,7 +132,7 @@ class _GamePageState extends State<GamePage> {
         }
         break;
       case 5:
-        children.add(_makeActionButton(ActionType.search, true, ''));
+        children.add(_makeActionButton(ActionType.search, true, 'Search'));
         for (var part in model.displayPlayer.savedParts) {
           children.add(PartWidget(part: part, enabled: enabledParts.contains(part.id), onTap: _onPartTapped, onProductTap: null, model: model));
         }
@@ -172,6 +173,7 @@ class _GamePageState extends State<GamePage> {
                   ),
                 ),
                 child: Scaffold(
+                  backgroundColor: Colors.yellow.shade100,
                   appBar: AppBar(
                     // Here we take the value from the MyHomePage object that was created by
                     // the App.build method, and use it to set our appbar title.
@@ -197,89 +199,89 @@ class _GamePageState extends State<GamePage> {
                         //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
                       ),
                     ],
-                    bottom: PreferredSize(
-                      preferredSize: Size.fromHeight(0.0),
-                      child: ResourceStorageWidget(resources: model.getAvailableResources()),
-                    ),
+                    // bottom: PreferredSize(
+                    //   preferredSize: Size.fromHeight(0.0),
+                    //   child: ResourceStorageWidget(resources: model.getAvailableResources()),
+                    // ),
                   ),
                   body: SafeArea(
                     child: SingleChildScrollView(
                       child: Container(
-                        color: Colors.white,
-                        child: Column(
-                          // Column is also a layout widget. It takes a list of children and
-                          // arranges them vertically. By default, it sizes itself to fit its
-                          // children horizontally, and tries to be as tall as its parent.
-                          //
-                          // Invoke "debug painting" (press "p" in the console, choose the
-                          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-                          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-                          // to see the wireframe for each widget.
-                          //
-                          // Column has various properties to control how it sizes itself and
-                          // how it positions its children. Here we use mainAxisAlignment to
-                          // center the children vertically; the main axis here is the vertical
-                          // axis because Columns are vertical (the cross axis would be
-                          // horizontal).
-                          //mainAxisAlignment: MainAxisAlignment.center,
-                          children: <Widget>[
-                            Container(
-                              decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
-                              padding: EdgeInsets.only(left: 10, right: 10),
-                              width: 350,
-                              child: ResourcePicker(
-                                resources: model.game.availableResources.toList(),
-                                enabled: model.isResourcePickerEnabled,
-                                onTap: _onResourceTapped,
-                              ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            Container(
-                              decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
-                              padding: EdgeInsets.all(10),
-                              width: 900,
-                              child: Column(
+                        //color: Colors.yellow.shade100,
+                        child: Center(
+                          child: Column(
+                            children: <Widget>[
+                              Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
-                                children: <Widget>[
-                                  _makePartList(model.game.saleParts[2].list),
-                                  _makePartList(model.game.saleParts[1].list),
-                                  _makePartList(model.game.saleParts[0].list),
+                                children: [
+                                  Column(
+                                    children: [
+                                      PlayerListWidget(
+                                        game: model.game,
+                                        onTap: (model.game.currentTurn.turnState.value == TurnState.started ||
+                                                model.game.currentTurn.turnState.value == TurnState.selectedActionCompleted)
+                                            ? model.playerNameTapped
+                                            : null,
+                                      ),
+                                    ],
+                                  ),
+                                  Column(
+                                    children: [
+                                      Container(
+                                        decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
+                                        padding: EdgeInsets.only(left: 10, right: 10),
+                                        width: 350,
+                                        child: ResourcePicker(
+                                          resources: model.game.availableResources.toList(),
+                                          enabled: model.isResourcePickerEnabled,
+                                          onTap: _onResourceTapped,
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      ConstrainedBox(
+                                        constraints: BoxConstraints(minWidth: 900),
+                                        child: Container(
+                                          decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
+                                          padding: EdgeInsets.all(10),
+                                          //width: 900,
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: <Widget>[
+                                              _makePartList(model.game.saleParts[2].list),
+                                              _makePartList(model.game.saleParts[1].list),
+                                              _makePartList(model.game.saleParts[0].list),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      SizedBox(
+                                        height: 10,
+                                      ),
+                                      ResourceStorageWidget(resources: model.getAvailableResources()),
+                                    ],
+                                  ),
                                 ],
                               ),
-                            ),
-                            SizedBox(
-                              height: 10,
-                            ),
-                            // ResourceStorageWidget(resources: model.getAvailableResources()),
-                            // SizedBox(
-                            //   height: 10,
-                            // ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              children: <Widget>[
-                                _makeColumn(0),
-                                _makeColumn(1),
-                                _makeColumn(2),
-                                _makeColumn(3),
-                                _makeColumn(4),
-                                _makeColumn(5),
-                              ],
-                            ),
-                            // Row(
-                            //   mainAxisAlignment: MainAxisAlignment.end,
-                            //   children: <Widget>[
-                            //     RaisedButton(child: Text('Undo'), onPressed: model.canUndo ? _onUndoTapped : null),
-                            //     SizedBox(width: 10),
-                            //     RaisedButton(
-                            //         child: Text('End Turn'), onPressed: model.canEndTurn ? _onEndTurnTapped : null),
-                            //     SizedBox(width: 10)
-                            //   ],
-                            // ),
-                          ],
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                children: <Widget>[
+                                  _makeColumn(0),
+                                  _makeColumn(1),
+                                  _makeColumn(2),
+                                  _makeColumn(3),
+                                  _makeColumn(4),
+                                  _makeColumn(5),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
