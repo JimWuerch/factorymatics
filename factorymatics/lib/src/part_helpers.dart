@@ -38,7 +38,7 @@ IconData actionToIcon(ActionType actionType) {
   }
 }
 
-IconData resourceToIconData(ResourceType resourceType) {
+IconData resourceToIconData(ResourceType resourceType, {bool outline = false}) {
   switch (resourceType) {
     case ResourceType.none:
       return Icons.cancel;

@@ -141,6 +141,7 @@ class Turn {
     // we can build or store one of the parts we searched
     if (turnState.value == TurnState.searchSelected) {
       _addSearchedPartActions(ret);
+      return ret;
     }
 
     if (turnState.value == TurnState.acquireRequested) {
@@ -189,6 +190,7 @@ class Turn {
         actions.add(StoreAction(player.id, part, null));
       }
     }
+    actions.add(SearchDeclinedAction(player.id, null));
   }
 
   void _addAllAvailableActions(List<GameAction> actions, Part part, GameAction action) {
@@ -211,9 +213,13 @@ class Turn {
 
         case ActionType.search:
           // can search one of the 3 decks
-          actions.add(SearchAction(player.id, 0));
-          actions.add(SearchAction(player.id, 1));
-          actions.add(SearchAction(player.id, 2));
+          for (var level = 0; level < 3; ++level) {
+            if (game.partDecks[level].isNotEmpty) {
+              actions.add(SearchAction(player.id, level));
+            }
+          }
+          // actions.add(SearchAction(player.id, 1));
+          // actions.add(SearchAction(player.id, 2));
           break;
 
         default:
@@ -232,6 +238,8 @@ class Turn {
         actions.add(action);
       }
     } else if (action is RequestAcquireAction) {
+      actions.add(action);
+    } else if (action is SearchDeclinedAction) {
       actions.add(action);
     }
   }
@@ -301,70 +309,6 @@ class Turn {
     game.endTurn();
   }
 
-/*
-  ValidateResponseCode verifyAction(GameAction action) {
-    // first make sure it's something that the game state allows
-    if (action.owner != player.id) {
-      return ValidateResponseCode.outOfTurn;
-    }
-    var code = isAvailableAction(action);
-    if (code != ValidateResponseCode.ok) return code;
-
-    // now make sure the player can do the action
-    switch (action.actionType) {
-      case ActionType.store:
-        //case ActionType.requestStore:
-        return player.hasPartStorageSpace ? ValidateResponseCode.ok : ValidateResponseCode.noStorage;
-
-      case ActionType.construct:
-        var a = action as ConstructAction;
-        if (!isDuringSearch && !game.isForSale(a.part)) {
-          return ValidateResponseCode.partNotForSale;
-        }
-        if (isDuringSearch && !game.isInDeck(a.part)) {
-          return ValidateResponseCode.partNotForSale;
-        }
-
-        return player.canAfford(a.part) ? ValidateResponseCode.ok : ValidateResponseCode.cantAfford;
-      // case ActionType.requestConstruct:
-      //   var a = action as ConstructAction;
-      //   return isPartForSale(a.part) && player.canAfford(a.part);
-
-      case ActionType.acquire:
-        //case ActionType.requestAcquire:
-        return player.hasResourceStorageSpace ? ValidateResponseCode.ok : ValidateResponseCode.noStorage;
-
-      case ActionType.search:
-        return verifyAction((action as SearchAction).action);
-      // case ActionType.requestSearch:
-      //   return verifyAction((action as RequestSearchAction).action);
-
-      case ActionType.convert:
-        return player.hasResource((action as ConvertAction).source)
-            ? ValidateResponseCode.ok
-            : ValidateResponseCode.cantAfford;
-      // case ActionType.requestConvert:
-      //   return player.hasResource((action as RequestConvertAction).source);
-
-      case ActionType.doubleConvert:
-        if (!player.hasResource((action as DoubleConvertAction).source)) return ValidateResponseCode.cantAfford;
-        return player.hasResourceStorageSpace ? ValidateResponseCode.ok : ValidateResponseCode.noStorage;
-      // case ActionType.requestDoubleConvert:
-      //   return player.hasResource((action as DoubleConvertAction).source) && player.hasResourceStorageSpace;
-
-      case ActionType.mysteryMeat:
-        // case ActionType.requestMysteryMeat:
-        return player.hasResourceStorageSpace ? ValidateResponseCode.ok : ValidateResponseCode.noStorage;
-
-      case ActionType.vp:
-        // case ActionType.requestVp:
-        return ValidateResponseCode.ok;
-
-      default:
-        return ValidateResponseCode.unknownAction;
-    }
-  }
-*/
   // check to see if the player is even allowed to do the action
   GameAction _isAvailableAction(GameAction action) {
     var availableActions = getAvailableActions();
@@ -375,41 +319,6 @@ class Turn {
     return null;
   }
 
-  // ValidateResponseCode selectAction(GameAction action) {
-  //   selectedAction.value = action.actionType;
-
-  //   switch (selectedAction.value) {
-  //     case ActionType.store:
-  //       _selectedStoreAction(action as StoreAction);
-  //       break;
-
-  //     case ActionType.acquire:
-  //       _selectedAcquireAction(action as AcquireAction);
-  //       break;
-
-  //     case ActionType.construct:
-  //       _selectedConstructAction(action as ConstructAction);
-  //       break;
-
-  //     case ActionType.search:
-  //       _selectedSearchAction(action as SearchAction);
-  //       break;
-
-  //     default:
-  //       return ValidateResponseCode.unknownAction;
-  //   }
-
-  //   return ValidateResponseCode.ok;
-  // }
-
-  // void _selectedStoreAction(GameAction action) {}
-
-  // void _selectedAcquireAction(GameAction action) {}
-
-  // void _selectedConstructAction(GameAction action) {}
-
-  // void _selectedSearchAction(GameAction action) {}
-
   Tuple2<ValidateResponseCode, GameAction> processAction(GameAction action) {
     var matchedAction = _isAvailableAction(action);
     if (matchedAction == null) {
@@ -417,7 +326,7 @@ class Turn {
     }
 
     // the source may not know who made the action available
-    action.producedBy == matchedAction.producedBy;
+    //action.producedBy == matchedAction.producedBy;
 
     switch (action.actionType) {
       case ActionType.gameMode:
@@ -657,7 +566,7 @@ class Turn {
 
     searchedParts = <Part>[];
     var parts = <String>[];
-    for (var i = 0; i < player.search; ++i) {
+    for (var i = 0; i < player.search && game.partDecks[action.level].isNotEmpty; ++i) {
       var part = game.drawPart(action.level);
       searchedParts.add(part);
       parts.add(part.id);

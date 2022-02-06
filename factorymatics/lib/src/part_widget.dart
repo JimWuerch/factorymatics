@@ -19,6 +19,15 @@ class PartWidget extends StatefulWidget {
 }
 
 class _PartWidgetState extends State<PartWidget> {
+  // if the resource is spade, then we need to fix anything that is black
+  Color _fixColor(Color bg, Color fg) {
+    if (bg == fg) {
+      return Colors.white;
+    } else {
+      return fg;
+    }
+  }
+
   Widget _triggersToIcons(Part part) {
     var items = <Widget>[];
     items.add(Text(

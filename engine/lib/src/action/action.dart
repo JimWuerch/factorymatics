@@ -32,6 +32,7 @@ enum ActionType {
   internal,
   searchActionResult,
   requestAcquire,
+  searchDeclined,
   // requestStore,
   // requestConstruct,
   // requestAcquire,
@@ -107,6 +108,8 @@ GameAction actionFromJson(Game game, Map<String, dynamic> json) {
       return GameModeAction.fromJson(game, json);
     case ActionType.requestAcquire:
       return RequestAcquireAction.fromJson(game, json);
+    case ActionType.searchDeclined:
+      return SearchDeclinedAction.fromJson(game, json);
     // case ActionType.requestStore:
     //   return RequestStoreAction.fromJson(game, json);
     // case ActionType.requestConstruct:

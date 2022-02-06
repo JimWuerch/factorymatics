@@ -52,3 +52,24 @@ class SearchActionResult extends GameAction {
       : parts = listFromJson<String>(json['parts']),
         super.fromJson(game, json);
 }
+
+/// User did a search and decided (or couldn't) not to build or store anything.
+class SearchDeclinedAction extends GameAction {
+  SearchDeclinedAction(String player, [Product producedBy]) : super(player, producedBy);
+
+  @override
+  ActionType get actionType => ActionType.searchDeclined;
+
+  @override
+  bool matches(GameAction action) {
+    return action is SearchDeclinedAction;
+  }
+
+  @override
+  Map<String, dynamic> toJson() {
+    var ret = super.toJson();
+    return ret;
+  }
+
+  SearchDeclinedAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
+}
