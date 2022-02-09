@@ -8,5 +8,7 @@ library undo;
 import 'dart:async';
 import 'dart:collection';
 
+import 'package:engine/engine.dart';
+
 part 'src/undo_stack.dart';
 part 'src/changes.dart';

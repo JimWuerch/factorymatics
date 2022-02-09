@@ -47,8 +47,8 @@ class ChangeStack extends ChangeGroupBase {
   @override
   void clear() {
     if (isGrouping) {
-      _openGroup.clear();
-      _openGroup = null;
+      _openGroups.clear();
+      //_openGroup = null;
     }
     _undos.clear();
     _redos.clear();

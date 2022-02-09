@@ -24,12 +24,14 @@ abstract class Change {
 }
 
 abstract class ChangeGroupBase {
-  _ChangeGroup _openGroup;
-  bool get isGrouping => _openGroup != null;
+  final List<_ChangeGroup> _openGroups;
+  bool get isGrouping => _openGroups.isNotEmpty;
+
+  ChangeGroupBase() : _openGroups = <_ChangeGroup>[];
 
   void add(Change change, {String label}) {
     if (isGrouping) {
-      _openGroup.add(change, label: label);
+      _openGroups.last.add(change, label: label);
     } else {
       _add(change, label: label);
     }
@@ -40,20 +42,24 @@ abstract class ChangeGroupBase {
   void clear();
 
   void group({String label}) {
-    _openGroup = _ChangeGroup()..label = label;
+    _openGroups.add(_ChangeGroup()..label = label);
   }
 
   void commit() {
     if (isGrouping) {
-      _add(_openGroup, label: _openGroup.label, doExecute: false);
-      _openGroup = null;
+      var last = _openGroups.removeLast();
+      if (isGrouping) {
+        _openGroups.last._add(last, label: last.label, doExecute: false);
+      } else {
+        _add(last, label: last.label, doExecute: false);
+      }
     }
   }
 
   void discard() {
     if (isGrouping) {
-      _openGroup.undo();
-      _openGroup = null;
+      _openGroups.last.undo();
+      _openGroups.removeLast();
     }
   }
 

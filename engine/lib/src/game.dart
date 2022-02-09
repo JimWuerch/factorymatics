@@ -29,18 +29,10 @@ class Game {
   ListState<ResourceType> availableResources;
 
   List<ListState<Part>> partDecks;
-  // ListState<Part> level2Parts;
-  // ListState<Part> level3Parts;
+  List<int> partsRemaining; // this is maintained for the client to query
   ListState<ResourceType> well;
-
   List<ListState<Part>> saleParts;
-  // ListState<Part> level2Sale;
-  // ListState<Part> level3Sale;
-
-  //List<Turn> gameTurns;
-
-  //int _currentTurn;
-  Turn currentTurn; // => _currentTurn != null ? gameTurns[_currentTurn] : null;
+  Turn currentTurn;
 
   int _currentPlayerIndex = 0;
   PlayerData get currentPlayer => players[_currentPlayerIndex];
@@ -94,6 +86,7 @@ class Game {
     changeStack = ChangeStack();
 
     partDecks = List<ListState<Part>>.filled(3, null);
+    partsRemaining = List<int>.filled(3, 0);
     well = ListState<ResourceType>(this, 'well');
     availableResources = ListState(this, 'availableResources');
     saleParts = List<ListState<Part>>.filled(3, null);
@@ -106,6 +99,7 @@ class Game {
   void assignStartingDecks(List<List<Part>> decks) {
     for (var i = 0; i < 3; ++i) {
       partDecks[i] = ListState<Part>(this, 'lvl${i}Deck', starting: decks[i]);
+      partsRemaining[i] = partDecks[i].length;
     }
   }
 
@@ -133,12 +127,15 @@ class Game {
   }
 
   Part drawPart(int level) {
-    return partDecks[level].removeLast();
+    var ret = partDecks[level].removeLast();
+    partsRemaining[level] = partDecks[level].length;
+    return ret;
   }
 
   /// Puts [part] back on the bottom of its deck
   void returnPart(Part part) {
     partDecks[part.level].insert(part, 0);
+    partsRemaining[part.level] = partDecks[part.level].length;
   }
 
   void refillMarket() {
@@ -276,6 +273,7 @@ class Game {
     ret['s3'] = partListToString(saleParts[2].toList());
     ret['cp'] = _currentPlayerIndex;
     ret['players'] = players.map<Map<String, dynamic>>((e) => e.toJson()).toList();
+    ret['pr'] = partsRemaining;
 
     if (!isAuthoritativeSave) {
       // only the client uses this value, it's not saved/restored on the server
@@ -300,10 +298,13 @@ class Game {
     partStringToList(json['s3'] as String, (part) => game.saleParts[2].add(part), game.allParts);
     stringToResourceListState(json['res'] as String, game.availableResources);
 
+    game.partsRemaining = listFromJson<int>(json['pr']);
+
     game._currentPlayerIndex = json['cp'] as int;
 
     var item = json['players'] as List<dynamic>;
-    game.players = item.map<PlayerData>((dynamic json) => PlayerData.fromJson(game, json as Map<String, dynamic>)).toList();
+    game.players =
+        item.map<PlayerData>((dynamic json) => PlayerData.fromJson(game, json as Map<String, dynamic>)).toList();
 
     if (json.containsKey('turn')) {
       game.currentTurn = Turn.fromJson(game, game.currentPlayer, json['turn'] as Map<String, dynamic>);

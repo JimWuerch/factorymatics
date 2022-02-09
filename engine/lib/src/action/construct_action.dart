@@ -3,8 +3,10 @@ import 'package:engine/engine.dart';
 class ConstructAction extends GameAction {
   final Part part;
   final List<ResourceType> payment;
+  final List<GameAction> convertersUsed;
 
-  ConstructAction(String player, this.part, this.payment, Product producedBy) : super(player, producedBy);
+  ConstructAction(String player, this.part, this.payment, Product producedBy, this.convertersUsed)
+      : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.construct;
@@ -24,11 +26,25 @@ class ConstructAction extends GameAction {
     if (payment != null) {
       ret['payment'] = resourceListToString(payment);
     }
+    if (convertersUsed != null) {
+      ret['cv'] = convertersUsed.map<Map<String, dynamic>>((e) => e.toJson()).toList();
+    }
     return ret;
   }
 
-  ConstructAction.fromJson(Game game, Map<String, dynamic> json)
-      : part = game.allParts[json['part'] as String],
-        payment = stringToResourceList(json['payment'] as String),
-        super.fromJson(game, json);
+  ConstructAction._fromJsonHelper(Game game, this.part, this.payment, this.convertersUsed, Map<String, dynamic> json)
+      : super.fromJson(game, json);
+
+  factory ConstructAction.fromJson(Game game, Map<String, dynamic> json) {
+    var part = game.allParts[json['part'] as String];
+    var payment = stringToResourceList(json['payment'] as String);
+    var item = json['cv'] as List<dynamic>;
+    List<GameAction> convertersUsed;
+    if (json.containsKey('cv')) {
+      convertersUsed =
+          item.map<GameAction>((dynamic json) => actionFromJson(game, json as Map<String, dynamic>)).toList();
+    }
+    //super.fromJson(game, json);
+    return ConstructAction._fromJsonHelper(game, part, payment, convertersUsed, json);
+  }
 }

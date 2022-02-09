@@ -134,7 +134,12 @@ class _GamePageState extends State<GamePage> {
       case 5:
         children.add(_makeActionButton(ActionType.search, true, 'Search'));
         for (var part in model.displayPlayer.savedParts) {
-          children.add(PartWidget(part: part, enabled: enabledParts.contains(part.id), onTap: _onPartTapped, onProductTap: null, model: model));
+          children.add(PartWidget(
+              part: part,
+              enabled: enabledParts.contains(part.id),
+              onTap: _onPartTapped,
+              onProductTap: null,
+              model: model));
         }
         break;
     }
@@ -143,6 +148,64 @@ class _GamePageState extends State<GamePage> {
       crossAxisAlignment: CrossAxisAlignment.center,
       children: children,
     );
+  }
+
+  Widget _buildCardArea(BuildContext context) {
+    if (!model.inSearch) {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: <Widget>[
+          _makePartList(model.game.saleParts[2].list),
+          _makePartList(model.game.saleParts[1].list),
+          _makePartList(model.game.saleParts[0].list),
+        ],
+      );
+    } else {
+      return Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          _makePartList(model.searchedParts),
+          SizedBox(
+            height: 10,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Tooltip(
+                message: 'Skip storing or constructing.',
+                child: ElevatedButton(
+                  onPressed: model.searchExecutionOption == SearchExecutionOptions.unselected
+                      ? () {
+                          model.onSearchActionTapped(SearchExecutionOptions.doNothing);
+                        }
+                      : null,
+                  child: Text('Skip'),
+                ),
+              ),
+              ElevatedButton.icon(
+                onPressed: model.searchExecutionOption == SearchExecutionOptions.unselected && model.canConstruct
+                    ? () {
+                        model.onSearchActionTapped(SearchExecutionOptions.construct);
+                      }
+                    : null,
+                icon: Icon(partTypeToIcon(PartType.construct)),
+                label: Text('Construct'),
+              ),
+              ElevatedButton.icon(
+                onPressed: model.searchExecutionOption == SearchExecutionOptions.unselected && model.canStore
+                    ? () {
+                        model.onSearchActionTapped(SearchExecutionOptions.store);
+                      }
+                    : null,
+                icon: Icon(partTypeToIcon(PartType.storage)),
+                label: Text('Store'),
+              ),
+            ],
+          ),
+        ],
+      );
+    }
   }
 
   @override
@@ -177,7 +240,8 @@ class _GamePageState extends State<GamePage> {
                   appBar: AppBar(
                     // Here we take the value from the MyHomePage object that was created by
                     // the App.build method, and use it to set our appbar title.
-                    title: Text('${model.displayPlayer.id} VP:${model.displayPlayer.score} Parts:${model.displayPlayer.partCount}'),
+                    title: Text(
+                        '${model.displayPlayer.id} VP:${model.displayPlayer.score} Parts:${model.displayPlayer.partCount}'),
                     actions: <Widget>[
                       TextButton(
                         //textColor: Colors.white,
@@ -219,7 +283,8 @@ class _GamePageState extends State<GamePage> {
                                       PlayerListWidget(
                                         game: model.game,
                                         onTap: (model.game.currentTurn.turnState.value == TurnState.started ||
-                                                model.game.currentTurn.turnState.value == TurnState.selectedActionCompleted)
+                                                model.game.currentTurn.turnState.value ==
+                                                    TurnState.selectedActionCompleted)
                                             ? model.playerNameTapped
                                             : null,
                                       ),
@@ -228,7 +293,11 @@ class _GamePageState extends State<GamePage> {
                                   Column(
                                     children: [
                                       Container(
-                                        decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
+                                        decoration: BoxDecoration(
+                                            border: Border.all(
+                                                width: 5,
+                                                color: model.isResourcePickerEnabled ? Colors.orange : Colors.blue),
+                                            borderRadius: BorderRadius.all(Radius.circular(20))),
                                         padding: EdgeInsets.only(left: 10, right: 10),
                                         width: 350,
                                         child: ResourcePicker(
@@ -243,23 +312,39 @@ class _GamePageState extends State<GamePage> {
                                       ConstrainedBox(
                                         constraints: BoxConstraints(minWidth: 900),
                                         child: Container(
-                                          decoration: BoxDecoration(border: Border.all(width: 5, color: Colors.blue), borderRadius: BorderRadius.all(Radius.circular(20))),
+                                          decoration: BoxDecoration(
+                                              border: Border.all(width: 5, color: Colors.blue),
+                                              borderRadius: BorderRadius.all(Radius.circular(20))),
                                           padding: EdgeInsets.all(10),
                                           //width: 900,
-                                          child: Column(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: <Widget>[
-                                              _makePartList(model.game.saleParts[2].list),
-                                              _makePartList(model.game.saleParts[1].list),
-                                              _makePartList(model.game.saleParts[0].list),
-                                            ],
-                                          ),
+                                          child: _buildCardArea(context),
+                                          // Column(
+                                          //   mainAxisAlignment: MainAxisAlignment.center,
+                                          //   children: <Widget>[
+                                          //     _makePartList(model.game.saleParts[2].list),
+                                          //     _makePartList(model.game.saleParts[1].list),
+                                          //     _makePartList(model.game.saleParts[0].list),
+                                          //   ],
+                                          // ),
                                         ),
                                       ),
                                       SizedBox(
                                         height: 10,
                                       ),
-                                      ResourceStorageWidget(resources: model.getAvailableResources()),
+                                      Row(
+                                        children: [
+                                          ResourceStorageWidget(resources: model.getAvailableResources()),
+                                          Text(
+                                            '  ${model.displayPlayer.vpChits}',
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.black,
+                                              fontSize: 24,
+                                            ),
+                                          ),
+                                          Icon(productTypeToIcon(ProductType.vp)),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                 ],

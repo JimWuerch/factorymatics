@@ -9,35 +9,42 @@ class ResourceStorageWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              resourceToIcon(ResourceType.heart, resourceToColor(ResourceType.heart)),
-              Text(' : ${resources[ResourceType.heart]} '),
-            ],
-          ),
-          Row(
-            children: [
-              resourceToIcon(ResourceType.diamond, resourceToColor(ResourceType.diamond)),
-              Text(' : ${resources[ResourceType.diamond]} '),
-            ],
-          ),
-          Row(
-            children: [
-              resourceToIcon(ResourceType.spade, resourceToColor(ResourceType.spade)),
-              Text(' : ${resources[ResourceType.spade]} '),
-            ],
-          ),
-          Row(
-            children: [
-              resourceToIcon(ResourceType.club, resourceToColor(ResourceType.club)),
-              Text(' : ${resources[ResourceType.club]} '),
-            ],
-          ),
-        ],
+    return DefaultTextStyle(
+      style: TextStyle(
+        fontWeight: FontWeight.bold,
+        fontSize: 24,
+        color: Colors.black,
+      ),
+      child: Container(
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Row(
+              children: [
+                Text('${resources[ResourceType.heart]}'),
+                resourceToIcon(ResourceType.heart, resourceToColor(ResourceType.heart)),
+              ],
+            ),
+            Row(
+              children: [
+                Text('  ${resources[ResourceType.diamond]}'),
+                resourceToIcon(ResourceType.diamond, resourceToColor(ResourceType.diamond)),
+              ],
+            ),
+            Row(
+              children: [
+                Text('  ${resources[ResourceType.spade]}'),
+                resourceToIcon(ResourceType.spade, resourceToColor(ResourceType.spade)),
+              ],
+            ),
+            Row(
+              children: [
+                Text('  ${resources[ResourceType.club]}'),
+                resourceToIcon(ResourceType.club, resourceToColor(ResourceType.club)),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

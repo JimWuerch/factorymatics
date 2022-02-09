@@ -1,6 +1,6 @@
+import 'package:community_material_icon/community_material_icon.dart';
 import 'package:engine/engine.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_vector_icons/flutter_vector_icons.dart';
 
 IconData partTypeToIcon(PartType partType) {
   switch (partType) {
@@ -13,9 +13,9 @@ IconData partTypeToIcon(PartType partType) {
     case PartType.acquire:
       return Icons.arrow_drop_down_circle;
     case PartType.construct:
-      return MaterialCommunityIcons.crane;
+      return CommunityMaterialIcons.crane;
     default:
-      return Fontisto.question;
+      return CommunityMaterialIcons.help;
   }
 }
 
@@ -28,11 +28,11 @@ IconData actionToIcon(ActionType actionType) {
     case ActionType.construct:
       return partTypeToIcon(PartType.construct);
     case ActionType.search:
-      return MaterialCommunityIcons.feature_search;
+      return CommunityMaterialIcons.feature_search;
     case ActionType.convert:
       return Icons.arrow_forward_ios;
     case ActionType.mysteryMeat:
-      return MaterialCommunityIcons.cloud_question;
+      return CommunityMaterialIcons.cloud_question;
     default:
       throw ArgumentError('invalid action ${actionType.toString()}');
   }
@@ -43,18 +43,18 @@ IconData resourceToIconData(ResourceType resourceType, {bool outline = false}) {
     case ResourceType.none:
       return Icons.cancel;
     case ResourceType.heart:
-      return MaterialCommunityIcons.cards_heart;
+      return CommunityMaterialIcons.cards_heart;
     case ResourceType.spade:
-      return MaterialCommunityIcons.cards_spade;
+      return CommunityMaterialIcons.cards_spade;
     case ResourceType.diamond:
-      return MaterialCommunityIcons.cards_diamond;
+      return CommunityMaterialIcons.cards_diamond;
     case ResourceType.club:
-      return MaterialCommunityIcons.cards_club;
+      return CommunityMaterialIcons.cards_club;
     case ResourceType.any:
-      //return MaterialCommunityIcons.all_inclusive;
-      return FontAwesome.question_circle;
+      //return CommunityMaterialIcons.all_inclusive;
+      return CommunityMaterialIcons.help_circle;
     default:
-      return Fontisto.question;
+      return CommunityMaterialIcons.help;
   }
 }
 
@@ -69,7 +69,7 @@ Color resourceToColor(ResourceType resourceType) {
     case ResourceType.heart:
       return Colors.red[700];
     case ResourceType.spade:
-      return Colors.black87;
+      return Colors.black;
     case ResourceType.diamond:
       return Colors.yellow;
     case ResourceType.club:
@@ -103,11 +103,11 @@ IconData productTypeToIcon(ProductType productType) {
   } else if (productType == ProductType.aquire) {
     return actionToIcon(ActionType.acquire);
   } else if (productType == ProductType.vp) {
-    return FontAwesome.gear;
+    return CommunityMaterialIcons.cog;
   } else if (productType == ProductType.convert) {
-    return FontAwesome.question_circle;
+    return CommunityMaterialIcons.help_circle;
   } else {
-    return Fontisto.question;
+    return CommunityMaterialIcons.help;
   }
 }
 
