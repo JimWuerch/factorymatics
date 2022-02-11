@@ -38,6 +38,10 @@ IconData actionToIcon(ActionType actionType) {
   }
 }
 
+IconData partIcon() {
+  return CommunityMaterialIcons.hammer_wrench;
+}
+
 IconData resourceToIconData(ResourceType resourceType, {bool outline = false}) {
   switch (resourceType) {
     case ResourceType.none:

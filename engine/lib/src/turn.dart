@@ -26,6 +26,8 @@ class Turn {
   bool isGameEndTriggered;
   ListState<Part> searchedParts;
 
+  bool get gameEnded => turnState.value == TurnState.gameEnded;
+
   Turn(this.game, this.player)
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', TurnState.notStarted),
@@ -99,6 +101,10 @@ class Turn {
 
   List<GameAction> getAvailableActions() {
     var ret = <GameAction>[];
+
+    if (turnState.value == TurnState.gameEnded) {
+      return ret;
+    }
 
     if (changeStack.canUndo) {
       ret.add(GameModeAction(player.id, GameModeType.undo));
@@ -315,13 +321,14 @@ class Turn {
       item.value = 0;
     }
     isGameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
-    if (isGameEndTriggered) {
-      turnState.value = TurnState.gameEnded;
-    }
 
     changeStack.clear();
-    game.changeStack = null;
+    //game.changeStack = null;
     game.endTurn();
+  }
+
+  void setGameComplete() {
+    turnState.value = TurnState.gameEnded;
   }
 
   // check to see if the player is even allowed to do the action

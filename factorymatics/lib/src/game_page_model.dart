@@ -94,6 +94,7 @@ class GamePageModel {
   //   }
   // }
 
+  bool get isGameEnded => game.currentTurn.gameEnded;
   bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
 
   bool get isResourcePickerEnabled => ((game.currentTurn?.selectedAction?.value == ActionType.acquire &&

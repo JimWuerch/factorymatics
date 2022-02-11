@@ -33,6 +33,7 @@ class Game {
   ListState<ResourceType> well;
   List<ListState<Part>> saleParts;
   Turn currentTurn;
+  int round = 0;
 
   int _currentPlayerIndex = 0;
   PlayerData get currentPlayer => players[_currentPlayerIndex];
@@ -176,6 +177,10 @@ class Game {
   }
 
   Turn startNextTurn() {
+    if (currentTurn?.gameEnded == true) {
+      return currentTurn;
+    }
+
     changeStack = ChangeStack();
     refillMarket();
     refillResources();
@@ -183,14 +188,17 @@ class Game {
 
     currentTurn = Turn(this, getNextPlayer());
     currentTurn.startTurn();
+    if (_currentPlayerIndex == 0) {
+      round++;
+    }
 
     return currentTurn;
   }
 
   void endTurn() {
-    // check for game end
-    if (currentTurn.isGameEndTriggered) {
-      // do stuff here?
+    // check for game end at end of round
+    if (currentTurn.isGameEndTriggered && (_currentPlayerIndex == players.length - 1)) {
+      currentTurn.setGameComplete();
     } else {
       // if game not over, next turn
       startNextTurn();
@@ -274,6 +282,7 @@ class Game {
     ret['cp'] = _currentPlayerIndex;
     ret['players'] = players.map<Map<String, dynamic>>((e) => e.toJson()).toList();
     ret['pr'] = partsRemaining;
+    ret['rd'] = round;
 
     if (!isAuthoritativeSave) {
       // only the client uses this value, it's not saved/restored on the server
@@ -301,6 +310,7 @@ class Game {
     game.partsRemaining = listFromJson<int>(json['pr']);
 
     game._currentPlayerIndex = json['cp'] as int;
+    game.round = json['rd'] as int;
 
     var item = json['players'] as List<dynamic>;
     game.players =

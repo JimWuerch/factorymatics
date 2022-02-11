@@ -1,4 +1,5 @@
 import 'package:engine/engine.dart';
+import 'package:factorymatics/src/final_score_widget.dart';
 import 'package:factorymatics/src/game_info_model.dart';
 import 'package:factorymatics/src/game_page_model.dart';
 import 'package:factorymatics/src/part_helpers.dart';
@@ -242,134 +243,139 @@ class _GamePageState extends State<GamePage> {
                     // the App.build method, and use it to set our appbar title.
                     title: Text(
                         '${model.displayPlayer.id} VP:${model.displayPlayer.score} Parts:${model.displayPlayer.partCount}'),
-                    actions: <Widget>[
-                      TextButton(
-                        //textColor: Colors.white,
-                        style: TextButton.styleFrom(
-                          primary: Colors.white, // foreground
-                        ),
-                        onPressed: model.canUndo && model.isActivePlayer ? _onUndoTapped : null,
-                        child: Text("Undo"),
-                        //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
-                      ),
-                      TextButton(
-                        //textColor: Colors.white,
-                        style: TextButton.styleFrom(
-                          primary: Colors.white, // foreground
-                        ),
+                    actions: model.isGameEnded
+                        ? <Widget>[]
+                        : <Widget>[
+                            TextButton(
+                              //textColor: Colors.white,
+                              style: TextButton.styleFrom(
+                                primary: Colors.white, // foreground
+                              ),
+                              onPressed: model.canUndo && model.isActivePlayer ? _onUndoTapped : null,
+                              child: Text("Undo"),
+                              //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                            ),
+                            TextButton(
+                              //textColor: Colors.white,
+                              style: TextButton.styleFrom(
+                                primary: Colors.white, // foreground
+                              ),
 
-                        onPressed: model.canEndTurn && model.isActivePlayer ? _onEndTurnTapped : null,
-                        child: Text("End Turn"),
-                        //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
-                      ),
-                    ],
+                              onPressed: model.canEndTurn && model.isActivePlayer ? _onEndTurnTapped : null,
+                              child: Text("End Turn"),
+                              //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                            ),
+                          ],
                     // bottom: PreferredSize(
                     //   preferredSize: Size.fromHeight(0.0),
                     //   child: ResourceStorageWidget(resources: model.getAvailableResources()),
                     // ),
                   ),
                   body: SafeArea(
-                    child: SingleChildScrollView(
-                      child: Container(
-                        //color: Colors.yellow.shade100,
-                        child: Center(
-                          child: Column(
-                            children: <Widget>[
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Column(
-                                    children: [
-                                      PlayerListWidget(
-                                        game: model.game,
-                                        onTap: (model.game.currentTurn.turnState.value == TurnState.started ||
-                                                model.game.currentTurn.turnState.value ==
-                                                    TurnState.selectedActionCompleted)
-                                            ? model.playerNameTapped
-                                            : null,
-                                      ),
-                                    ],
-                                  ),
-                                  Column(
-                                    children: [
-                                      Container(
-                                        decoration: BoxDecoration(
-                                            border: Border.all(
-                                                width: 5,
-                                                color: model.isResourcePickerEnabled ? Colors.orange : Colors.blue),
-                                            borderRadius: BorderRadius.all(Radius.circular(20))),
-                                        padding: EdgeInsets.only(left: 10, right: 10),
-                                        width: 350,
-                                        child: ResourcePicker(
-                                          resources: model.game.availableResources.toList(),
-                                          enabled: model.isResourcePickerEnabled,
-                                          onTap: _onResourceTapped,
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      ConstrainedBox(
-                                        constraints: BoxConstraints(minWidth: 900),
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                              border: Border.all(width: 5, color: Colors.blue),
-                                              borderRadius: BorderRadius.all(Radius.circular(20))),
-                                          padding: EdgeInsets.all(10),
-                                          //width: 900,
-                                          child: _buildCardArea(context),
-                                          // Column(
-                                          //   mainAxisAlignment: MainAxisAlignment.center,
-                                          //   children: <Widget>[
-                                          //     _makePartList(model.game.saleParts[2].list),
-                                          //     _makePartList(model.game.saleParts[1].list),
-                                          //     _makePartList(model.game.saleParts[0].list),
-                                          //   ],
-                                          // ),
-                                        ),
-                                      ),
-                                      SizedBox(
-                                        height: 10,
-                                      ),
-                                      Row(
-                                        children: [
-                                          ResourceStorageWidget(resources: model.getAvailableResources()),
-                                          Text(
-                                            '  ${model.displayPlayer.vpChits}',
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.black,
-                                              fontSize: 24,
+                    child: model.isGameEnded
+                        ? FinalScoreWidget(players: model.game.players)
+                        : SingleChildScrollView(
+                            child: Container(
+                              //color: Colors.yellow.shade100,
+                              child: Center(
+                                child: Column(
+                                  children: <Widget>[
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Column(
+                                          children: [
+                                            PlayerListWidget(
+                                              game: model.game,
+                                              onTap: (model.game.currentTurn.turnState.value == TurnState.started ||
+                                                      model.game.currentTurn.turnState.value ==
+                                                          TurnState.selectedActionCompleted)
+                                                  ? model.playerNameTapped
+                                                  : null,
                                             ),
-                                          ),
-                                          Icon(productTypeToIcon(ProductType.vp)),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ],
+                                          ],
+                                        ),
+                                        Column(
+                                          children: [
+                                            Container(
+                                              decoration: BoxDecoration(
+                                                  border: Border.all(
+                                                      width: 5,
+                                                      color:
+                                                          model.isResourcePickerEnabled ? Colors.orange : Colors.blue),
+                                                  borderRadius: BorderRadius.all(Radius.circular(20))),
+                                              padding: EdgeInsets.only(left: 10, right: 10),
+                                              width: 350,
+                                              child: ResourcePicker(
+                                                resources: model.game.availableResources.toList(),
+                                                enabled: model.isResourcePickerEnabled,
+                                                onTap: _onResourceTapped,
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              height: 10,
+                                            ),
+                                            ConstrainedBox(
+                                              constraints: BoxConstraints(minWidth: 900),
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                    border: Border.all(width: 5, color: Colors.blue),
+                                                    borderRadius: BorderRadius.all(Radius.circular(20))),
+                                                padding: EdgeInsets.all(10),
+                                                //width: 900,
+                                                child: _buildCardArea(context),
+                                                // Column(
+                                                //   mainAxisAlignment: MainAxisAlignment.center,
+                                                //   children: <Widget>[
+                                                //     _makePartList(model.game.saleParts[2].list),
+                                                //     _makePartList(model.game.saleParts[1].list),
+                                                //     _makePartList(model.game.saleParts[0].list),
+                                                //   ],
+                                                // ),
+                                              ),
+                                            ),
+                                            SizedBox(
+                                              height: 10,
+                                            ),
+                                            Row(
+                                              children: [
+                                                ResourceStorageWidget(resources: model.getAvailableResources()),
+                                                Text(
+                                                  '  ${model.displayPlayer.vpChits}',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.black,
+                                                    fontSize: 24,
+                                                  ),
+                                                ),
+                                                Icon(productTypeToIcon(ProductType.vp)),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                                      textBaseline: TextBaseline.alphabetic,
+                                      children: <Widget>[
+                                        _makeColumn(0),
+                                        _makeColumn(1),
+                                        _makeColumn(2),
+                                        _makeColumn(3),
+                                        _makeColumn(4),
+                                        _makeColumn(5),
+                                      ],
+                                    ),
+                                  ],
+                                ),
                               ),
-                              SizedBox(
-                                height: 10,
-                              ),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.baseline,
-                                textBaseline: TextBaseline.alphabetic,
-                                children: <Widget>[
-                                  _makeColumn(0),
-                                  _makeColumn(1),
-                                  _makeColumn(2),
-                                  _makeColumn(3),
-                                  _makeColumn(4),
-                                  _makeColumn(5),
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
-                    ),
                   ),
                 ),
               );
