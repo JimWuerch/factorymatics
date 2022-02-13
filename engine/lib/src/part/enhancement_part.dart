@@ -75,3 +75,31 @@ class DisallowSearchPart extends Part {
   @override
   int get vp => _vp;
 }
+
+class VpChitDoublerPart extends Part {
+  VpChitDoublerPart(Game game, String id, int level, int cost)
+      : super(game, id, level, PartType.enhancement, cost, <Trigger>[], <Product>[], ResourceType.any);
+
+  @override
+  int get vp {
+    var owner = ready.game?.getPartOwner(this);
+    if (owner == null) {
+      return 0;
+    }
+    return owner.vpChits;
+  }
+}
+
+class VpIsResourcesPart extends Part {
+  VpIsResourcesPart(Game game, String id, int level, int cost)
+      : super(game, id, level, PartType.enhancement, cost, <Trigger>[], <Product>[], ResourceType.any);
+
+  @override
+  int get vp {
+    var owner = ready.game?.getPartOwner(this);
+    if (owner == null) {
+      return 0;
+    }
+    return owner.resourceCount();
+  }
+}

@@ -1,4 +1,6 @@
+import 'package:engine/engine.dart';
 import 'package:factorymatics/src/game_page.dart';
+import 'package:factorymatics/src/part_test_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -194,6 +196,18 @@ class _MainPageState extends State<MainPage> {
                           Navigator.push<void>(
                             context,
                             MaterialPageRoute(builder: (context) => GamePage(model.gameInfoModel)),
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: ElevatedButton(
+                        child: Text('Part Test'),
+                        onPressed: () async {
+                          Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(builder: (context) => PartTestWidget(parts: createParts(null))),
                           );
                         },
                       ),

@@ -1,18 +1,18 @@
 import 'package:engine/engine.dart';
 import 'package:flutter/material.dart';
 
-import 'game_page_model.dart';
+//import 'game_page_model.dart';
 import 'icons.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
-  PartWidget({this.part, this.enabled, this.onTap, this.onProductTap, this.model});
+  PartWidget({this.part, this.enabled, this.onTap, this.onProductTap, this.isResourcePickerEnabled});
 
   final Part part;
   final bool enabled;
   final void Function(Part part) onTap;
   final void Function(Product product) onProductTap;
-  final GamePageModel model;
+  final bool isResourcePickerEnabled;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -29,9 +29,33 @@ class _PartWidgetState extends State<PartWidget> {
   }
 
   List<Widget> _productionLine() {
-    var items = _triggersToIcons(widget.part);
-    items.addAll(_productsToIcons(widget.part.products));
-    return items;
+    if (widget.part is MultipleConverterPart) {
+      var part = widget.part as MultipleConverterPart;
+      return <Widget>[
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: _triggersToIcons(part.converters[0]),
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          textBaseline: TextBaseline.alphabetic,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          children: [
+            Text('|', style: TextStyle(color: _fixColor(resourceToColor(part.resource), Colors.black))),
+          ],
+        ),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: _triggersToIcons(part.converters[1]),
+        ),
+      ];
+    } else {
+      var items = _triggersToIcons(widget.part);
+      items.addAll(_productsToIcons(widget.part.products));
+      return items;
+    }
   }
 
   List<Widget> _triggersToIcons(Part part) {
@@ -42,16 +66,25 @@ class _PartWidgetState extends State<PartWidget> {
     // ));
     if (part is EnhancementPart) {
       if (part.resourceStorage > 0) {
-        items.add(Icon(partTypeToIcon(PartType.acquire)));
-        items.add(Text(':${part.resourceStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)));
+        items.add(Icon(partTypeToIcon(PartType.acquire),
+            color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
+        items.add(Text(':${part.resourceStorage} ',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: _fixColor(resourceToColor(widget.part.resource), Colors.black))));
       }
       if (part.partStorage > 0) {
-        items.add(Icon(partTypeToIcon(PartType.storage)));
-        items.add(Text(':${part.partStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)));
+        items.add(Icon(partTypeToIcon(PartType.storage),
+            color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
+        items.add(Text(':${part.partStorage} ',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: _fixColor(resourceToColor(widget.part.resource), Colors.black))));
       }
       if (part.search > 0) {
-        items.add(Icon(actionToIcon(ActionType.search)));
-        items.add(Text(':${part.search}', style: const TextStyle(fontWeight: FontWeight.bold)));
+        items.add(Icon(actionToIcon(ActionType.search),
+            color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
+        items.add(Text(':${part.search}',
+            style: TextStyle(
+                fontWeight: FontWeight.bold, color: _fixColor(resourceToColor(widget.part.resource), Colors.black))));
       }
       return items;
       // return Row(
@@ -63,7 +96,8 @@ class _PartWidgetState extends State<PartWidget> {
       var trigger = part.triggers[index];
       switch (trigger.triggerType) {
         case TriggerType.store:
-          items.add(Icon(partTypeToIcon(PartType.storage)));
+          items.add(Icon(partTypeToIcon(PartType.storage),
+              color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
           break;
         case TriggerType.acquire:
           items.add(Icon(partTypeToIcon(PartType.acquire),
@@ -104,13 +138,15 @@ class _PartWidgetState extends State<PartWidget> {
           }
           break;
         case TriggerType.purchased:
-          items.add(Icon(Icons.monetization_on));
+          items.add(Icon(Icons.monetization_on, color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
           break;
         case TriggerType.constructLevel:
-          items.add(Icon(Icons.add_shopping_cart));
+          items.add(
+              Icon(Icons.add_shopping_cart, color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
           break;
         case TriggerType.constructFromStore:
-          items.add(Icon(Icons.add_shopping_cart));
+          items.add(Icon(partTypeToIcon(PartType.construct),
+              color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
           items.add(Icon(partTypeToIcon(PartType.storage),
               color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
           break;
@@ -135,7 +171,7 @@ class _PartWidgetState extends State<PartWidget> {
         ],
       );
     } else if (product is VpProduct) {
-      return Text('+1 VP', style: const TextStyle(fontWeight: FontWeight.bold));
+      return Text('+${product.vp} VP', style: const TextStyle(fontWeight: FontWeight.bold));
     } else {
       return Icon(productToIcon(product));
     }
@@ -149,7 +185,7 @@ class _PartWidgetState extends State<PartWidget> {
         message: productTooltipString(product.productType),
         child: ElevatedButton(
           child: _productWidget(product),
-          onPressed: !widget.model.isResourcePickerEnabled &&
+          onPressed: !widget.isResourcePickerEnabled &&
                   widget.part.ready.value &&
                   !product.activated.value &&
                   (widget.onProductTap != null)
@@ -213,9 +249,14 @@ class _PartWidgetState extends State<PartWidget> {
                         //     color: Colors.black,
                         //   ),
                         // ),
-                        Icon(
-                          partTypeToIcon(widget.part.partType),
-                          color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
+                        Row(
+                          children: [
+                            Text('${widget.part.id}'),
+                            Icon(
+                              partTypeToIcon(widget.part.partType),
+                              color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
+                            ),
+                          ],
                         ),
                         if (widget.part.cost > 0)
                           Row(

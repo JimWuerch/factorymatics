@@ -26,10 +26,10 @@ class _GamePageState extends State<GamePage> {
   @override
   void initState() {
     super.initState();
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeRight,
-      DeviceOrientation.landscapeLeft,
-    ]);
+    // SystemChrome.setPreferredOrientations([
+    //   DeviceOrientation.landscapeRight,
+    //   DeviceOrientation.landscapeLeft,
+    // ]);
 
     model = GamePageModel(widget.gameInfoModel, context);
     model.init();
@@ -44,7 +44,7 @@ class _GamePageState extends State<GamePage> {
         enabled: enabledParts.contains(part.id),
         onTap: _onPartTapped,
         onProductTap: null,
-        model: model,
+        isResourcePickerEnabled: model.isResourcePickerEnabled,
       ));
     }
     return Row(
@@ -100,7 +100,7 @@ class _GamePageState extends State<GamePage> {
           children.add(PartWidget(
             part: part,
             enabled: false,
-            model: model,
+            isResourcePickerEnabled: model.isResourcePickerEnabled,
           ));
         }
         break;
@@ -110,37 +110,53 @@ class _GamePageState extends State<GamePage> {
           children.add(PartWidget(
             part: part,
             enabled: false,
-            model: model,
+            isResourcePickerEnabled: model.isResourcePickerEnabled,
           ));
         }
         break;
       case 2:
         children.add(_makeActionButton(ActionType.store, model.canStore, 'Store'));
         for (var part in model.displayPlayer.parts[PartType.storage]) {
-          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped, model: model));
+          children.add(PartWidget(
+            part: part,
+            enabled: false,
+            onProductTap: _onProductTapped,
+            isResourcePickerEnabled: model.isResourcePickerEnabled,
+          ));
         }
         break;
       case 3:
         children.add(_makeActionButton(ActionType.acquire, model.canAcquire, 'Acquire'));
         for (var part in model.displayPlayer.parts[PartType.acquire]) {
-          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped, model: model));
+          children.add(PartWidget(
+            part: part,
+            enabled: false,
+            onProductTap: _onProductTapped,
+            isResourcePickerEnabled: model.isResourcePickerEnabled,
+          ));
         }
         break;
       case 4:
         children.add(_makeActionButton(ActionType.construct, model.canConstruct, 'Construct'));
         for (var part in model.displayPlayer.parts[PartType.construct]) {
-          children.add(PartWidget(part: part, enabled: false, onProductTap: _onProductTapped, model: model));
+          children.add(PartWidget(
+            part: part,
+            enabled: false,
+            onProductTap: _onProductTapped,
+            isResourcePickerEnabled: model.isResourcePickerEnabled,
+          ));
         }
         break;
       case 5:
         children.add(_makeActionButton(ActionType.search, true, 'Search'));
         for (var part in model.displayPlayer.savedParts) {
           children.add(PartWidget(
-              part: part,
-              enabled: enabledParts.contains(part.id),
-              onTap: _onPartTapped,
-              onProductTap: null,
-              model: model));
+            part: part,
+            enabled: enabledParts.contains(part.id),
+            onTap: _onPartTapped,
+            onProductTap: null,
+            isResourcePickerEnabled: model.isResourcePickerEnabled,
+          ));
         }
         break;
     }

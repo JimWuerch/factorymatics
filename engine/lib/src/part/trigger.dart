@@ -66,8 +66,10 @@ class ConstructFromStoreTrigger extends Trigger {
 
   @override
   bool isTriggeredBy(GameAction action) {
-    // The game engine will have to handle where the construct came from
-    return action is ConstructAction;
+    if (action is ConstructAction) {
+      return action.fromStorage;
+    }
+    return false;
   }
 }
 

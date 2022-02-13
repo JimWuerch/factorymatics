@@ -1,5 +1,4 @@
 import 'package:engine/engine.dart';
-import 'package:engine/src/part/converter_part.dart';
 
 class PlayerData {
   static const int baseResourceStorage = 5;
@@ -67,7 +66,8 @@ class PlayerData {
     return ret;
   }
 
-  PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts) : maxResources = null {
+  PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts)
+      : maxResources = null {
     initResourceMap(game, resources, id);
     _initParts(parts);
   }
@@ -271,15 +271,18 @@ class PlayerData {
   }
 
   List<SpendHistory> getPayments(Part part) {
-    return CalcResources.getPayments(part.cost, part.resource, ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
+    return CalcResources.getPayments(
+        part.cost, part.resource, ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
   }
 
   bool canAfford(Part part, int discount, Map<ResourceType, GameStateVar<int>> convertedResources) {
     if (maxResources == null) {
-      maxResources = CalcResources.getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
+      maxResources =
+          CalcResources.getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
     }
     if (part.resource == ResourceType.any) {
-      return (part.cost - discount) <= maxResources.count(part.resource) + ResourcePool.fromResources(convertedResources).getResourceCount();
+      return (part.cost - discount) <=
+          maxResources.count(part.resource) + ResourcePool.fromResources(convertedResources).getResourceCount();
     } else {
       return (part.cost - discount) <= maxResources.count(part.resource) + convertedResources[part.resource].value;
     }
@@ -292,7 +295,7 @@ class PlayerData {
           return true;
         }
       } else if (part is MultipleConverterPart) {
-        for (var i = 0; i < MultipleConverterPart.numberOfParts; ++i) {
+        for (var i = 0; i < 2; ++i) {
           if (!part.products[i].activated.value && part.canConvert(i, resourceType)) {
             return true;
           }

@@ -195,7 +195,7 @@ class Turn {
     if (searchedParts == null) return;
     for (var part in searchedParts) {
       if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources)) {
-        actions.add(ConstructAction(player.id, part, null, null, null));
+        actions.add(ConstructAction(player.id, part, null, null, null, false));
       }
       if (player.hasPartStorageSpace) {
         actions.add(StoreAction(player.id, part, null));
@@ -298,7 +298,7 @@ class Turn {
   void _addAffordablePartActions(List<GameAction> actions, Product producedBy, int discount) {
     var parts = getAffordableParts(discount);
     for (var part in parts) {
-      actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy, null));
+      actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy, null, false));
     }
   }
 

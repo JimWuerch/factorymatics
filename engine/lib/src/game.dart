@@ -94,7 +94,10 @@ class Game {
     for (var i = 0; i < 3; ++i) {
       saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
     }
-    createParts(this);
+    var parts = createParts(this);
+    for (var part in parts) {
+      allParts[part.id] = part;
+    }
   }
 
   void assignStartingDecks(List<List<Part>> decks) {
@@ -125,6 +128,22 @@ class Game {
     for (var i = availableResources.length; i < Game.availableResourceCount; i++) {
       availableResources.add(getFromWell());
     }
+  }
+
+  PlayerData getPartOwner(Part part) {
+    for (var player in players) {
+      for (var p in player.parts[part.partType]) {
+        if (p.id == part.id) {
+          return player;
+        }
+      }
+      for (var p in player.savedParts) {
+        if (p.id == part.id) {
+          return player;
+        }
+      }
+    }
+    return null;
   }
 
   Part drawPart(int level) {

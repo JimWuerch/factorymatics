@@ -273,7 +273,8 @@ class GamePageModel {
     } else {
       payment = List<ResourceType>.filled(part.cost, part.resource);
     }
-    return ConstructAction(playerId, part, payment, null, convertersUsed.isNotEmpty ? convertersUsed : null);
+    return ConstructAction(playerId, part, payment, null, convertersUsed.isNotEmpty ? convertersUsed : null,
+        game.getPlayerFromId(playerId).isInStorage(part));
   }
 
   Future<void> partTapped(Part part) async {
