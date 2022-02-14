@@ -182,8 +182,19 @@ class _PartWidgetState extends State<PartWidget> {
     for (var product in products) {
       if (product is DoubleResourceProduct || product is ConvertProduct) continue;
       items.add(Tooltip(
-        message: productTooltipString(product.productType),
+        message: productTooltipString(product),
         child: ElevatedButton(
+          style: ButtonStyle(
+              backgroundColor: resourceToColor(widget.part.resource) == Colors.black
+                  ? MaterialStateProperty.resolveWith<Color>(
+                      (states) {
+                        if (states.contains(MaterialState.disabled)) {
+                          return Colors.grey; //Theme.of(context).colorScheme.background;
+                        }
+                        return null; // Use the component's default.
+                      },
+                    )
+                  : null),
           child: _productWidget(product),
           onPressed: !widget.isResourcePickerEnabled &&
                   widget.part.ready.value &&

@@ -10,6 +10,7 @@ class TestProducts {
   final DoubleResourceProduct spadeDoubler = DoubleResourceProduct(null, ResourceType.spade);
   final DoubleResourceProduct heartDoubler = DoubleResourceProduct(null, ResourceType.heart);
   final DoubleResourceProduct diamondDoubler = DoubleResourceProduct(null, ResourceType.diamond);
+  final ConvertProduct anyConverter = ConvertProduct(null, ResourceType.any, ResourceType.any);
 }
 
 void dumpPaths(List<SpendHistory> paths) {
@@ -135,6 +136,26 @@ void main() {
       paths = CalcResources.getPayments(2, ResourceType.any, pool2, products);
       //dumpPaths(paths);
       expect(paths.length, 7);
+    });
+
+    test('test any to any converter', () {
+      var tp = TestProducts();
+      var products = <ConverterBaseProduct>[];
+      var pool = ResourcePool();
+
+      pool.add1(ResourceType.diamond);
+      pool.add1(ResourceType.club);
+      pool.add1(ResourceType.spade);
+
+      products.add(tp.anyConverter);
+      var paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      //dumpPaths(paths);
+      expect(paths.length, 2);
+
+      products.add(tp.clubConverter);
+      paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      //dumpPaths(paths);
+      expect(paths.length, 4);
     });
   });
 

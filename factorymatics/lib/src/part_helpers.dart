@@ -115,8 +115,8 @@ IconData productTypeToIcon(ProductType productType) {
   }
 }
 
-String productTooltipString(ProductType productType) {
-  switch (productType) {
+String productTooltipString(Product product) {
+  switch (product.productType) {
     case ProductType.aquire:
       return "Acquire a resource";
     case ProductType.convert:
@@ -132,7 +132,13 @@ String productTooltipString(ProductType productType) {
     case ProductType.store:
       return "Move a part into storage";
     case ProductType.vp:
-      return "Gain a victory point";
+      {
+        var p = product as VpProduct;
+        if (p.vp == 1) {
+          return "Gain a victory point";
+        }
+        return 'Gain ${p.vp} vicory points';
+      }
     default:
       return "Unknown product";
   }
