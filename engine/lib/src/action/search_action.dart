@@ -73,3 +73,18 @@ class SearchDeclinedAction extends GameAction {
 
   SearchDeclinedAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
 }
+
+class RequestSearchAction extends GameAction {
+  RequestSearchAction(String player, Product producedBy) : super(player, producedBy);
+
+  @override
+  ActionType get actionType => ActionType.requestSearch;
+
+  @override
+  bool matches(GameAction action) {
+    // we match all RequestAcquireAction
+    return action is RequestAcquireAction;
+  }
+
+  RequestSearchAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
+}

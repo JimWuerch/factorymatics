@@ -1,6 +1,6 @@
 import 'package:engine/engine.dart';
 
-enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, store, freeConstruct, spend }
+enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, store, freeConstructL1, spend }
 
 abstract class Product {
   final ProductType productType;
@@ -82,7 +82,7 @@ class SearchProduct extends Product {
 
   @override
   GameAction produce(Game game, String player) {
-    throw UnimplementedError();
+    return RequestSearchAction(player, this);
   }
 }
 
@@ -91,18 +91,18 @@ class StoreProduct extends Product {
 
   @override
   GameAction produce(Game game, String player) {
-    throw UnimplementedError();
+    return RequestStoreAction(player, this);
   }
 }
 
-class FreeConstructProduct extends Product {
+class FreeConstructL1Product extends Product {
   final int level;
 
-  FreeConstructProduct(Game game, this.level) : super(game, ProductType.freeConstruct);
+  FreeConstructL1Product(Game game, this.level) : super(game, ProductType.freeConstructL1);
 
   @override
   GameAction produce(Game game, String player) {
-    throw UnimplementedError();
+    return RequestConstructL1Action(player, this);
   }
 }
 

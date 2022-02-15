@@ -53,3 +53,18 @@ class ConstructAction extends GameAction {
     return ConstructAction._fromJsonHelper(game, part, payment, convertersUsed, fromStorage, json);
   }
 }
+
+class RequestConstructL1Action extends GameAction {
+  RequestConstructL1Action(String player, Product producedBy) : super(player, producedBy);
+
+  @override
+  ActionType get actionType => ActionType.requestConstructL1;
+
+  @override
+  bool matches(GameAction action) {
+    // we match all RequestAcquireAction
+    return action is RequestAcquireAction;
+  }
+
+  RequestConstructL1Action.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
+}

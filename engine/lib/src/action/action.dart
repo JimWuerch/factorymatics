@@ -33,6 +33,9 @@ enum ActionType {
   searchActionResult,
   requestAcquire,
   searchDeclined,
+  requestSearch,
+  requestConstructL1,
+  requestStore,
   // requestStore,
   // requestConstruct,
   // requestAcquire,
@@ -72,7 +75,8 @@ abstract class GameAction {
     return ret;
   }
 
-  GameAction.fromJson(Game game, Map<String, dynamic> json) : owner = game.playerService.getPlayer(json['owner'] as String).playerId {
+  GameAction.fromJson(Game game, Map<String, dynamic> json)
+      : owner = game.playerService.getPlayer(json['owner'] as String).playerId {
     if (json.containsKey('part')) {
       var part = game.allParts[json['part'] as String];
       if (json.containsKey('pi')) {
@@ -110,6 +114,10 @@ GameAction actionFromJson(Game game, Map<String, dynamic> json) {
       return RequestAcquireAction.fromJson(game, json);
     case ActionType.searchDeclined:
       return SearchDeclinedAction.fromJson(game, json);
+    case ActionType.requestSearch:
+      return RequestSearchAction.fromJson(game, json);
+    case ActionType.requestConstructL1:
+      return RequestConstructL1Action.fromJson(game, json);
     // case ActionType.requestStore:
     //   return RequestStoreAction.fromJson(game, json);
     // case ActionType.requestConstruct:

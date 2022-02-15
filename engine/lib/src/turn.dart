@@ -12,6 +12,8 @@ enum TurnState {
   searchSelected, // if the selectedAction is search, this state is waiting for the deck choice
   selectedActionCompleted, // ready to handle triggered actions
   acquireRequested, // acquire request as result of product triggered
+  constructL1Requested, // construct a free L1 part requested as a result of product triggered
+  storeRequested, // store request as a result of a product triggered
   ended, // received end turn action
   gameEnded, // end of game detected, no more allowed actions
 }
@@ -121,14 +123,16 @@ class Turn {
 
     if (turnState.value == TurnState.started) {
       // if we haven't selected an action yet, require that first
-      if (player.hasPartStorageSpace) {
+      if (player.hasPartStorageSpace && player.canStore) {
         ret.add(SelectActionAction(player.id, ActionType.store));
       }
       if (player.hasResourceStorageSpace) {
         ret.add(SelectActionAction(player.id, ActionType.acquire));
       }
       ret.add(SelectActionAction(player.id, ActionType.construct));
-      ret.add(SelectActionAction(player.id, ActionType.search));
+      if (player.canSearch) {
+        ret.add(SelectActionAction(player.id, ActionType.search));
+      }
       return ret;
     }
 
@@ -158,6 +162,16 @@ class Turn {
       return ret;
     }
 
+    if (turnState.value == TurnState.constructL1Requested) {
+      _addFreeConstructL1Actions(ret);
+      return ret;
+    }
+
+    if (turnState.value == TurnState.storeRequested) {
+      _addStorePartActions(ret, null);
+      return ret;
+    }
+
     if (turnState.value == TurnState.selectedActionCompleted) {
       // we know an action has been selected and completed, so now we can add all
       // the actions that triggered parts produce
@@ -178,6 +192,13 @@ class Turn {
                     if (!player.hasResourceStorageSpace) {
                       continue;
                     }
+                  } else if (product.productType == ProductType.store &&
+                      (!player.hasPartStorageSpace || !player.canStore)) {
+                    continue;
+                  } else if (product.productType == ProductType.freeConstructL1 && game.saleParts[0].isEmpty) {
+                    continue;
+                  } else if (product.productType == ProductType.search && !player.canSearch) {
+                    continue;
                   }
                   _addAllAvailableActions(ret, part, product.produce(game, player.id));
                 }
@@ -204,6 +225,20 @@ class Turn {
     actions.add(SearchDeclinedAction(player.id, null));
   }
 
+  void _addFreeConstructL1Actions(List<GameAction> actions) {
+    for (var part in game.saleParts[0].list) {
+      actions.add(ConstructAction(player.id, part, null, null, null, false));
+    }
+  }
+
+  void _addSearchActions(List<GameAction> actions) {
+    for (var level = 0; level < 3; ++level) {
+      if (game.partDecks[level].isNotEmpty) {
+        actions.add(SearchAction(player.id, level));
+      }
+    }
+  }
+
   void _addAllAvailableActions(List<GameAction> actions, Part part, GameAction action) {
     if (action is SelectActionAction) {
       switch (action.selectedAction) {
@@ -224,13 +259,7 @@ class Turn {
 
         case ActionType.search:
           // can search one of the 3 decks
-          for (var level = 0; level < 3; ++level) {
-            if (game.partDecks[level].isNotEmpty) {
-              actions.add(SearchAction(player.id, level));
-            }
-          }
-          // actions.add(SearchAction(player.id, 1));
-          // actions.add(SearchAction(player.id, 2));
+          _addSearchActions(actions);
           break;
 
         default:
@@ -252,6 +281,12 @@ class Turn {
       actions.add(action);
     } else if (action is SearchDeclinedAction) {
       actions.add(action);
+    } else if (action is RequestSearchAction) {
+      actions.add(action);
+    } else if (action is RequestConstructL1Action) {
+      actions.add(action);
+    } else if (action is RequestStoreAction) {
+      actions.add(action);
     }
   }
 
@@ -270,7 +305,9 @@ class Turn {
     // if we have searched, only consider those parts
     if (turnState.value == TurnState.searchSelected) {
       for (var part in searchedParts) {
-        if (player.canAfford(part, discount, convertedResources)) {
+        var dis = discount;
+        if (part.level == 1) dis += player.constructLevel2Discount;
+        if (player.canAfford(part, dis, convertedResources)) {
           items.add(part);
         }
       }
@@ -278,16 +315,18 @@ class Turn {
       // not searching, so look at the stuff for sale and storage
       for (var i = 0; i < 3; ++i) {
         for (var part in game.saleParts[i]) {
-          if (part.level == 1) discount += player.constructLevel2Discount;
-          if (player.canAfford(part, discount, convertedResources)) {
+          var dis = discount;
+          if (part.level == 1) dis += player.constructLevel2Discount;
+          if (player.canAfford(part, dis, convertedResources)) {
             items.add(part);
           }
         }
       }
       for (var part in player.savedParts) {
-        if (part.level == 1) discount += player.constructLevel2Discount;
-        discount += player.constructFromStoreDiscount;
-        if (player.canAfford(part, discount, convertedResources)) {
+        var dis = discount;
+        if (part.level == 1) dis += player.constructLevel2Discount;
+        dis += player.constructFromStoreDiscount;
+        if (player.canAfford(part, dis, convertedResources)) {
           items.add(part);
         }
       }
@@ -404,6 +443,12 @@ class Turn {
         return _doRequestAcquire(action as RequestAcquireAction);
       case ActionType.searchDeclined:
         return _doSearchDeclined(action as SearchDeclinedAction);
+      case ActionType.requestSearch:
+        return _doRequestSearch(action as RequestSearchAction);
+      case ActionType.requestConstructL1:
+        return _doRequestConstructL1(action as RequestConstructL1Action);
+      case ActionType.requestStore:
+        return _doRequestStore(action as RequestStoreAction);
       default:
         return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.unknownAction, null);
     }
@@ -496,7 +541,7 @@ class Turn {
 
     _doTriggers(game, action, PartType.storage);
 
-    if (turnState.value == TurnState.actionSelected) {
+    if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.storeRequested) {
       turnState.value = TurnState.selectedActionCompleted;
     }
 
@@ -536,19 +581,22 @@ class Turn {
       }
     }
 
-    // make player pay for the part
     player.buyPart(action.part);
-    for (var resource in action.payment) {
-      if (convertedResources[resource].value > 0) {
-        convertedResources[resource].value--;
-      } else if (player.resources[resource].value > 0) {
-        player.removeResource(resource);
-      } else {
-        log.severe('Player ${player.id} failed to spend ${resource.name}');
-        changeStack.discard();
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+
+    // make player pay for the part if it isn't free
+    if (turnState != TurnState.constructL1Requested) {
+      for (var resource in action.payment) {
+        if (convertedResources[resource].value > 0) {
+          convertedResources[resource].value--;
+        } else if (player.resources[resource].value > 0) {
+          player.removeResource(resource);
+        } else {
+          log.severe('Player ${player.id} failed to spend ${resource.name}');
+          changeStack.discard();
+          return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+        }
+        game.addToWell(resource);
       }
-      game.addToWell(resource);
     }
 
     // we can use the new part this turn
@@ -562,7 +610,7 @@ class Turn {
         changeStack.discard();
         return Tuple2<ValidateResponseCode, GameAction>(ret, null);
       }
-    } else if (turnState.value == TurnState.actionSelected) {
+    } else if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.constructL1Requested) {
       turnState.value = TurnState.selectedActionCompleted;
     }
 
@@ -682,6 +730,36 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.acquireRequested;
+    action.producedBy.activated.value = true;
+    changeStack.commit();
+
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+  }
+
+  Tuple2<ValidateResponseCode, GameAction> _doRequestSearch(RequestSearchAction action) {
+    var ret = ValidateResponseCode.ok;
+    changeStack.group();
+    turnState.value = TurnState.searchSelected;
+    action.producedBy.activated.value = true;
+    changeStack.commit();
+
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+  }
+
+  Tuple2<ValidateResponseCode, GameAction> _doRequestConstructL1(RequestConstructL1Action action) {
+    var ret = ValidateResponseCode.ok;
+    changeStack.group();
+    turnState.value = TurnState.constructL1Requested;
+    action.producedBy.activated.value = true;
+    changeStack.commit();
+
+    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+  }
+
+  Tuple2<ValidateResponseCode, GameAction> _doRequestStore(RequestStoreAction action) {
+    var ret = ValidateResponseCode.ok;
+    changeStack.group();
+    turnState.value = TurnState.storeRequested;
     action.producedBy.activated.value = true;
     changeStack.commit();
 

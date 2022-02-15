@@ -27,3 +27,18 @@ class StoreAction extends GameAction {
       : part = game.allParts[json['part'] as String],
         super.fromJson(game, json);
 }
+
+class RequestStoreAction extends GameAction {
+  RequestStoreAction(String player, Product producedBy) : super(player, producedBy);
+
+  @override
+  ActionType get actionType => ActionType.requestStore;
+
+  @override
+  bool matches(GameAction action) {
+    // we match all RequestAcquireAction
+    return action is RequestAcquireAction;
+  }
+
+  RequestStoreAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);
+}

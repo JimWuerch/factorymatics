@@ -368,7 +368,6 @@ List<Part> createParts(Game game) {
         DoubleResourceProduct(game, ResourceType.spade), ResourceType.heart, 3))
     ..add(ConverterPart(game, (partId++).toString(), 1, 3, ConvertTrigger(ResourceType.heart),
         DoubleResourceProduct(game, ResourceType.heart), ResourceType.spade, 3))
-    // TODO: fix costing routines to work with MultipleConverterPart
     ..add(MultipleConverterPart(
         game,
         (partId++).toString(),
@@ -505,7 +504,7 @@ List<Part> createParts(Game game) {
         PartType.construct,
         6,
         [ConstructTrigger(ResourceType.club), ConstructTrigger(ResourceType.spade)],
-        [FreeConstructProduct(game, 0)],
+        [FreeConstructL1Product(game, 0)],
         ResourceType.diamond,
         6))
     ..add(SimplePart(
@@ -515,7 +514,7 @@ List<Part> createParts(Game game) {
         PartType.construct,
         6,
         [ConstructTrigger(ResourceType.diamond), ConstructTrigger(ResourceType.heart)],
-        [FreeConstructProduct(game, 0)],
+        [FreeConstructL1Product(game, 0)],
         ResourceType.club,
         6))
     ..add(MultipleConverterPart(

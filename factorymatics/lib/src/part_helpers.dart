@@ -123,7 +123,7 @@ String productTooltipString(Product product) {
       return "Convert a resource to a different type";
     case ProductType.doubleResource:
       return "Double a resource";
-    case ProductType.freeConstruct:
+    case ProductType.freeConstructL1:
       return "Construct a level 1 part for free";
     case ProductType.mysteryMeat:
       return "Acquire a random resource from the well";

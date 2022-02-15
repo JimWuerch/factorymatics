@@ -168,7 +168,7 @@ class CalcResources {
   static final Map<int, ConverterBaseProduct> _idToProd = <int, ConverterBaseProduct>{};
   static int prodCount = 0;
 
-// helper function for PlayerData usage
+  // helper function for PlayerData usage
   static List<ConverterBaseProduct> makeProductList(MapState<PartType, ListState<Part>> parts) {
     // make a Set of available converters
     var products = <ConverterBaseProduct>[];
