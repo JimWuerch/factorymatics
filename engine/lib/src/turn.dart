@@ -11,6 +11,7 @@ enum TurnState {
   actionSelected, // received SelectActionAction
   searchSelected, // if the selectedAction is search, this state is waiting for the deck choice
   selectedActionCompleted, // ready to handle triggered actions
+  searchRequested, // search as a result of product triggered
   acquireRequested, // acquire request as result of product triggered
   constructL1Requested, // construct a free L1 part requested as a result of product triggered
   storeRequested, // store request as a result of a product triggered
@@ -154,6 +155,11 @@ class Turn {
     // we can build or store one of the parts we searched
     if (turnState.value == TurnState.searchSelected) {
       _addSearchedPartActions(ret);
+      return ret;
+    }
+
+    if (turnState.value == TurnState.searchRequested) {
+      _addSearchActions(ret);
       return ret;
     }
 
@@ -381,9 +387,11 @@ class Turn {
   }
 
   Tuple2<ValidateResponseCode, GameAction> processAction(GameAction action) {
-    var matchedAction = _isAvailableAction(action);
-    if (matchedAction == null) {
-      return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+    if (!game.testMode) {
+      var matchedAction = _isAvailableAction(action);
+      if (matchedAction == null) {
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+      }
     }
 
     // the source may not know who made the action available
@@ -739,7 +747,7 @@ class Turn {
   Tuple2<ValidateResponseCode, GameAction> _doRequestSearch(RequestSearchAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
-    turnState.value = TurnState.searchSelected;
+    turnState.value = TurnState.searchRequested;
     action.producedBy.activated.value = true;
     changeStack.commit();
 

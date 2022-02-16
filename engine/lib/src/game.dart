@@ -15,6 +15,8 @@ class Game {
   static const int level2MarketSize = 3;
   static const int level3MarketSize = 2;
 
+  bool testMode = false;
+
   List<PlayerData> players;
 
   String tmpName;

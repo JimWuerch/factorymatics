@@ -34,7 +34,7 @@ class GameController {
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i].shuffle();
     }
-    // partDecks[2].removeRange(16, partDecks[2].length);
+    startingPartDecks[2].removeRange(16, startingPartDecks[2].length);
     game.assignStartingDecks(startingPartDecks);
 
     game.startGame();
