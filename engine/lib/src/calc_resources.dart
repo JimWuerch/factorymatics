@@ -176,12 +176,12 @@ class CalcResources {
       if (!part.ready.value) continue;
       for (var index = 0; index < part.products.length; ++index) {
         if (!part.products[index].activated.value) {
-          if (part is MultipleConverterPart) {
-            products.add(part.converters[0].products[0] as ConverterBaseProduct);
-            products.add(part.converters[1].products[0] as ConverterBaseProduct);
-          } else {
-            products.add(part.products[index] as ConverterBaseProduct);
-          }
+          // if (part is MultipleConverterPart) {
+          //   products.add(part.converters[0].products[0] as ConverterBaseProduct);
+          //   products.add(part.converters[1].products[0] as ConverterBaseProduct);
+          // } else {
+          products.add(part.products[index] as ConverterBaseProduct);
+          // }
         }
       }
     }
@@ -427,24 +427,36 @@ class CalcResources {
     for (var c in conv) {
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;
-        if (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0) {
+        if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
           // we have a matching resource, so use it
-          for (var rt in ResourceType.values) {
-            if (rt == cv.source || rt == ResourceType.any || rt == ResourceType.none) continue;
-            var ip2 = ResourcePool.of(inputPool);
-            var op2 = ResourcePool.of(outputPool);
-            if (ip2.count(cv.source) > 0) {
-              ip2.sub1(cv.source);
-            } else {
-              op2.sub1(cv.source);
+          for (var destRt in ResourceType.values) {
+            if (destRt == cv.source || destRt == ResourceType.any || destRt == ResourceType.none) continue;
+            for (var srcRt in ResourceType.values) {
+              // we will try using every type as the "from". So for non any to any converters,
+              // we will skip anything but the rt that matches what the converter source is
+              if (srcRt == ResourceType.any ||
+                  srcRt == ResourceType.none ||
+                  srcRt == destRt ||
+                  (cv.source != ResourceType.any && srcRt != cv.source)) continue;
+
+              // this can happen for cv.source == ResourceType.any
+              if (inputPool.count(srcRt) == 0 && outputPool.count(srcRt) == 0) continue;
+
+              var ip2 = ResourcePool.of(inputPool);
+              var op2 = ResourcePool.of(outputPool);
+              if (ip2.count(srcRt) > 0) {
+                ip2.sub1(srcRt);
+              } else {
+                op2.sub1(srcRt);
+              }
+              op2.add1(destRt);
+              var conv2 = List<ConverterBaseProduct>.of(conv);
+              conv2.remove(c);
+              if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
+                max.resources[destRt] = op2.count(destRt) + ip2.count(destRt);
+              }
+              _findMaxResources(max, conv2, ip2, op2);
             }
-            op2.add1(rt);
-            var conv2 = List<ConverterBaseProduct>.of(conv);
-            conv2.remove(c);
-            if (max.count(rt) < op2.count(rt) + ip2.count(rt)) {
-              max.resources[rt] = op2.count(rt) + ip2.count(rt);
-            }
-            _findMaxResources(max, conv2, ip2, op2);
           }
         }
       } else if (c.productType == ProductType.doubleResource) {

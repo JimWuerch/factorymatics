@@ -217,12 +217,12 @@ class PlayerData {
   }
 
   void buyPart(Part part) {
-    //}, List<ResourceType> payment) {
     parts[part.partType].add(part);
-    // for (var resource in payment) {
-    //   resources[resource].value = resources[resource].value - 1;
-    //   game.addToWell(resource);
-    // }
+    invalidateMaxResources();
+  }
+
+  void removePart(Part part) {
+    parts[part.partType].remove(part);
     invalidateMaxResources();
   }
 
@@ -262,8 +262,8 @@ class PlayerData {
   }
 
   void updateMaxResources() {
-    //maxResources = getMaxResources();
-    throw UnimplementedError();
+    maxResources =
+        CalcResources.getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
   }
 
   void invalidateMaxResources() {

@@ -4,10 +4,10 @@ class ConstructAction extends GameAction {
   final Part part;
   final List<ResourceType> payment;
   final List<GameAction> convertersUsed;
-  final bool fromStorage;
+  bool fromStorage; // Turn will force update this
 
-  // ignore: avoid_positional_boolean_parameters
-  ConstructAction(String player, this.part, this.payment, Product producedBy, this.convertersUsed, this.fromStorage)
+  ConstructAction(String player, this.part, this.payment, Product producedBy, this.convertersUsed,
+      {this.fromStorage = false})
       : super(player, producedBy);
 
   @override

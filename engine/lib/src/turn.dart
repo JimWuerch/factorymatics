@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:developer';
 
 import 'package:engine/engine.dart';
 import 'package:tuple/tuple.dart';
@@ -222,7 +223,7 @@ class Turn {
     if (searchedParts == null) return;
     for (var part in searchedParts) {
       if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources)) {
-        actions.add(ConstructAction(player.id, part, null, null, null, false));
+        actions.add(ConstructAction(player.id, part, null, null, null));
       }
       if (player.hasPartStorageSpace) {
         actions.add(StoreAction(player.id, part, null));
@@ -233,7 +234,7 @@ class Turn {
 
   void _addFreeConstructL1Actions(List<GameAction> actions) {
     for (var part in game.saleParts[0].list) {
-      actions.add(ConstructAction(player.id, part, null, null, null, false));
+      actions.add(ConstructAction(player.id, part, null, null, null));
     }
   }
 
@@ -343,7 +344,7 @@ class Turn {
   void _addAffordablePartActions(List<GameAction> actions, Product producedBy, int discount) {
     var parts = getAffordableParts(discount);
     for (var part in parts) {
-      actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy, null, false));
+      actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy, null));
     }
   }
 
@@ -387,6 +388,11 @@ class Turn {
   }
 
   Tuple2<ValidateResponseCode, GameAction> processAction(GameAction action) {
+    if (action.owner != player.id) {
+      log.info('Action requested by non-current player ${action.owner}');
+      return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+    }
+
     if (!game.testMode) {
       var matchedAction = _isAvailableAction(action);
       if (matchedAction == null) {
@@ -564,6 +570,11 @@ class Turn {
     // run the converters needed
     if (action.convertersUsed != null) {
       for (var cv in action.convertersUsed) {
+        if (cv.actionType != ActionType.convert && cv.actionType != ActionType.doubleConvert) {
+          log.severe('Player ${player.id} tried to use a non-converter action as a converter');
+          changeStack.discard();
+          return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, cv);
+        }
         ret = processAction(cv).item1;
         if (ret != ValidateResponseCode.ok) {
           changeStack.discard();
@@ -572,10 +583,14 @@ class Turn {
       }
     }
 
+    // force fromStorage to be accurate
+    action.fromStorage = player.isInStorage(action.part);
+
     // do this first so we don't trigger ourself
     if (action.producedBy != null) {
       action.producedBy.activated.value = true;
     }
+
     _doTriggers(game, action, PartType.construct);
 
     if (turnState.value != TurnState.searchSelected) {
@@ -592,18 +607,28 @@ class Turn {
     player.buyPart(action.part);
 
     // make player pay for the part if it isn't free
-    if (turnState != TurnState.constructL1Requested) {
+    if (turnState.value != TurnState.constructL1Requested) {
+      var costRemaining = action.part.cost;
+      if (action.part.level == 1) costRemaining -= player.constructLevel2Discount;
+      if (action.fromStorage) costRemaining -= player.constructFromStoreDiscount;
+      if (turnState.value == TurnState.searchSelected) costRemaining -= player.constructFromSearchDiscount;
       for (var resource in action.payment) {
         if (convertedResources[resource].value > 0) {
           convertedResources[resource].value--;
         } else if (player.resources[resource].value > 0) {
           player.removeResource(resource);
+          game.addToWell(resource);
         } else {
           log.severe('Player ${player.id} failed to spend ${resource.name}');
           changeStack.discard();
           return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
         }
-        game.addToWell(resource);
+        costRemaining--;
+      }
+      if (costRemaining != 0) {
+        log.severe('Player ${player.id} failed to pay for ${action.part.id}');
+        changeStack.discard();
+        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.cantAfford, null);
       }
     }
 
@@ -690,6 +715,7 @@ class Turn {
     changeStack.group();
 
     player.removeResource(action.source);
+    game.addToWell(action.source);
     convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
     action.producedBy.activated.value = true;
     changeStack.commit();
@@ -701,6 +727,7 @@ class Turn {
     changeStack.group();
 
     player.removeResource(action.source);
+    game.addToWell(action.source);
     convertedResources[action.source].value = convertedResources[action.source].value + 2;
     action.producedBy.activated.value = true;
     changeStack.commit();
@@ -727,7 +754,9 @@ class Turn {
   Tuple2<ValidateResponseCode, GameAction> _doVp(VpAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
-    player.giveVpChit();
+    for (var i = 0; i < action.vp; i++) {
+      player.giveVpChit();
+    }
     action.producedBy.activated.value = true;
     changeStack.commit();
 

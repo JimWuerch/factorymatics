@@ -492,6 +492,7 @@ List<Part> createParts(Game game) {
         [VpProduct(game, 2)],
         ResourceType.heart,
         5))
+    // TODO: fix ConstructFromStoreTrigger
     ..add(SimplePart(game, (partId++).toString(), 2, PartType.construct, 5, [ConstructFromStoreTrigger()],
         [VpProduct(game, 2)], ResourceType.heart, 5))
     ..add(SimplePart(game, (partId++).toString(), 2, PartType.construct, 5, [ConstructFromStoreTrigger()],
