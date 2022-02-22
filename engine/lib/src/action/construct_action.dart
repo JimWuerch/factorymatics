@@ -62,8 +62,8 @@ class RequestConstructL1Action extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    // we match all RequestAcquireAction
-    return action is RequestAcquireAction;
+    // we match all RequestConstructL1Action
+    return action is RequestConstructL1Action;
   }
 
   RequestConstructL1Action.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);

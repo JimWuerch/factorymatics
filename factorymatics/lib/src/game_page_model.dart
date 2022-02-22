@@ -183,7 +183,7 @@ class GamePageModel {
 
   bool get canAcquire => game.currentPlayer.hasResourceStorageSpace;
 
-  bool get canConstruct => game.currentTurn.getAffordableParts(0).isNotEmpty;
+  bool get canConstruct => game.currentTurn.getAffordableParts().isNotEmpty;
 
   bool get inSearch => game.currentTurn.turnState.value == TurnState.searchSelected;
 
@@ -240,7 +240,17 @@ class GamePageModel {
   }
 
   Future<GameAction> _handleConstructRequest(Part part) async {
-    var paths = game.currentPlayer.getPayments(part);
+    // is the part free as a result of a product?
+    if (game.currentTurn.turnState.value == TurnState.constructL1Requested && part.level == 0) {
+      return ConstructAction(playerId, part, [], null, null);
+    }
+    // is the part free because of discounts?
+    var discount = game.currentTurn.partDiscount(part);
+    if (part.cost - discount == 0) {
+      return ConstructAction(playerId, part, [], null, null);
+    }
+
+    var paths = game.currentPlayer.getPayments(part, discount);
     if (paths.isEmpty) {
       throw InvalidOperationError('No way to pay for part ${part.id}');
     }
@@ -259,19 +269,15 @@ class GamePageModel {
     for (var used in paths[index].history) {
       if (used.product.productType != ProductType.spend) {
         convertersUsed.add(used.product.produce(game, playerId));
-        // var act = used.product.produce(game, playerId);
-        // var response = await gameInfoModel.client.postAction(game, act);
-        // if (response.responseCode != ResponseCode.ok) {
-        //   _notifierController.addError(null);
-        // }
       }
     }
 
     List<ResourceType> payment;
     if (part.resource == ResourceType.any) {
-      payment = paths[index].getCost().toList();
+      //payment = paths[index].getCost().toList();
+      payment = paths[index].getOutput().toList();
     } else {
-      payment = List<ResourceType>.filled(part.cost, part.resource);
+      payment = List<ResourceType>.filled(part.cost - discount, part.resource);
     }
     return ConstructAction(playerId, part, payment, null, convertersUsed.isNotEmpty ? convertersUsed : null);
   }
@@ -340,5 +346,9 @@ class GamePageModel {
     } else if (option != SearchExecutionOptions.unselected) {
       searchExecutionOption = option; // will call gameUpdate
     }
+  }
+
+  Future<void> onDoAiTurn() async {
+    await _postAction(GameModeAction(playerId, GameModeType.doAiTurn));
   }
 }

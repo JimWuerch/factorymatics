@@ -1,5 +1,7 @@
 // ignore_for_file: avoid_classes_with_only_static_members
 
+import 'dart:typed_data';
+
 import 'package:engine/engine.dart';
 
 class UsedProduct {
@@ -33,34 +35,41 @@ class UsedProduct {
 }
 
 class ResourcePool {
-  final Map<ResourceType, int> resources;
+  final Int8List _resources;
 
-  ResourcePool() : resources = _createResourcePool();
+  ResourcePool() : _resources = _createResourcePool();
 
-  ResourcePool.fromResources(Map<ResourceType, GameStateVar<int>> src) : resources = _createResourcePool() {
+  ResourcePool.fromResources(Map<ResourceType, GameStateVar<int>> src) : _resources = _createResourcePool() {
     for (var resourceType in src.keys) {
       if (resourceType == ResourceType.none) continue;
-      resources[resourceType] = src[resourceType].value;
+      set(resourceType, src[resourceType].value);
     }
   }
 
-  ResourcePool.of(ResourcePool src) : resources = Map<ResourceType, int>.of(src.resources);
+  ResourcePool.of(ResourcePool src) : _resources = Int8List.fromList(src._resources);
 
-  int count(ResourceType rt) => resources[rt];
-  void add1(ResourceType rt) => resources[rt]++;
+  int count(ResourceType rt) => _resources[rt.index];
+  void add1(ResourceType rt) => _resources[rt.index]++;
   void sub1(ResourceType rt) {
-    if (resources[rt] == 0) {
+    if (_resources[rt.index] == 0) {
       throw InvalidOperationError('No resource');
     } else {
-      resources[rt]--;
+      _resources[rt.index]--;
     }
+  }
+
+  void set(ResourceType rt, int value) {
+    if (value < 0) {
+      throw InvalidOperationError('Negative value set');
+    }
+    _resources[rt.index] = value;
   }
 
   int getResourceCount() {
     var total = 0;
     for (var rt in ResourceType.values) {
       if (rt == ResourceType.any || rt == ResourceType.none) continue;
-      total += resources[rt];
+      total += _resources[rt.index];
     }
     return total;
   }
@@ -69,28 +78,29 @@ class ResourcePool {
     var ret = <ResourceType>[];
     for (var rt in ResourceType.values) {
       if (rt == ResourceType.none || rt == ResourceType.any) continue;
-      for (var i = 0; i < resources[rt]; ++i) {
+      for (var i = 0; i < _resources[rt.index]; ++i) {
         ret.add(rt);
       }
     }
     return ret;
   }
 
-  static Map<ResourceType, int> _createResourcePool() {
-    return <ResourceType, int>{
-      ResourceType.heart: 0,
-      ResourceType.spade: 0,
-      ResourceType.diamond: 0,
-      ResourceType.club: 0
-    };
+  static Int8List _createResourcePool() {
+    return Int8List(6); // ResourceType.values.length
+    // return <ResourceType, int>{
+    //   ResourceType.heart: 0,
+    //   ResourceType.spade: 0,
+    //   ResourceType.diamond: 0,
+    //   ResourceType.club: 0
+    // };
   }
 
   @override
   String toString() {
-    if (resources[ResourceType.any] > 0) {
-      return 'heart:${resources[ResourceType.heart]} spade:${resources[ResourceType.spade]} diamond: ${resources[ResourceType.diamond]} club: ${resources[ResourceType.club]} any: ${resources[ResourceType.any]}';
+    if (_resources[ResourceType.any.index] > 0) {
+      return 'heart:${_resources[ResourceType.heart.index]} spade:${_resources[ResourceType.spade.index]} diamond: ${_resources[ResourceType.diamond.index]} club: ${_resources[ResourceType.club.index]} any: ${_resources[ResourceType.any.index]}';
     }
-    return 'heart:${resources[ResourceType.heart]} spade:${resources[ResourceType.spade]} diamond: ${resources[ResourceType.diamond]} club: ${resources[ResourceType.club]}';
+    return 'heart:${_resources[ResourceType.heart.index]} spade:${_resources[ResourceType.spade.index]} diamond: ${_resources[ResourceType.diamond.index]} club: ${_resources[ResourceType.club.index]}';
   }
 }
 
@@ -114,6 +124,28 @@ class SpendHistory {
     for (var prod in history) {
       if (prod.usedSource) {
         pool.add1(prod.source);
+      }
+    }
+    return pool;
+  }
+
+  ResourcePool getOutput() {
+    var pool = ResourcePool();
+    for (var prod in history) {
+      if (prod.product is SpendResourceProduct) {
+        pool.add1(prod.product.sourceResource);
+      } else if (prod.product is ConvertProduct) {
+        if (!prod.usedSource) {
+          pool.sub1(prod.product.sourceResource);
+        }
+        pool.add1((prod.product as ConvertProduct).dest);
+      } else if (prod.product is DoubleResourceProduct) {
+        if (prod.usedSource) {
+          pool.add1(prod.product.sourceResource);
+        }
+        pool.add1(prod.product.sourceResource);
+      } else {
+        throw InvalidOperationError('Unknown product in SpendHistory');
       }
     }
     return pool;
@@ -149,11 +181,17 @@ class _AnyToAnyProduct extends ConvertProduct {
   // instances are so we can have separate id's for each source type, so the dedup still works
   Map<ResourceType, ConvertProduct> instances;
   _AnyToAnyProduct(this.src) : super(src.part?.ready?.game, src.source, src.dest) {
+    part = src.part;
+    prodIndex = src.prodIndex;
     instances = <ResourceType, ConvertProduct>{};
     for (var rt in ResourceType.values) {
       if (rt == ResourceType.any || rt == ResourceType.none) continue;
       var newProd = ConvertProduct(null, rt, ResourceType.any);
       newProd.part = src.part;
+      newProd.prodIndex = src.prodIndex;
+      if (src.part == null) {
+        print('hmmm');
+      }
       newProd.prodIndex = src.prodIndex;
       instances[rt] = newProd;
       CalcResources._idToProd[1 << CalcResources.prodCount] = newProd;
@@ -244,14 +282,15 @@ class CalcResources {
   }
 
   static void _getSpendPaths(
-      List<SpendHistory> paths,
-      List<ConverterBaseProduct> conv,
-      List<SpendResourceProduct> spenders,
-      ResourcePool inputPool,
-      SpendHistory history,
-      int needed,
-      ResourceType neededResource,
-      Map<ConverterBaseProduct, int> prodIds) {
+    List<SpendHistory> paths,
+    List<ConverterBaseProduct> conv,
+    List<SpendResourceProduct> spenders,
+    ResourcePool inputPool,
+    SpendHistory history,
+    int needed,
+    ResourceType neededResource,
+    Map<ConverterBaseProduct, int> prodIds,
+  ) {
     if (needed == 0) {
       return;
     }
@@ -278,6 +317,23 @@ class CalcResources {
       }
     }
   }
+
+  // add spend products for all resources left in the inputPool
+  // static void _addRemainingResources(
+  //   List<SpendHistory> paths,
+  //   ResourcePool inputPool,
+  //   SpendHistory history,
+  //   Map<ConverterBaseProduct, int> prodIds,
+  //   List<SpendResourceProduct> spenders,
+  // ) {
+  //   var s2 = List<SpendResourceProduct>.of(spenders);
+  //   // add spend products for all resources left in the inputPool
+  //   for (var resource in inputPool.toList()) {
+  //     var spender = s2.firstWhere((element) => element.sourceResource == resource);
+  //     history.add(UsedProduct(spender, true, prodIds[spender]));
+  //     s2.remove(spender);
+  //   }
+  // }
 
 // recursively try all permutations of products
   static void _getConvertersPaths(
@@ -326,6 +382,10 @@ class CalcResources {
               var history2 = SpendHistory.of(history);
               var newProd = ConvertProduct(null, srcRt, destRt);
               newProd.part = cv.part;
+              newProd.prodIndex = cv.prodIndex;
+              // if (cv.part == null) {
+              //   print('hmmm');
+              // }
               newProd.prodIndex = cv.prodIndex;
               var ip2 = ResourcePool.of(inputPool);
               var op2 = ResourcePool.of(outputPool);
@@ -381,9 +441,13 @@ class CalcResources {
           conv2.remove(c);
 
           if (neededResource == ResourceType.any) {
-            var total = op2.getResourceCount();
+            var total = op2.getResourceCount(); // + (spenders != null ? ip2.getResourceCount() : 0);
             if (total == needed) {
               paths.add(history2);
+              // // this will append spenders to the history we just saved
+              // if (spenders != null) {
+              //   _addRemainingResources(paths, ip2, history2, prodIds, spenders);
+              // }
             } else {
               _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource, prodIds);
             }
@@ -414,7 +478,7 @@ class CalcResources {
     var max = ResourcePool.of(sourcePool);
 
     // fix the ResourceType.any max
-    max.resources[ResourceType.any] = sourcePool.getResourceCount();
+    max.set(ResourceType.any, sourcePool.getResourceCount());
 
     _findMaxResources(max, products, sourcePool, ResourcePool());
 
@@ -453,7 +517,7 @@ class CalcResources {
               var conv2 = List<ConverterBaseProduct>.of(conv);
               conv2.remove(c);
               if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
-                max.resources[destRt] = op2.count(destRt) + ip2.count(destRt);
+                max.set(destRt, op2.count(destRt) + ip2.count(destRt));
               }
               _findMaxResources(max, conv2, ip2, op2);
             }
@@ -475,12 +539,12 @@ class CalcResources {
           conv2.remove(c);
 
           if (max.count(cv.resourceType) < op2.count(cv.resourceType) + ip2.count(cv.resourceType)) {
-            max.resources[cv.resourceType] = op2.count(cv.resourceType) + ip2.count(cv.resourceType);
+            max.set(cv.resourceType, op2.count(cv.resourceType) + ip2.count(cv.resourceType));
           }
 
           var total = op2.getResourceCount() + ip2.getResourceCount();
           if (max.count(ResourceType.any) < total) {
-            max.resources[ResourceType.any] = total;
+            max.set(ResourceType.any, total);
           }
           _findMaxResources(max, conv2, ip2, op2);
         }

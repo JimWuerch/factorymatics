@@ -103,14 +103,16 @@ class Turn {
     return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts, convRes);
   }
 
-  List<GameAction> getAvailableActions() {
+  /// Returns a list of possible actions for the current state of the turn
+  /// When [isAi] is true, don't include non-active actions, like undo, end turn, etc
+  List<GameAction> getAvailableActions({bool isAi = false}) {
     var ret = <GameAction>[];
 
     if (turnState.value == TurnState.gameEnded) {
       return ret;
     }
 
-    if (changeStack.canUndo) {
+    if (changeStack.canUndo && !isAi) {
       ret.add(GameModeAction(player.id, GameModeType.undo));
     }
 
@@ -131,7 +133,9 @@ class Turn {
       if (player.hasResourceStorageSpace) {
         ret.add(SelectActionAction(player.id, ActionType.acquire));
       }
-      ret.add(SelectActionAction(player.id, ActionType.construct));
+      if (getAffordableParts().isNotEmpty) {
+        ret.add(SelectActionAction(player.id, ActionType.construct));
+      }
       if (player.canSearch) {
         ret.add(SelectActionAction(player.id, ActionType.search));
       }
@@ -139,10 +143,12 @@ class Turn {
     }
 
     // converter actions are available at this point
-    for (var part in player.parts[PartType.converter]) {
-      for (var product in part.products) {
-        if (!product.activated.value) {
-          _addAllAvailableActions(ret, part, product.produce(game, player.id));
+    if (!isAi) {
+      for (var part in player.parts[PartType.converter]) {
+        for (var product in part.products) {
+          if (!product.activated.value) {
+            _addAllAvailableActions(ret, part, product.produce(game, player.id));
+          }
         }
       }
     }
@@ -184,7 +190,9 @@ class Turn {
       // the actions that triggered parts produce
 
       // allowed to end the turn now
-      ret.add(GameModeAction(player.id, GameModeType.endTurn));
+      if (!isAi) {
+        ret.add(GameModeAction(player.id, GameModeType.endTurn));
+      }
 
       // triggered actions
       for (var partList in player.parts.values) {
@@ -261,7 +269,7 @@ class Turn {
 
         case ActionType.construct:
           // add all buildings we can currently afford
-          _addAffordablePartActions(actions, null, 0);
+          _addAffordablePartActions(actions, null);
           break;
 
         case ActionType.search:
@@ -277,11 +285,25 @@ class Turn {
     } else if (action is AcquireAction) {
       actions.add(action);
     } else if (action is ConvertAction) {
-      if (player.hasResource(action.source)) {
-        actions.add(action);
+      if (action.source == ResourceType.any) {
+        if (player.maxResources == null) {
+          player.updateMaxResources();
+        }
+        if (player.maxResources.getResourceCount() > 0) {
+          actions.add(action);
+        } else if (convertedResources[ResourceType.heart].value > 0 ||
+            convertedResources[ResourceType.spade].value > 0 ||
+            convertedResources[ResourceType.club].value > 0 ||
+            convertedResources[ResourceType.diamond].value > 0) {
+          actions.add(action);
+        }
+      } else {
+        if (player.hasResource(action.source) || convertedResources[action.source].value > 0) {
+          actions.add(action);
+        }
       }
     } else if (action is DoubleConvertAction) {
-      if (player.hasResource(action.source)) {
+      if (player.hasResource(action.source) || convertedResources[action.source].value > 0) {
         actions.add(action);
       }
     } else if (action is RequestAcquireAction) {
@@ -307,13 +329,37 @@ class Turn {
     }
   }
 
-  HashSet<Part> getAffordableParts(int discount) {
+  /// Part discount
+  int partDiscount(Part part) {
+    var discount = 0;
+    if (part.level == 1) discount += player.constructLevel2Discount;
+
+    if (turnState.value == TurnState.searchSelected) {
+      if (searchedParts.contains(part)) {
+        discount += player.constructFromSearchDiscount;
+      }
+    } else if (player.isInStorage(part)) {
+      discount += player.constructFromStoreDiscount;
+    }
+
+    if (discount > part.cost) {
+      discount = part.cost;
+    }
+
+    return discount;
+  }
+
+  HashSet<Part> getAffordableParts() {
     var items = HashSet<Part>();
+    var discount = 0;
     // if we have searched, only consider those parts
     if (turnState.value == TurnState.searchSelected) {
       for (var part in searchedParts) {
-        var dis = discount;
+        var dis = discount + player.constructFromSearchDiscount;
         if (part.level == 1) dis += player.constructLevel2Discount;
+        if (dis > part.cost) {
+          dis = part.cost;
+        }
         if (player.canAfford(part, dis, convertedResources)) {
           items.add(part);
         }
@@ -324,6 +370,9 @@ class Turn {
         for (var part in game.saleParts[i]) {
           var dis = discount;
           if (part.level == 1) dis += player.constructLevel2Discount;
+          if (dis > part.cost) {
+            dis = part.cost;
+          }
           if (player.canAfford(part, dis, convertedResources)) {
             items.add(part);
           }
@@ -333,6 +382,9 @@ class Turn {
         var dis = discount;
         if (part.level == 1) dis += player.constructLevel2Discount;
         dis += player.constructFromStoreDiscount;
+        if (dis > part.cost) {
+          dis = part.cost;
+        }
         if (player.canAfford(part, dis, convertedResources)) {
           items.add(part);
         }
@@ -341,8 +393,8 @@ class Turn {
     return items;
   }
 
-  void _addAffordablePartActions(List<GameAction> actions, Product producedBy, int discount) {
-    var parts = getAffordableParts(discount);
+  void _addAffordablePartActions(List<GameAction> actions, Product producedBy) {
+    var parts = getAffordableParts();
     for (var part in parts) {
       actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy, null));
     }
@@ -591,8 +643,6 @@ class Turn {
       action.producedBy.activated.value = true;
     }
 
-    _doTriggers(game, action, PartType.construct);
-
     if (turnState.value != TurnState.searchSelected) {
       if (game.isForSale(action.part) || game.isInDeck(action.part)) {
         game.removePart(action.part);
@@ -603,8 +653,6 @@ class Turn {
         return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.partNotForSale, null);
       }
     }
-
-    player.buyPart(action.part);
 
     // make player pay for the part if it isn't free
     if (turnState.value != TurnState.constructL1Requested) {
@@ -631,6 +679,9 @@ class Turn {
         return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.cantAfford, null);
       }
     }
+
+    player.buyPart(action.part);
+    _doTriggers(game, action, PartType.construct);
 
     // we can use the new part this turn
     if (action.part.partType == PartType.converter) {
@@ -714,8 +765,14 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    player.removeResource(action.source);
-    game.addToWell(action.source);
+    if (convertedResources[action.source].value > 0) {
+      convertedResources[action.source].value--;
+    } else if (player.resources[action.source].value > 0) {
+      player.removeResource(action.source);
+      game.addToWell(action.source);
+    } else {
+      throw InvalidOperationError('tried to spend non-existence resource');
+    }
     convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
     action.producedBy.activated.value = true;
     changeStack.commit();
@@ -726,8 +783,14 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    player.removeResource(action.source);
-    game.addToWell(action.source);
+    if (convertedResources[action.source].value > 0) {
+      convertedResources[action.source].value--;
+    } else if (player.resources[action.source].value > 0) {
+      player.removeResource(action.source);
+      game.addToWell(action.source);
+    } else {
+      throw InvalidOperationError('tried to spend non-existence resource');
+    }
     convertedResources[action.source].value = convertedResources[action.source].value + 2;
     action.producedBy.activated.value = true;
     changeStack.commit();

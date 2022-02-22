@@ -40,9 +40,11 @@ class GameStateVar<T> extends GameStateBase {
   T get value => _value;
   set value(T newValue) {
     if (_changeStack == null) {
-      game.changeStack.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)), label: label);
+      game.changeStack.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)),
+          label: label);
     } else {
-      _changeStack.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)), label: label);
+      _changeStack.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)),
+          label: label);
     }
   }
 

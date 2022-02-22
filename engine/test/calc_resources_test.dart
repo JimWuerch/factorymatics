@@ -82,6 +82,25 @@ void main() {
       //dumpPaths(paths2);
     });
 
+    test('Test getPayments bug #1', () {
+      var tp = TestProducts();
+      var products = <ConverterBaseProduct>[];
+      products.add(tp.clubConverter);
+      products.add(tp.spadeConverter);
+      products.add(tp.diamondConverter);
+      products.add(tp.clubDoubler);
+      products.add(tp.diamondDoubler);
+      var pool = ResourcePool();
+      pool.add1(ResourceType.heart);
+      pool.add1(ResourceType.heart);
+      pool.add1(ResourceType.heart);
+      pool.add1(ResourceType.spade);
+      pool.add1(ResourceType.spade);
+
+      var paths = CalcResources.getPayments(7, ResourceType.any, pool, products);
+      dumpPaths(paths);
+    });
+
     test('Test getPayments dedup', () {
       //var tp = TestProducts();
       var products = <ConverterBaseProduct>[];

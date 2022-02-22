@@ -82,8 +82,8 @@ class RequestSearchAction extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    // we match all RequestAcquireAction
-    return action is RequestAcquireAction;
+    // we match all RequestSearchAction
+    return action is RequestSearchAction;
   }
 
   RequestSearchAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);

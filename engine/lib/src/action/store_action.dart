@@ -36,8 +36,8 @@ class RequestStoreAction extends GameAction {
 
   @override
   bool matches(GameAction action) {
-    // we match all RequestAcquireAction
-    return action is RequestAcquireAction;
+    // we match all RequestStoreAction
+    return action is RequestStoreAction;
   }
 
   RequestStoreAction.fromJson(Game game, Map<String, dynamic> json) : super.fromJson(game, json);

@@ -41,7 +41,7 @@ class ConstructTrigger extends Trigger {
   @override
   bool isTriggeredBy(GameAction action) {
     if (action is ConstructAction) {
-      return action.part.resource == resourceType;
+      return action.part.resource == resourceType || action.part.resource == ResourceType.any;
     }
     return false;
   }

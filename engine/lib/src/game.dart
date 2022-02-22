@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:engine/engine.dart';
+import 'package:engine/src/ai/ai_player.dart';
 //import 'package:engine/src/player/player_service.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
@@ -47,6 +48,9 @@ class Game {
 
   // this is only set for the client, it is not used or accurate for the server
   bool canUndo;
+
+  // if the ai is simulating a game, this is true
+  bool inSimulation = false;
 
   Game(List<String> playerNames, this.playerService, this.gameId) {
     _initialize();
@@ -185,6 +189,11 @@ class Game {
   }
 
   Tuple2<ValidateResponseCode, GameAction> applyAction(GameAction action) {
+    if (action is GameModeAction && action.mode == GameModeType.doAiTurn) {
+      var ai = AiPlayer(getPlayerFromId(action.owner));
+      ai.takeTurn(this);
+      return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+    }
     return currentTurn.processAction(action);
   }
 
@@ -197,6 +206,48 @@ class Game {
     return players.firstWhere((element) => element.id == id, orElse: () => null);
   }
 
+  PlayerData getWinner() {
+    var firstPass = <PlayerData>[];
+    var secondPass = <PlayerData>[];
+    var thirdPass = <PlayerData>[];
+
+    // first get the high score
+    var _highScore = -1;
+    for (var player in players) {
+      if (player.score >= _highScore) {
+        firstPass.add(player);
+        _highScore = player.score;
+      }
+    }
+    if (firstPass.length == 1) {
+      // only 1 winner
+      return firstPass.first;
+    } else {
+      var parts = 0;
+      for (var player in firstPass) {
+        if (player.partCount >= parts) {
+          secondPass.add(player);
+          parts = player.partCount;
+        }
+      }
+      if (secondPass.length == 1) {
+        // found a winner
+        return secondPass.first;
+      } else {
+        var resources = -1;
+        for (var player in secondPass) {
+          if (player.resourceCount() >= resources) {
+            thirdPass.add(player);
+            resources = player.resourceCount();
+          }
+        }
+        // if there's still more than 1 player left,
+        // the last tiebreaker is whoever went later in turn order, which will be the last player in the list
+        return thirdPass.last;
+      }
+    }
+  }
+
   Turn startNextTurn() {
     if (currentTurn?.gameEnded == true) {
       return currentTurn;
@@ -207,18 +258,24 @@ class Game {
     refillResources();
     changeStack.clear();
 
-    currentTurn = Turn(this, getNextPlayer());
-    currentTurn.startTurn();
-    if (_currentPlayerIndex == 0) {
+    if (inSimulation) {
+      currentTurn = Turn(this, currentPlayer);
       round++;
+    } else {
+      currentTurn = Turn(this, getNextPlayer());
+      if (_currentPlayerIndex == 0) {
+        round++;
+      }
     }
+    currentTurn.startTurn();
 
     return currentTurn;
   }
 
   void endTurn() {
     // check for game end at end of round
-    if (currentTurn.isGameEndTriggered && (_currentPlayerIndex == players.length - 1)) {
+    if (currentTurn.isGameEndTriggered && ((_currentPlayerIndex == players.length - 1) || inSimulation)) {
+      // if (currentTurn.isGameEndTriggered && (_currentPlayerIndex == players.length - 1)) {
       currentTurn.setGameComplete();
     } else {
       // if game not over, next turn

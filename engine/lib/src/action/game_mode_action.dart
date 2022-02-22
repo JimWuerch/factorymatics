@@ -1,6 +1,6 @@
 import 'package:engine/engine.dart';
 
-enum GameModeType { startGame, endGame, startTurn, endTurn, undo }
+enum GameModeType { startGame, endGame, startTurn, endTurn, undo, doAiTurn }
 
 class GameModeAction extends GameAction {
   final GameModeType mode;

@@ -267,6 +267,15 @@ class _GamePageState extends State<GamePage> {
                               style: TextButton.styleFrom(
                                 primary: Colors.white, // foreground
                               ),
+                              onPressed: () async => await model.onDoAiTurn(),
+                              child: Text("Ai Turn"),
+                              //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
+                            ),
+                            TextButton(
+                              //textColor: Colors.white,
+                              style: TextButton.styleFrom(
+                                primary: Colors.white, // foreground
+                              ),
                               onPressed: model.canUndo && model.isActivePlayer ? _onUndoTapped : null,
                               child: Text("Undo"),
                               //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),

@@ -10,22 +10,29 @@ class PartTestWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      shrinkWrap: true,
-      itemCount: parts.length,
-      itemBuilder: ((context, index) {
-        return Wrap(
-          children: [
-            PartWidget(
-              part: parts[index],
-              enabled: false,
-              onTap: null,
-              onProductTap: null,
-              isResourcePickerEnabled: false,
-            ),
-          ],
-        );
-      }),
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Part List'),
+      ),
+      body: Center(
+        child: ListView.builder(
+          shrinkWrap: true,
+          itemCount: parts.length,
+          itemBuilder: ((context, index) {
+            return Wrap(
+              children: [
+                PartWidget(
+                  part: parts[index],
+                  enabled: false,
+                  onTap: null,
+                  onProductTap: null,
+                  isResourcePickerEnabled: false,
+                ),
+              ],
+            );
+          }),
+        ),
+      ),
     );
   }
 }

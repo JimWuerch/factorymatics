@@ -55,12 +55,8 @@ class GameController {
     return ret;
   }
 
-  void loadGame(PlayerService playerService, String jsonString) {
-    var json = jsonDecode(jsonString) as Map<String, dynamic>;
-
-    //var playerIds = listFromJson<String>(json);
-
-    game = Game.fromJson(playerService, json);
+  Game gameFromJson(PlayerService playerService, Map<String, dynamic> json) {
+    var game = Game.fromJson(playerService, json['game'] as Map<String, dynamic>);
 
     game.changeStack = ChangeStack(); // will be discarded
 
@@ -74,6 +70,28 @@ class GameController {
     game.assignStartingDecks(startingPartDecks);
 
     stringToResourceListState(json['well'] as String, game.well);
+    return game;
+  }
+
+  void loadGame(PlayerService playerService, String jsonString) {
+    var json = jsonDecode(jsonString) as Map<String, dynamic>;
+
+    game = gameFromJson(playerService, json);
+
+    // game = Game.fromJson(playerService, json);
+
+    // game.changeStack = ChangeStack(); // will be discarded
+
+    // var startingPartDecks = List<List<Part>>.filled(3, null);
+    // for (var i = 0; i < 3; ++i) {
+    //   startingPartDecks[i] = <Part>[];
+    // }
+    // partStringToList(json['l1'] as String, (part) => startingPartDecks[0].add(part), game.allParts);
+    // partStringToList(json['l2'] as String, (part) => startingPartDecks[1].add(part), game.allParts);
+    // partStringToList(json['l3'] as String, (part) => startingPartDecks[2].add(part), game.allParts);
+    // game.assignStartingDecks(startingPartDecks);
+
+    // stringToResourceListState(json['well'] as String, game.well);
   }
 
   String getGameState() {

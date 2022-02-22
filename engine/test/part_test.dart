@@ -22,9 +22,7 @@ void _createGame() {
   for (var i = 0; i < 3; ++i) {
     startingPartDecks[i].shuffle();
   }
-  //startingPartDecks[2].removeRange(16, startingPartDecks[2].length);
   game.assignStartingDecks(startingPartDecks);
-
   game.startGame();
   game.startNextTurn();
   game.testMode = true;

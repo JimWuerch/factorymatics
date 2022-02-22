@@ -270,9 +270,9 @@ class PlayerData {
     maxResources = null;
   }
 
-  List<SpendHistory> getPayments(Part part) {
-    return CalcResources.getPayments(
-        part.cost, part.resource, ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
+  List<SpendHistory> getPayments(Part part, int discount) {
+    return CalcResources.getPayments(part.cost - discount, part.resource, ResourcePool.fromResources(resources),
+        CalcResources.makeProductList(parts));
   }
 
   bool canAfford(Part part, int discount, Map<ResourceType, GameStateVar<int>> convertedResources) {

@@ -8,6 +8,15 @@ export 'trigger.dart';
 
 enum PartType { enhancement, converter, storage, acquire, construct }
 
+class FakeGameStateBool {
+  bool value = false;
+  Game game;
+  FakeGameStateBool(Game game, String name, this.value);
+  void reinitialize(bool val) {
+    value = val;
+  }
+}
+
 abstract class Part extends GameObject {
   static const String startingPartId = "0";
 
@@ -18,10 +27,12 @@ abstract class Part extends GameObject {
   final List<Product> products;
   final ResourceType resource;
   int get vp;
-  final GameStateVar<bool> ready;
+  //final GameStateVar<bool> ready;
+  final FakeGameStateBool ready;
 
   Part(Game game, String id, this.level, this.partType, this.cost, this.triggers, this.products, this.resource)
-      : ready = GameStateVar(game, 'part:$id:ready', false),
+      //: ready = GameStateVar(game, 'part:$id:ready', false),
+      : ready = FakeGameStateBool(game, 'whee', false),
         super(id) {
     // take ownership of the products
     for (var index = 0; index < products.length; ++index) {
