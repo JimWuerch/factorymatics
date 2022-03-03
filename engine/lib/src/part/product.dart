@@ -6,12 +6,9 @@ abstract class Product {
   final ProductType productType;
   Part part; // set in the part constructor
   int prodIndex; // also set in the part constructor
-  //final GameStateVar<bool> activated;
-  final FakeGameStateBool activated;
+  final GameStateVar<bool> activated;
 
-  Product(Game game, this.productType)
-      : activated =
-            FakeGameStateBool(game, 'wheee', false); //activated = GameStateVar(game, 'product:activated', false);
+  Product(Game game, this.productType) : activated = GameStateVar(game, 'product:activated', false);
 
   GameAction produce(Game game, String player);
 }

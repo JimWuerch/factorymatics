@@ -1,7 +1,5 @@
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/ai_player.dart';
-import 'package:test/test.dart';
-import 'dart:developer' as developer;
 
 Game game;
 
@@ -34,20 +32,27 @@ void _createGame() {
   //game.testMode = true;
 }
 
-void main() {
-  group('ai', () {
-    setUp(_createGame);
+int gameCount = 0;
+Game _duplicateGame(Game game) {
+  var gc = GameController();
+  gc.game = game;
+  var g = gc.gameFromJson(game.playerService, gc.toJson());
+  gc.game = null;
+  g.inSimulation = true;
+  g.nextObjectId = ++gameCount;
+  return g;
+}
 
-    test('Take turn', () {
-      var ai = AiPlayer(game.players[0]);
-      var ai2 = AiPlayer(game.players[1]);
-      while (!game.currentTurn.gameEnded) {
-        ai.takeTurn(game);
-        //ai2.takeTurn(game);
-        for (var i = 0; i < 2; i++) {
-          print('Score for ${game.players[i].id} is ${game.players[i].score} at round ${game.round}');
-        }
-      }
-    });
-  });
+void main() {
+  _createGame();
+
+  var ai = AiPlayer(game.players[0]);
+  var ai2 = AiPlayer(game.players[1]);
+  while (!game.currentTurn.gameEnded) {
+    ai.takeTurn(game);
+    ai2.takeTurn(game);
+    for (var i = 0; i < 2; i++) {
+      print('Score for ${game.players[i].id} is ${game.players[i].score} at round ${game.round}');
+    }
+  }
 }

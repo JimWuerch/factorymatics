@@ -5,6 +5,13 @@
     "version": "0.2.0",
     "configurations": [
         {
+            "name": "Flutter Profile",
+            "type": "dart",
+            "request": "launch",
+            "program": "${workspaceFolder}/factorymatics/lib/main.dart",
+            "flutterMode": "profile"
+        },
+        {
             "name": "factorymatics",
             "program": "${workspaceFolder}/factorymatics/lib/main.dart",
             "request": "launch",

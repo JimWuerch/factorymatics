@@ -23,7 +23,7 @@ class MCTSNode {
   }
 
   MCTSNode getBestChild() {
-    const c = 15; //1.414;
+    const c = 1.414; //15; //1.414;
 
     for (var child in children) {
       if (child.visits == 0) {
@@ -53,6 +53,14 @@ class MCTSNode {
 
   void addChild(MCTSNode child) {
     children.add(child);
+  }
+
+  void deleteChildren() {
+    for (var child in children) {
+      child.deleteChildren();
+    }
+    children.clear();
+    game = null;
   }
 }
 

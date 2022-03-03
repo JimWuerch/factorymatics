@@ -23,7 +23,7 @@ class Game {
   String tmpName;
 
   String gameId;
-  int _nextObjectId = 0;
+  int nextObjectId = 0;
   Uuid uuidGen;
   PlayerService playerService;
   Map<String, Part> allParts;
@@ -180,12 +180,6 @@ class Game {
         saleParts[2].add(drawPart(2));
       }
     }
-  }
-
-  String nextObjectId() {
-    var ret = _nextObjectId.toString();
-    _nextObjectId++;
-    return ret;
   }
 
   Tuple2<ValidateResponseCode, GameAction> applyAction(GameAction action) {

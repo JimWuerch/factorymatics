@@ -151,12 +151,18 @@ class SpendHistory {
     return pool;
   }
 
-  int id() {
+  String id() {
     var ret = 0;
+    var spenders = <String>[];
     for (var prod in history) {
-      ret += prod.id;
+      if (prod.product is SpendResourceProduct) {
+        spenders.add(prod.product.sourceResource.index.toString());
+      } else {
+        ret += prod.id;
+      }
     }
-    return ret;
+    spenders.sort();
+    return '${spenders.join()}:$ret';
   }
 
   void dump() {
@@ -273,10 +279,13 @@ class CalcResources {
     }
 
     // now de-dup paths
-    var dedup = <int, SpendHistory>{};
+    var dedup = <String, SpendHistory>{};
     for (var path in paths) {
       dedup[path.id()] = path;
     }
+
+    _idToProd.clear();
+    _prodIds.clear();
 
     return dedup.values.toList();
   }
@@ -295,24 +304,42 @@ class CalcResources {
       return;
     }
     _getConvertersPaths(paths, conv, inputPool, ResourcePool(), history, needed, neededResource, prodIds);
-    for (var rt in ResourceType.values) {
-      if (rt == ResourceType.any || rt == ResourceType.none || inputPool.count(rt) == 0) continue;
-      if (neededResource != ResourceType.any && neededResource != rt) continue;
-      var history2 = SpendHistory.of(history);
-      var ip2 = ResourcePool.of(inputPool);
-      var currentSpenders = spenders.where((element) => element.resourceType == rt);
-      // take all the matching spenders out of the list
-      var sp2 = spenders.where((element) => element.resourceType != rt).toList();
-      var resourceCount = 0;
-      for (var cv in currentSpenders) {
-        resourceCount++;
-        history2.add(UsedProduct(cv, true, prodIds[cv]));
-        ip2.sub1(cv.resourceType);
-        if (needed - resourceCount == 0) {
+    // for ResourceType.any we need to try every permutation of the spending order
+    if (neededResource == ResourceType.any) {
+      for (var spender in spenders) {
+        if (neededResource != ResourceType.any && neededResource != spender.resourceType) continue;
+        var history2 = SpendHistory.of(history);
+        var ip2 = ResourcePool.of(inputPool);
+        var sp2 = List<SpendResourceProduct>.of(spenders);
+        history2.add(UsedProduct(spender, true, prodIds[spender]));
+        sp2.remove(spender);
+        ip2.sub1(spender.resourceType);
+        if (needed - 1 == 0) {
           paths.add(history2);
-          break;
         } else {
-          _getSpendPaths(paths, conv, sp2, ip2, history2, needed - resourceCount, neededResource, prodIds);
+          _getSpendPaths(paths, conv, sp2, ip2, history2, needed - 1, neededResource, prodIds);
+        }
+      }
+    } else {
+      for (var rt in ResourceType.values) {
+        if (rt == ResourceType.any || rt == ResourceType.none || inputPool.count(rt) == 0) continue;
+        if (neededResource != ResourceType.any && neededResource != rt) continue;
+        var history2 = SpendHistory.of(history);
+        var ip2 = ResourcePool.of(inputPool);
+        var currentSpenders = spenders.where((element) => element.resourceType == rt);
+        // take all the matching spenders out of the list
+        var sp2 = spenders.where((element) => element.resourceType != rt).toList();
+        var resourceCount = 0;
+        for (var cv in currentSpenders) {
+          resourceCount++;
+          history2.add(UsedProduct(cv, true, prodIds[cv]));
+          ip2.sub1(cv.resourceType);
+          if (needed - resourceCount == 0) {
+            paths.add(history2);
+            break;
+          } else {
+            _getSpendPaths(paths, conv, sp2, ip2, history2, needed - resourceCount, neededResource, prodIds);
+          }
         }
       }
     }

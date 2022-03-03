@@ -1,8 +1,8 @@
 part of undo;
 
 class ChangeStack extends ChangeGroupBase {
-  final _streamController = StreamController<ChangeStack>.broadcast();
-  Stream<ChangeStack> get stream => _streamController.stream.asBroadcastStream();
+  // final _streamController = StreamController<ChangeStack>.broadcast();
+  // Stream<ChangeStack> get stream => _streamController.stream.asBroadcastStream();
 
   final Queue<Change> _undos = ListQueue();
   final Queue<Change> _redos = ListQueue();
@@ -16,7 +16,7 @@ class ChangeStack extends ChangeGroupBase {
   String get undoLabel => canUndo ? _undos.last.label : '';
 
   ChangeStack({this.max}) {
-    _streamController.add(this);
+//    _streamController.add(this);
   }
 
   @override
@@ -36,7 +36,7 @@ class ChangeStack extends ChangeGroupBase {
       _undos.removeFirst();
     }
 
-    _streamController.add(this);
+    //_streamController.add(this);
   }
 
   // @override
@@ -52,7 +52,7 @@ class ChangeStack extends ChangeGroupBase {
     }
     _undos.clear();
     _redos.clear();
-    _streamController.add(null);
+    //_streamController.add(null);
   }
 
   void redo() {
@@ -60,7 +60,7 @@ class ChangeStack extends ChangeGroupBase {
       var change = _redos.removeFirst();
       change.execute();
       _undos.addLast(change);
-      _streamController.add(this);
+      //_streamController.add(this);
     }
   }
 
@@ -70,12 +70,12 @@ class ChangeStack extends ChangeGroupBase {
       var change = _undos.removeLast();
       change.undo();
       _redos.addFirst(change);
-      _streamController.add(this);
+      //_streamController.add(this);
     }
   }
 
   void dispose() {
-    _streamController.close();
+    //_streamController.close();
   }
 
   void merge(ChangeStack stack) {

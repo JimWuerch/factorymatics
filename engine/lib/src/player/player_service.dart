@@ -12,6 +12,13 @@ class PlayerService {
     return PlayerService._();
   }
 
+  PlayerService.of(PlayerService src) {
+    players = <Player>[];
+    for (var player in src.players) {
+      addPlayer(player.name, player.playerId);
+    }
+  }
+
   Player addPlayer(String name, String id) {
     var player = LocalPlayer(name, id);
     players.add(player);
