@@ -13,7 +13,7 @@ void _createGame() {
   for (var i = 0; i < 3; ++i) {
     startingPartDecks[i] = <Part>[];
   }
-  for (var part in game.allParts.values) {
+  for (var part in allParts.values) {
     if (part.level != -1) {
       // initial part is lvl -1
       startingPartDecks[part.level].add(part);
@@ -29,7 +29,7 @@ void _createGame() {
 }
 
 Part _getPart(int id) {
-  return game.allParts[id.toString()];
+  return allParts[id.toString()];
 }
 
 void main() {
@@ -53,9 +53,9 @@ void main() {
           game.currentTurn.processAction(ConstructAction(player, _getPart(3), [ResourceType.heart], null, null)).item1,
           ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.selectedActionCompleted);
-      expect(game.currentPlayer.parts[PartType.construct].first.ready.value, true);
-      expect(game.currentTurn.processAction(_getPart(77).products.first.produce(game, player)).item1,
-          ValidateResponseCode.ok);
+      expect(game.currentTurn.partReady[game.currentPlayer.parts[PartType.construct].first.id], true);
+      expect(
+          game.currentTurn.processAction(_getPart(77).products.first.produce(player)).item1, ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.storeRequested);
       expect(game.currentTurn.getAvailableActions().last.actionType, ActionType.store);
     });
@@ -83,9 +83,9 @@ void main() {
           game.currentTurn.processAction(ConstructAction(player, _getPart(3), [ResourceType.heart], null, null)).item1,
           ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.selectedActionCompleted);
-      expect(game.currentPlayer.parts[PartType.construct].first.ready.value, true);
-      expect(game.currentTurn.processAction(_getPart(82).products.first.produce(game, player)).item1,
-          ValidateResponseCode.ok);
+      expect(game.currentTurn.partReady[game.currentPlayer.parts[PartType.construct].first.id], true);
+      expect(
+          game.currentTurn.processAction(_getPart(82).products.first.produce(player)).item1, ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.searchRequested);
       game.currentTurn.processAction(SearchAction(player, 0)).item2 as SearchActionResult;
       expect(game.currentTurn.getAvailableActions().last.actionType, ActionType.searchDeclined);
@@ -112,7 +112,7 @@ void main() {
               .item1,
           ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.selectedActionCompleted);
-      expect(game.currentPlayer.parts[PartType.construct].first.ready.value, true);
+      expect(game.currentTurn.partReady[game.currentPlayer.parts[PartType.construct].first.id], true);
       // now construct something else and make sure the part wasn't triggered
       expect(game.currentTurn.processAction(GameModeAction(player, GameModeType.undo)).item1, ValidateResponseCode.ok);
       expect(game.currentTurn.processAction(SelectActionAction(player, ActionType.construct)).item1,
@@ -121,7 +121,7 @@ void main() {
           game.currentTurn.processAction(ConstructAction(player, _getPart(3), [ResourceType.heart], null, null)).item1,
           ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.selectedActionCompleted);
-      expect(game.currentPlayer.parts[PartType.construct].first.ready.value, false);
+      expect(game.currentTurn.partReady[game.currentPlayer.parts[PartType.construct].first.id], false);
     });
 
     test('Test 87', () {
@@ -162,9 +162,9 @@ void main() {
               .item1,
           ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.selectedActionCompleted);
-      expect(game.currentPlayer.parts[PartType.construct].first.ready.value, true);
-      expect(game.currentTurn.processAction(_getPart(90).products.first.produce(game, player)).item1,
-          ValidateResponseCode.ok);
+      expect(game.currentTurn.partReady[game.currentPlayer.parts[PartType.construct].first.id], true);
+      expect(
+          game.currentTurn.processAction(_getPart(90).products.first.produce(player)).item1, ValidateResponseCode.ok);
       expect(game.currentTurn.turnState.value, TurnState.constructL1Requested);
       var actions = game.currentTurn.getAvailableActions();
       expect(actions.where((element) => element is ConstructAction && element.part.level == 0).length,
@@ -184,10 +184,11 @@ void main() {
     test('Test 91', () {
       // Multi doubler
       game.currentPlayer.buyPart(_getPart(91));
-      _getPart(91).ready.value = true;
+      game.currentTurn.partReady["91"] = true;
+      //_getPart(91).ready.value = true;
       game.currentPlayer.storeResource(ResourceType.spade);
       game.currentPlayer.storeResource(ResourceType.heart);
-      game.currentPlayer.updateMaxResources();
+      game.currentPlayer.updateMaxResources(game.currentTurn);
       var resources = game.currentPlayer.maxResources;
       expect(resources.count(ResourceType.spade), 2);
       expect(resources.count(ResourceType.heart), 2);
@@ -196,10 +197,11 @@ void main() {
     test('Test 93', () {
       // X > X converter
       game.currentPlayer.buyPart(_getPart(93));
-      _getPart(93).ready.value = true;
+      game.currentTurn.partReady["93"] = true;
+      //_getPart(93).ready.value = true;
       game.currentPlayer.storeResource(ResourceType.spade);
       game.currentPlayer.storeResource(ResourceType.heart);
-      game.currentPlayer.updateMaxResources();
+      game.currentPlayer.updateMaxResources(game.currentTurn);
       var resources = game.currentPlayer.maxResources;
       expect(resources.count(ResourceType.spade), 2);
       expect(resources.count(ResourceType.heart), 2);
@@ -276,7 +278,8 @@ void main() {
           0);
 
       game.currentPlayer.buyPart(_getPart(78));
-      _getPart(78).ready.value = true;
+      game.currentTurn.partReady["78"] = true;
+      //_getPart(78).ready.value = true;
       game.currentTurn.turnState.value = TurnState.selectedActionCompleted;
       actions = game.currentTurn.getAvailableActions();
       expect(actions.whereType<RequestStoreAction>().length, 0);
@@ -296,7 +299,8 @@ void main() {
           0);
 
       game.currentPlayer.buyPart(_getPart(81));
-      _getPart(81).ready.value = true;
+      game.currentTurn.partReady["81"] = true;
+      //_getPart(81).ready.value = true;
       game.currentTurn.turnState.value = TurnState.selectedActionCompleted;
       actions = game.currentTurn.getAvailableActions();
       expect(actions.whereType<RequestSearchAction>().length, 0);

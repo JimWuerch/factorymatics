@@ -1,6 +1,7 @@
 import 'package:engine/engine.dart';
 import 'package:engine/src/undo/undo.dart' as undo;
 
+export 'default_value_map_state.dart';
 export 'list_state.dart';
 export 'map_state.dart';
 

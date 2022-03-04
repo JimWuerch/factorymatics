@@ -2,15 +2,15 @@ import 'package:engine/engine.dart';
 import 'package:test/test.dart';
 
 class TestProducts {
-  final ConvertProduct clubConverter = ConvertProduct(null, ResourceType.club, ResourceType.any);
-  final ConvertProduct spadeConverter = ConvertProduct(null, ResourceType.spade, ResourceType.any);
-  final ConvertProduct heartConverter = ConvertProduct(null, ResourceType.heart, ResourceType.any);
-  final ConvertProduct diamondConverter = ConvertProduct(null, ResourceType.diamond, ResourceType.any);
-  final DoubleResourceProduct clubDoubler = DoubleResourceProduct(null, ResourceType.club);
-  final DoubleResourceProduct spadeDoubler = DoubleResourceProduct(null, ResourceType.spade);
-  final DoubleResourceProduct heartDoubler = DoubleResourceProduct(null, ResourceType.heart);
-  final DoubleResourceProduct diamondDoubler = DoubleResourceProduct(null, ResourceType.diamond);
-  final ConvertProduct anyConverter = ConvertProduct(null, ResourceType.any, ResourceType.any);
+  final ConvertProduct clubConverter = ConvertProduct(ResourceType.club, ResourceType.any);
+  final ConvertProduct spadeConverter = ConvertProduct(ResourceType.spade, ResourceType.any);
+  final ConvertProduct heartConverter = ConvertProduct(ResourceType.heart, ResourceType.any);
+  final ConvertProduct diamondConverter = ConvertProduct(ResourceType.diamond, ResourceType.any);
+  final DoubleResourceProduct clubDoubler = DoubleResourceProduct(ResourceType.club);
+  final DoubleResourceProduct spadeDoubler = DoubleResourceProduct(ResourceType.spade);
+  final DoubleResourceProduct heartDoubler = DoubleResourceProduct(ResourceType.heart);
+  final DoubleResourceProduct diamondDoubler = DoubleResourceProduct(ResourceType.diamond);
+  final ConvertProduct anyConverter = ConvertProduct(ResourceType.any, ResourceType.any);
 }
 
 void dumpPaths(List<SpendHistory> paths) {

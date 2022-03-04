@@ -24,7 +24,7 @@ class AiPlayer {
     var ts = MCTreeSearch(startGame);
 
     stopwatch.reset();
-    for (var loop = 0; loop < 2000; ++loop) {
+    for (var loop = 0; loop < 5000; ++loop) {
       //while (stopwatch.elapsedMilliseconds < 5000) {
       var node = ts.root;
       // if (node.game.currentTurn.turnState == TurnState.notStarted) {
@@ -71,7 +71,7 @@ class AiPlayer {
         _backPropagate(node, 0.0);
         continue;
       }
-      node.game.currentPlayer.updateMaxResources();
+      node.game.currentPlayer.updateMaxResources(node.game.currentTurn);
       for (var action in actions) {
         var tmpGame = _duplicateGame(node.game);
         var a = action as SelectActionAction;
@@ -312,7 +312,7 @@ class AiPlayer {
     var choices = <StoreAction>[];
     StoreAction selected;
     if (game.currentPlayer.maxResources == null) {
-      game.currentPlayer.updateMaxResources();
+      game.currentPlayer.updateMaxResources(game.currentTurn);
     }
     for (var action in actions) {
       var a = action as StoreAction;
@@ -343,14 +343,14 @@ class AiPlayer {
     }
 
     // get a random payment method
-    var paths = game.currentPlayer.getPayments(part, discount);
+    var paths = game.currentPlayer.getPayments(part, discount, game.currentTurn);
     var index = game.random.nextInt(paths.length);
     var convertersUsed = <GameAction>[];
     for (var used in paths[index].history) {
       if (used.product.productType != ProductType.spend) {
-        var action = used.product.produce(game, game.currentPlayer.id);
+        var action = used.product.produce(game.currentPlayer.id);
         // need to look up the original product, as this is a copy
-        action.producedBy = game.allParts[action.producedBy.part.id].products[action.producedBy.prodIndex];
+        action.producedBy = allParts[action.producedBy.part.id].products[action.producedBy.prodIndex];
         convertersUsed.add(action);
       }
     }
@@ -410,7 +410,7 @@ class AiPlayer {
 
   static void takeSearchTurn(Game game) {
     if (game.currentPlayer.maxResources == null) {
-      game.currentPlayer.updateMaxResources();
+      game.currentPlayer.updateMaxResources(game.currentTurn);
     }
     var level = 0;
     if (game.currentPlayer.maxResources.count(ResourceType.any) > 6 ||

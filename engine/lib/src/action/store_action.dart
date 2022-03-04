@@ -24,7 +24,7 @@ class StoreAction extends GameAction {
   }
 
   StoreAction.fromJson(Game game, Map<String, dynamic> json)
-      : part = game.allParts[json['part'] as String],
+      : part = allParts[json['part'] as String],
         super.fromJson(game, json);
 }
 

@@ -207,7 +207,7 @@ class _MainPageState extends State<MainPage> {
                         onPressed: () async {
                           Navigator.push<void>(
                             context,
-                            MaterialPageRoute(builder: (context) => PartTestWidget(parts: createParts(null))),
+                            MaterialPageRoute(builder: (context) => PartTestWidget(parts: createParts())),
                           );
                         },
                       ),

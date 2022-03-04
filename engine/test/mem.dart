@@ -16,7 +16,7 @@ void _createGame() {
   for (var i = 0; i < 3; ++i) {
     startingPartDecks[i] = <Part>[];
   }
-  for (var part in game.allParts.values) {
+  for (var part in allParts.values) {
     if (part.level != -1) {
       // initial part is lvl -1
       startingPartDecks[part.level].add(part);

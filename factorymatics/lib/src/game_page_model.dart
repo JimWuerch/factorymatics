@@ -187,6 +187,9 @@ class GamePageModel {
 
   bool get inSearch => game.currentTurn.turnState.value == TurnState.searchSelected;
 
+  bool isPartReady(Part part) => game.currentTurn.partReady[part.id];
+  bool isProductActivated(Product product) => game.currentTurn.productActivated[game.currentTurn.productCode(product)];
+
   Future<ResponseCode> _postAction(GameAction action) async {
     var response = await gameInfoModel.client.postAction(game, action);
     if (response.responseCode != ResponseCode.ok) {
@@ -250,7 +253,7 @@ class GamePageModel {
       return ConstructAction(playerId, part, [], null, null);
     }
 
-    var paths = game.currentPlayer.getPayments(part, discount);
+    var paths = game.currentPlayer.getPayments(part, discount, game.currentTurn);
     if (paths.isEmpty) {
       throw InvalidOperationError('No way to pay for part ${part.id}');
     }
@@ -268,7 +271,7 @@ class GamePageModel {
     var convertersUsed = <GameAction>[];
     for (var used in paths[index].history) {
       if (used.product.productType != ProductType.spend) {
-        convertersUsed.add(used.product.produce(game, playerId));
+        convertersUsed.add(used.product.produce(playerId));
       }
     }
 
@@ -313,7 +316,7 @@ class GamePageModel {
     // acquire is handled elsewhere
     //if (product.productType == ProductType.aquire) return;
     GameAction action;
-    action = product.produce(game, playerId);
+    action = product.produce(playerId);
 
     if (action != null) {
       var response = await gameInfoModel.client.postAction(game, action);
@@ -337,7 +340,7 @@ class GamePageModel {
   }
 
   int unusedProducts() {
-    return game.currentPlayer.unusedProductCount();
+    return game.currentTurn.unusedProductCount();
   }
 
   Future<void> onSearchActionTapped(SearchExecutionOptions option) async {

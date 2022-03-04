@@ -25,7 +25,7 @@ class GameController {
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i] = <Part>[];
     }
-    for (var part in game.allParts.values) {
+    for (var part in allParts.values) {
       if (part.level != -1) {
         // initial part is lvl -1
         startingPartDecks[part.level].add(part);
@@ -64,9 +64,9 @@ class GameController {
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i] = <Part>[];
     }
-    partStringToList(json['l1'] as String, (part) => startingPartDecks[0].add(part), game.allParts);
-    partStringToList(json['l2'] as String, (part) => startingPartDecks[1].add(part), game.allParts);
-    partStringToList(json['l3'] as String, (part) => startingPartDecks[2].add(part), game.allParts);
+    partStringToList(json['l1'] as String, (part) => startingPartDecks[0].add(part), allParts);
+    partStringToList(json['l2'] as String, (part) => startingPartDecks[1].add(part), allParts);
+    partStringToList(json['l3'] as String, (part) => startingPartDecks[2].add(part), allParts);
     game.assignStartingDecks(startingPartDecks);
 
     stringToResourceListState(json['well'] as String, game.well);

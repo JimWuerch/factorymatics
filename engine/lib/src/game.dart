@@ -10,6 +10,17 @@ import 'package:uuid/uuid.dart';
 
 export 'turn.dart';
 
+Map<String, Part> allParts = _createAllParts();
+
+Map<String, Part> _createAllParts() {
+  var ret = <String, Part>{};
+  var parts = createParts();
+  for (var part in parts) {
+    ret[part.id] = part;
+  }
+  return ret;
+}
+
 class Game {
   static const int availableResourceCount = 6;
   static const int level1MarketSize = 4;
@@ -26,7 +37,7 @@ class Game {
   int nextObjectId = 0;
   Uuid uuidGen;
   PlayerService playerService;
-  Map<String, Part> allParts;
+  //Map<String, Part> allParts;
   Random random = Random();
 
   ListState<ResourceType> availableResources;
@@ -72,7 +83,7 @@ class Game {
   }
 
   void _initialize() {
-    allParts = <String, Part>{};
+    //allParts = <String, Part>{};
     uuidGen = Uuid();
     players = <PlayerData>[];
   }
@@ -100,10 +111,10 @@ class Game {
     for (var i = 0; i < 3; ++i) {
       saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
     }
-    var parts = createParts(this);
-    for (var part in parts) {
-      allParts[part.id] = part;
-    }
+    // var parts = createParts(this);
+    // for (var part in parts) {
+    //   allParts[part.id] = part;
+    // }
   }
 
   void assignStartingDecks(List<List<Part>> decks) {
@@ -153,7 +164,11 @@ class Game {
   }
 
   Part drawPart(int level) {
-    var ret = partDecks[level].removeLast();
+    Part ret;
+    do {
+      ret = partDecks[level].removeLast();
+      // TODO: we are throwing away the 7 cost multicolor parts
+    } while (ret.resource == ResourceType.any);
     partsRemaining[level] = partDecks[level].length;
     return ret;
   }
@@ -374,9 +389,9 @@ class Game {
     var game = Game._fromSerialize(gameId, playerService);
     var changeStack = ChangeStack(); // we'll discard this
     game.changeStack = changeStack;
-    partStringToList(json['s1'] as String, (part) => game.saleParts[0].add(part), game.allParts);
-    partStringToList(json['s2'] as String, (part) => game.saleParts[1].add(part), game.allParts);
-    partStringToList(json['s3'] as String, (part) => game.saleParts[2].add(part), game.allParts);
+    partStringToList(json['s1'] as String, (part) => game.saleParts[0].add(part), allParts);
+    partStringToList(json['s2'] as String, (part) => game.saleParts[1].add(part), allParts);
+    partStringToList(json['s3'] as String, (part) => game.saleParts[2].add(part), allParts);
     stringToResourceListState(json['res'] as String, game.availableResources);
 
     game.partsRemaining = listFromJson<int>(json['pr']);

@@ -1,4 +1,5 @@
 import 'package:engine/engine.dart';
+import 'package:factorymatics/src/game_page_model.dart';
 import 'package:flutter/material.dart';
 
 //import 'game_page_model.dart';
@@ -6,13 +7,15 @@ import 'icons.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
-  PartWidget({this.part, this.enabled, this.onTap, this.onProductTap, this.isResourcePickerEnabled});
+  PartWidget(
+      {this.part, this.enabled, this.onTap, this.onProductTap, this.isResourcePickerEnabled, this.gamePageModel});
 
   final Part part;
   final bool enabled;
   final void Function(Part part) onTap;
   final void Function(Product product) onProductTap;
   final bool isResourcePickerEnabled;
+  final GamePageModel gamePageModel;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -197,8 +200,10 @@ class _PartWidgetState extends State<PartWidget> {
                   : null),
           child: _productWidget(product),
           onPressed: !widget.isResourcePickerEnabled &&
-                  widget.part.ready.value &&
-                  !product.activated.value &&
+                  widget.gamePageModel.isPartReady(widget.part) &&
+                  !widget.gamePageModel.isProductActivated(product) &&
+                  //widget.part.ready.value &&
+                  //!product.activated.value &&
                   (widget.onProductTap != null)
               ? () async => await widget.onProductTap(product)
               : null,

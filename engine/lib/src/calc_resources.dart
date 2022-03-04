@@ -186,13 +186,13 @@ class _AnyToAnyProduct extends ConvertProduct {
   final ConvertProduct src;
   // instances are so we can have separate id's for each source type, so the dedup still works
   Map<ResourceType, ConvertProduct> instances;
-  _AnyToAnyProduct(this.src) : super(src.part?.ready?.game, src.source, src.dest) {
+  _AnyToAnyProduct(this.src) : super(src.source, src.dest) {
     part = src.part;
     prodIndex = src.prodIndex;
     instances = <ResourceType, ConvertProduct>{};
     for (var rt in ResourceType.values) {
       if (rt == ResourceType.any || rt == ResourceType.none) continue;
-      var newProd = ConvertProduct(null, rt, ResourceType.any);
+      var newProd = ConvertProduct(rt, ResourceType.any);
       newProd.part = src.part;
       newProd.prodIndex = src.prodIndex;
       if (src.part == null) {
@@ -208,18 +208,19 @@ class _AnyToAnyProduct extends ConvertProduct {
 }
 
 class CalcResources {
+  // TODO: make these not static
   static final Map<ConverterBaseProduct, int> _prodIds = <ConverterBaseProduct, int>{};
   static final Map<int, ConverterBaseProduct> _idToProd = <int, ConverterBaseProduct>{};
   static int prodCount = 0;
 
   // helper function for PlayerData usage
-  static List<ConverterBaseProduct> makeProductList(MapState<PartType, ListState<Part>> parts) {
+  static List<ConverterBaseProduct> makeProductList(MapState<PartType, ListState<Part>> parts, Turn turn) {
     // make a Set of available converters
     var products = <ConverterBaseProduct>[];
     for (var part in parts[PartType.converter]) {
-      if (!part.ready.value) continue;
+      if (!turn.partReady[part.id]) continue;
       for (var index = 0; index < part.products.length; ++index) {
-        if (!part.products[index].activated.value) {
+        if (!turn.productActivated[turn.productCode(part.products[index])]) {
           // if (part is MultipleConverterPart) {
           //   products.add(part.converters[0].products[0] as ConverterBaseProduct);
           //   products.add(part.converters[1].products[0] as ConverterBaseProduct);
@@ -264,7 +265,7 @@ class CalcResources {
           if (rt == ResourceType.any || rt == ResourceType.none) continue;
           if (rt == neededResource || neededResource == ResourceType.any) {
             for (var count = 0; count < sourcePool.count(rt); ++count) {
-              spenders.add(SpendResourceProduct(null, rt));
+              spenders.add(SpendResourceProduct(rt));
               _idToProd[1 << prodCount] = spenders.last;
               _prodIds[spenders.last] = 1 << prodCount;
               prodCount++;
@@ -407,7 +408,7 @@ class CalcResources {
               if (inputPool.count(srcRt) == 0 && outputPool.count(srcRt) == 0) continue;
 
               var history2 = SpendHistory.of(history);
-              var newProd = ConvertProduct(null, srcRt, destRt);
+              var newProd = ConvertProduct(srcRt, destRt);
               newProd.part = cv.part;
               newProd.prodIndex = cv.prodIndex;
               // if (cv.part == null) {
@@ -520,9 +521,13 @@ class CalcResources {
         var cv = c as ConvertProduct;
         if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
           // we have a matching resource, so use it
-          for (var destRt in ResourceType.values) {
+          for (var i = 0; i < 6; i++) {
+            //for (var destRt in ResourceType.values) {
+            var destRt = ResourceType.values[i];
             if (destRt == cv.source || destRt == ResourceType.any || destRt == ResourceType.none) continue;
-            for (var srcRt in ResourceType.values) {
+            for (var i2 = 0; i2 < 6; i2++) {
+              //for (var srcRt in ResourceType.values) {
+              var srcRt = ResourceType.values[i2];
               // we will try using every type as the "from". So for non any to any converters,
               // we will skip anything but the rt that matches what the converter source is
               if (srcRt == ResourceType.any ||
@@ -541,8 +546,9 @@ class CalcResources {
                 op2.sub1(srcRt);
               }
               op2.add1(destRt);
-              var conv2 = List<ConverterBaseProduct>.of(conv);
-              conv2.remove(c);
+              // var conv2 = List<ConverterBaseProduct>.of(conv, growable: false);
+              // conv2.remove(c);
+              var conv2 = conv.takeWhile((value) => value != c).toList();
               if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
                 max.set(destRt, op2.count(destRt) + ip2.count(destRt));
               }

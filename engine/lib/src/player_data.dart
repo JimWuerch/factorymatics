@@ -51,7 +51,7 @@ class PlayerData {
     var allP = <String>[];
     for (var plist in parts.values) {
       for (var part in plist) {
-        allP.add("${part.id}:${part.getPartSerializeString()}");
+        allP.add(part.id);
       }
     }
     ret['parts'] = allP;
@@ -83,16 +83,13 @@ class PlayerData {
 
     var savedP = listFromJson<String>(json['saved']);
     for (var part in savedP) {
-      var p = game.allParts[part];
+      var p = allParts[part];
       ret.savedParts.add(p);
     }
 
     var partsList = listFromJson<String>(json['parts']);
-    for (var partCode in partsList) {
-      var i = partCode.indexOf(':');
-      var partId = partCode.substring(0, i);
-      var p = game.allParts[partId];
-      p.setPartFromSerializeString(partCode.substring(i + 1));
+    for (var part in partsList) {
+      var p = allParts[part];
       ret.parts[p.partType].add(p);
     }
 
@@ -113,10 +110,10 @@ class PlayerData {
     }
   }
 
-  void resetPartActivations() {
-    _doParts((part) => part.resetActivations());
-    _doParts((part) => part.ready.reinitialize(false));
-  }
+  // void resetPartActivations() {
+  //   _doParts((part) => part.resetActivations());
+  //   _doParts((part) => part.ready.reinitialize(false));
+  // }
 
   int get partCount {
     var ret = 0;
@@ -238,7 +235,12 @@ class PlayerData {
 
   int get score {
     var ret = 0;
-    _doParts((part) => ret += part.vp);
+    _doParts((part) {
+      if (part is CalculatedVpPart) {
+        part.updateVp(this);
+      }
+      ret += part.vp;
+    });
     ret += vpChits;
     return ret;
   }
@@ -261,24 +263,24 @@ class PlayerData {
     invalidateMaxResources();
   }
 
-  void updateMaxResources() {
-    maxResources =
-        CalcResources.getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
+  void updateMaxResources(Turn turn) {
+    maxResources = CalcResources.getMaxResources(
+        ResourcePool.fromResources(resources), CalcResources.makeProductList(parts, turn));
   }
 
   void invalidateMaxResources() {
     maxResources = null;
   }
 
-  List<SpendHistory> getPayments(Part part, int discount) {
+  List<SpendHistory> getPayments(Part part, int discount, Turn turn) {
     return CalcResources.getPayments(part.cost - discount, part.resource, ResourcePool.fromResources(resources),
-        CalcResources.makeProductList(parts));
+        CalcResources.makeProductList(parts, turn));
   }
 
-  bool canAfford(Part part, int discount, Map<ResourceType, GameStateVar<int>> convertedResources) {
+  bool canAfford(Part part, int discount, Map<ResourceType, GameStateVar<int>> convertedResources, Turn turn) {
     if (maxResources == null) {
-      maxResources =
-          CalcResources.getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts));
+      maxResources = CalcResources.getMaxResources(
+          ResourcePool.fromResources(resources), CalcResources.makeProductList(parts, turn));
     }
     if (part.resource == ResourceType.any) {
       return (part.cost - discount) <=
@@ -288,41 +290,24 @@ class PlayerData {
     }
   }
 
-  bool canConvert(ResourceType resourceType) {
-    for (var part in parts[PartType.converter]) {
-      if (part is ConverterPart) {
-        if (!part.products[0].activated.value && part.canConvert(resourceType)) {
-          return true;
-        }
-      } else if (part is MultipleConverterPart) {
-        for (var i = 0; i < 2; ++i) {
-          if (!part.products[i].activated.value && part.canConvert(i, resourceType)) {
-            return true;
-          }
-        }
-      }
-    }
-    return false;
-  }
+  // bool canConvert(ResourceType resourceType) {
+  //   for (var part in parts[PartType.converter]) {
+  //     if (part is ConverterPart) {
+  //       if (!part.products[0].activated.value && part.canConvert(resourceType)) {
+  //         return true;
+  //       }
+  //     } else if (part is MultipleConverterPart) {
+  //       for (var i = 0; i < 2; ++i) {
+  //         if (!part.products[i].activated.value && part.canConvert(i, resourceType)) {
+  //           return true;
+  //         }
+  //       }
+  //     }
+  //   }
+  //   return false;
+  // }
 
   bool isInStorage(Part part) {
     return savedParts.contains(part);
-  }
-
-  int unusedProductCount() {
-    var count = 0;
-    for (var partType in parts.getMap.keys) {
-      if (partType == PartType.storage || partType == PartType.acquire || partType == PartType.construct) {
-        for (var part in parts[partType]) {
-          if (!part.ready.value) continue;
-          for (var product in part.products) {
-            if (!product.activated.value) {
-              count++;
-            }
-          }
-        }
-      }
-    }
-    return count;
   }
 }

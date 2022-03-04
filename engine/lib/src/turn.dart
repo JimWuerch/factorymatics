@@ -1,5 +1,5 @@
 import 'dart:collection';
-import 'dart:developer';
+import 'dart:convert';
 
 import 'package:engine/engine.dart';
 import 'package:tuple/tuple.dart';
@@ -29,6 +29,8 @@ class Turn {
   final Map<ResourceType, GameStateVar<int>> convertedResources;
   bool isGameEndTriggered;
   ListState<Part> searchedParts;
+  DefaultValueMapState<String, bool> partReady;
+  DefaultValueMapState<String, bool> productActivated;
 
   bool get gameEnded => turnState.value == TurnState.gameEnded;
 
@@ -38,7 +40,9 @@ class Turn {
         selectedAction = GameStateVar(game, 'selectedAction', null),
         convertedResources = <ResourceType, GameStateVar<int>>{},
         isGameEndTriggered = false,
-        searchedParts = ListState<Part>(game, 'searchedParts') {
+        searchedParts = ListState<Part>(game, 'searchedParts'),
+        partReady = DefaultValueMapState(game, "turn:partReady", false),
+        productActivated = DefaultValueMapState(game, "turn:productActivated", false) {
     PlayerData.initResourceMap(game, convertedResources, 'cRes');
   }
 
@@ -61,17 +65,21 @@ class Turn {
     if (convertedResString.isNotEmpty) {
       ret['convRes'] = convertedResString;
     }
+    ret['ready'] = jsonEncode(partReady.getMap);
+    ret['activated'] = jsonEncode(productActivated.getMap);
 
     return ret;
   }
 
-  Turn._fromJsonHelper(
-      this.game, this.player, TurnState state, ActionType selected, List<Part> searchedParts, this.convertedResources)
+  Turn._fromJsonHelper(this.game, this.player, TurnState state, ActionType selected, List<Part> searchedParts,
+      this.convertedResources, Map<String, bool> ready, Map<String, bool> activated)
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', state),
         selectedAction = GameStateVar(game, 'selectedAction', selected),
         isGameEndTriggered = false,
-        searchedParts = ListState<Part>(game, 'searchedParts', starting: searchedParts) {
+        searchedParts = ListState<Part>(game, 'searchedParts', starting: searchedParts),
+        partReady = DefaultValueMapState(game, 'turn:partReady', false, starting: ready),
+        productActivated = DefaultValueMapState(game, 'turn:productActivated', false, starting: activated) {
     if (state != TurnState.notStarted) {
       game.changeStack = changeStack;
     }
@@ -89,7 +97,7 @@ class Turn {
       var plist = listFromJson<String>(json['searchedParts']);
       searchedParts = <Part>[];
       for (var p in plist) {
-        searchedParts.add(game.allParts[p]);
+        searchedParts.add(allParts[p]);
       }
     }
     var res = stringToResourceMap(json['res'] as String);
@@ -100,7 +108,13 @@ class Turn {
     convRes[ResourceType.spade].reinitialize(res[ResourceType.spade]);
     convRes[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
 
-    return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts, convRes);
+    var ready = mapFromJson<String, bool>(jsonDecode(json['ready'] as String));
+    var activated = mapFromJson<String, bool>(jsonDecode(json['activated'] as String));
+    return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts, convRes, ready, activated);
+  }
+
+  String productCode(Product product) {
+    return '${product.part.id}:${product.prodIndex}';
   }
 
   /// Returns a list of possible actions for the current state of the turn
@@ -146,8 +160,8 @@ class Turn {
     if (!isAi) {
       for (var part in player.parts[PartType.converter]) {
         for (var product in part.products) {
-          if (!product.activated.value) {
-            _addAllAvailableActions(ret, part, product.produce(game, player.id));
+          if (!productActivated[productCode(product)]) {
+            _addAllAvailableActions(ret, part, product.produce(player.id));
           }
         }
       }
@@ -200,9 +214,9 @@ class Turn {
           if (part.partType == PartType.storage ||
               part.partType == PartType.acquire ||
               part.partType == PartType.construct) {
-            if (part.ready.value) {
+            if (partReady[part.id]) {
               for (var product in part.products) {
-                if (!product.activated.value) {
+                if (!productActivated[productCode(product)]) {
                   if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
                     if (!player.hasResourceStorageSpace) {
                       continue;
@@ -215,7 +229,7 @@ class Turn {
                   } else if (product.productType == ProductType.search && !player.canSearch) {
                     continue;
                   }
-                  _addAllAvailableActions(ret, part, product.produce(game, player.id));
+                  _addAllAvailableActions(ret, part, product.produce(player.id));
                 }
               }
             }
@@ -230,7 +244,7 @@ class Turn {
   void _addSearchedPartActions(List<GameAction> actions) {
     if (searchedParts == null) return;
     for (var part in searchedParts) {
-      if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources)) {
+      if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources, this)) {
         actions.add(ConstructAction(player.id, part, null, null, null));
       }
       if (player.hasPartStorageSpace) {
@@ -287,7 +301,7 @@ class Turn {
     } else if (action is ConvertAction) {
       if (action.source == ResourceType.any) {
         if (player.maxResources == null) {
-          player.updateMaxResources();
+          player.updateMaxResources(this);
         }
         if (player.maxResources.getResourceCount() > 0) {
           actions.add(action);
@@ -360,7 +374,7 @@ class Turn {
         if (dis > part.cost) {
           dis = part.cost;
         }
-        if (player.canAfford(part, dis, convertedResources)) {
+        if (player.canAfford(part, dis, convertedResources, this)) {
           items.add(part);
         }
       }
@@ -373,7 +387,7 @@ class Turn {
           if (dis > part.cost) {
             dis = part.cost;
           }
-          if (player.canAfford(part, dis, convertedResources)) {
+          if (player.canAfford(part, dis, convertedResources, this)) {
             items.add(part);
           }
         }
@@ -385,7 +399,7 @@ class Turn {
         if (dis > part.cost) {
           dis = part.cost;
         }
-        if (player.canAfford(part, dis, convertedResources)) {
+        if (player.canAfford(part, dis, convertedResources, this)) {
           items.add(part);
         }
       }
@@ -400,14 +414,17 @@ class Turn {
     }
   }
 
+  void resetPartActivations() {
+    partReady.reinitialize();
+    productActivated.reinitialize();
+  }
+
   void startTurn() {
     game.changeStack = changeStack;
-    player.resetPartActivations();
+    resetPartActivations();
     // converters don't rely on previous triggers, so enable them
     for (var part in player.parts[PartType.converter]) {
-      if (!part.ready.value) {
-        part.ready.value = true;
-      }
+      partReady[part.id] = true;
     }
     turnState.value = TurnState.started;
     changeStack.clear();
@@ -522,10 +539,10 @@ class Turn {
 
   void _doTriggers(Game game, GameAction gameAction, PartType partType) {
     for (var part in player.parts[partType]) {
-      if (!part.ready.value) {
+      if (!partReady[part.id]) {
         for (var trigger in part.triggers) {
           if (trigger.isTriggeredBy(gameAction)) {
-            part.ready.value = true;
+            partReady[part.id] = true;
             _fixResourceAcquireProducts(player);
             _doTriggeredVpProducts(game, part, gameAction.owner);
           }
@@ -537,8 +554,8 @@ class Turn {
   // don't make the user manually trigger VP actions
   void _doTriggeredVpProducts(Game game, Part part, String playerId) {
     for (var product in part.products) {
-      if (!product.activated.value && product is VpProduct) {
-        _doVp((product.produce(game, playerId)) as VpAction);
+      if (!productActivated[productCode(product)] && product is VpProduct) {
+        _doVp((product.produce(playerId)) as VpAction);
       }
     }
   }
@@ -550,9 +567,9 @@ class Turn {
     for (var partList in player.parts.values) {
       for (var part in partList) {
         for (var product in part.products) {
-          if (!product.activated.value &&
+          if (!productActivated[productCode(product)] &&
               (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat)) {
-            product.activated.value = true;
+            productActivated[productCode(product)] = true;
           }
         }
       }
@@ -602,7 +619,7 @@ class Turn {
     }
 
     if (action.producedBy != null) {
-      action.producedBy.activated.value = true;
+      productActivated[productCode(action.producedBy)] = true;
     }
 
     _doTriggers(game, action, PartType.storage);
@@ -640,7 +657,7 @@ class Turn {
 
     // do this first so we don't trigger ourself
     if (action.producedBy != null) {
-      action.producedBy.activated.value = true;
+      productActivated[productCode(action.producedBy)] = true;
     }
 
     if (turnState.value != TurnState.searchSelected) {
@@ -685,7 +702,7 @@ class Turn {
 
     // we can use the new part this turn
     if (action.part.partType == PartType.converter) {
-      action.part.ready.value = true;
+      partReady[action.part.id] = true;
     }
 
     if (turnState.value == TurnState.searchSelected) {
@@ -712,7 +729,7 @@ class Turn {
       player.storeResource(action.acquiredResource);
 
       if (action.producedBy != null) {
-        action.producedBy.activated.value = true;
+        productActivated[productCode(action.producedBy)] = true;
       }
 
       _doTriggers(game, action, PartType.acquire);
@@ -774,7 +791,7 @@ class Turn {
       throw InvalidOperationError('tried to spend non-existence resource');
     }
     convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -792,7 +809,7 @@ class Turn {
       throw InvalidOperationError('tried to spend non-existence resource');
     }
     convertedResources[action.source].value = convertedResources[action.source].value + 2;
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -804,7 +821,7 @@ class Turn {
       changeStack.group();
       action.resource = game.getFromWell();
       player.storeResource(action.resource);
-      action.producedBy.activated.value = true;
+      productActivated[productCode(action.producedBy)] = true;
       _fixResourceAcquireProducts(player);
       changeStack.commit();
       changeStack.clear();
@@ -820,7 +837,7 @@ class Turn {
     for (var i = 0; i < action.vp; i++) {
       player.giveVpChit();
     }
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -830,7 +847,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.acquireRequested;
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -840,7 +857,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.searchRequested;
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -850,7 +867,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.constructL1Requested;
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -860,9 +877,26 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.storeRequested;
-    action.producedBy.activated.value = true;
+    productActivated[productCode(action.producedBy)] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+  }
+
+  int unusedProductCount() {
+    var count = 0;
+    for (var partType in player.parts.getMap.keys) {
+      if (partType == PartType.storage || partType == PartType.acquire || partType == PartType.construct) {
+        for (var part in player.parts[partType]) {
+          if (!partReady[part.id]) continue;
+          for (var product in part.products) {
+            if (!productActivated[productCode(product)]) {
+              count++;
+            }
+          }
+        }
+      }
+    }
+    return count;
   }
 }

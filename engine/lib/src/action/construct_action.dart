@@ -40,7 +40,7 @@ class ConstructAction extends GameAction {
       : super.fromJson(game, json);
 
   factory ConstructAction.fromJson(Game game, Map<String, dynamic> json) {
-    var part = game.allParts[json['part'] as String];
+    var part = allParts[json['part'] as String];
     var payment = stringToResourceList(json['payment'] as String);
     var fromStorage = json['fs'] as bool;
     var item = json['cv'] as List<dynamic>;

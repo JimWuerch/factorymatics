@@ -78,7 +78,7 @@ abstract class GameAction {
   GameAction.fromJson(Game game, Map<String, dynamic> json)
       : owner = game.playerService.getPlayer(json['owner'] as String).playerId {
     if (json.containsKey('part')) {
-      var part = game.allParts[json['part'] as String];
+      var part = allParts[json['part'] as String];
       if (json.containsKey('pi')) {
         producedBy = part.products[json['pi'] as int];
       }

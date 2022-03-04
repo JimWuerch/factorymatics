@@ -19,17 +19,19 @@ class MapState<K, V> extends GameStateBase {
         super(game, label, onChanged);
 
   void operator []=(K key, V value) {
-    if (_map.containsKey(key)) {
-      var oldValue = _map[key];
-      if (oldValue != value) {
-        MapChange<K, V>.add(this, key, value);
-      }
-    } else {
-      MapChange<K, V>.add(this, key, value);
-    }
+    MapChange<K, V>.add(this, key, value);
+    // if (_map.containsKey(key)) {
+    //   var oldValue = _map[key];
+    //   if (oldValue != value) {
+    //     MapChange<K, V>.add(this, key, value);
+    //   }
+    // } else {
+    //   MapChange<K, V>.add(this, key, value);
+    // }
   }
 
   V operator [](K key) => _map[key];
+  V getValue(K key) => _map[key];
 
   V remove(K key) {
     if (!_map.containsKey(key)) return null;
@@ -44,6 +46,11 @@ class MapState<K, V> extends GameStateBase {
     for (var key in _map.keys.toList()) {
       remove(key);
     }
+  }
+
+  /// Reset the map without using the ChangeList
+  void reinitialize() {
+    _map.clear();
   }
 
   Iterable<V> get values => _map.values;
