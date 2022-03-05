@@ -199,7 +199,8 @@ class _PartWidgetState extends State<PartWidget> {
                     )
                   : null),
           child: _productWidget(product),
-          onPressed: !widget.isResourcePickerEnabled &&
+          onPressed: widget.gamePageModel != null &&
+                  !widget.isResourcePickerEnabled &&
                   widget.gamePageModel.isPartReady(widget.part) &&
                   !widget.gamePageModel.isProductActivated(product) &&
                   //widget.part.ready.value &&

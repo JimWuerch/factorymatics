@@ -24,7 +24,8 @@ class AiPlayer {
     var ts = MCTreeSearch(startGame);
 
     stopwatch.reset();
-    for (var loop = 0; loop < 5000; ++loop) {
+    for (var loop = 0; loop < 2500; ++loop) {
+      if (stopwatch.elapsedMilliseconds > 10000) break;
       //while (stopwatch.elapsedMilliseconds < 5000) {
       var node = ts.root;
       // if (node.game.currentTurn.turnState == TurnState.notStarted) {
@@ -66,8 +67,9 @@ class AiPlayer {
       // we are at a leaf, so generate new child nodes for every action
       var actions = node.game.currentTurn.getAvailableActions(isAi: true);
       if (actions.length == 1) {
-        var newNode = MCTSNode(node, _duplicateGame(node.game));
-        newNode.visits++;
+        //var newNode = MCTSNode(node, _duplicateGame(node.game));
+        //newNode.visits++;
+        //node.visits++;
         _backPropagate(node, 0.0);
         continue;
       }

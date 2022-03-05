@@ -45,6 +45,7 @@ class _GamePageState extends State<GamePage> {
         onTap: _onPartTapped,
         onProductTap: null,
         isResourcePickerEnabled: model.isResourcePickerEnabled,
+        gamePageModel: model,
       ));
     }
     return Row(
@@ -101,6 +102,7 @@ class _GamePageState extends State<GamePage> {
             part: part,
             enabled: false,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
+            gamePageModel: model,
           ));
         }
         break;
@@ -111,6 +113,7 @@ class _GamePageState extends State<GamePage> {
             part: part,
             enabled: false,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
+            gamePageModel: model,
           ));
         }
         break;
@@ -122,6 +125,7 @@ class _GamePageState extends State<GamePage> {
             enabled: false,
             onProductTap: _onProductTapped,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
+            gamePageModel: model,
           ));
         }
         break;
@@ -133,6 +137,7 @@ class _GamePageState extends State<GamePage> {
             enabled: false,
             onProductTap: _onProductTapped,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
+            gamePageModel: model,
           ));
         }
         break;
@@ -144,6 +149,7 @@ class _GamePageState extends State<GamePage> {
             enabled: false,
             onProductTap: _onProductTapped,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
+            gamePageModel: model,
           ));
         }
         break;
@@ -156,6 +162,7 @@ class _GamePageState extends State<GamePage> {
             onTap: _onPartTapped,
             onProductTap: null,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
+            gamePageModel: model,
           ));
         }
         break;

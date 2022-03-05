@@ -153,6 +153,12 @@ class Turn {
       if (player.canSearch) {
         ret.add(SelectActionAction(player.id, ActionType.search));
       }
+      if (ret.isEmpty) {
+        // allowed to end the turn now, in case we're completely stuck
+        if (!isAi) {
+          ret.add(GameModeAction(player.id, GameModeType.endTurn));
+        }
+      }
       return ret;
     }
 
@@ -435,7 +441,9 @@ class Turn {
     for (var item in convertedResources.values) {
       item.value = 0;
     }
-    isGameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
+    if (!isGameEndTriggered) {
+      isGameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
+    }
 
     changeStack.clear();
     //game.changeStack = null;
