@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:engine/engine.dart';
 import 'package:test/test.dart';
 
@@ -30,6 +32,8 @@ void checkPool(ResourcePool pool, int heart, int spade, int diamond, int club, i
   expect(pool.count(ResourceType.any), any);
 }
 
+CalcResources cr = CalcResources();
+
 void main() {
   group('calc_data find needed resource tests', () {
     setUp(() {});
@@ -42,11 +46,11 @@ void main() {
       var pool = ResourcePool();
       pool.add1(ResourceType.club);
 
-      var paths = CalcResources.getPayments(1, ResourceType.spade, pool, products);
+      var paths = cr.getPayments(1, ResourceType.spade, pool, products);
       expect(paths.length, 1);
       expect(paths[0].getCost().count(ResourceType.club), 1);
       //dumpPaths(paths);
-      paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      paths = cr.getPayments(2, ResourceType.diamond, pool, products);
       expect(paths.length, 1);
       expect(paths[0].length, 2);
       expect(paths[0].getCost().count(ResourceType.club), 1);
@@ -54,17 +58,17 @@ void main() {
 
       pool.add1(ResourceType.diamond);
       products.add(tp.heartDoubler);
-      paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      paths = cr.getPayments(2, ResourceType.diamond, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 3);
 
-      paths = CalcResources.getPayments(1, ResourceType.diamond, pool, products);
+      paths = cr.getPayments(1, ResourceType.diamond, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 2);
 
       products.add(tp.clubConverter);
       pool.add1(ResourceType.club);
-      paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      paths = cr.getPayments(2, ResourceType.diamond, pool, products);
       expect(paths.length, 4);
       //dumpPaths(paths);
 
@@ -75,7 +79,7 @@ void main() {
       products2.add(tp.heartConverter);
       products2.add(tp.spadeConverter);
       products2.add(tp.spadeConverter);
-      var paths2 = CalcResources.getPayments(2, ResourceType.diamond, pool2, products2);
+      var paths2 = cr.getPayments(2, ResourceType.diamond, pool2, products2);
       expect(paths2.length, 1);
       expect(paths2[0].length, 4);
       expect(paths2[0].getCost().count(ResourceType.heart), 1);
@@ -97,8 +101,39 @@ void main() {
       pool.add1(ResourceType.spade);
       pool.add1(ResourceType.spade);
 
-      var paths = CalcResources.getPayments(7, ResourceType.any, pool, products);
-      dumpPaths(paths);
+      var paths = cr.getPayments(7, ResourceType.any, pool, products);
+      expect(paths.length, 3);
+      //dumpPaths(paths);
+
+      products = <ConverterBaseProduct>[];
+      pool = ResourcePool();
+      products.add(tp.heartConverter);
+      products.add(tp.clubDoubler);
+      products.add(tp.heartDoubler);
+      pool.add1(ResourceType.heart);
+      pool.add1(ResourceType.spade);
+      pool.add1(ResourceType.diamond);
+      pool.add1(ResourceType.diamond);
+      pool.add1(ResourceType.diamond);
+      var paths2 = cr.getPayments(7, ResourceType.any, pool, products);
+      //dumpPaths(paths2);
+      expect(paths2.length, 1);
+
+      products = <ConverterBaseProduct>[];
+      pool = ResourcePool();
+      products.add(tp.heartDoubler);
+      products.add(tp.diamondDoubler);
+      products.add(tp.diamondConverter);
+      products.add(tp.diamondConverter);
+      products.add(tp.diamondConverter);
+      pool.add1(ResourceType.spade);
+      pool.add1(ResourceType.spade);
+      pool.add1(ResourceType.spade);
+      pool.add1(ResourceType.diamond);
+      pool.add1(ResourceType.club);
+      var paths3 = cr.getPayments(7, ResourceType.any, pool, products);
+      //dumpPaths(paths3);
+      expect(paths3.length, 2);
     });
 
     test('Test getPayments dedup', () {
@@ -113,7 +148,7 @@ void main() {
       pool.add1(ResourceType.diamond);
       pool.add1(ResourceType.club);
 
-      var paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      var paths = cr.getPayments(2, ResourceType.diamond, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 1);
       expect(paths[0].length, 2);
@@ -129,14 +164,14 @@ void main() {
       pool.add1(ResourceType.club);
       pool.add1(ResourceType.spade);
 
-      var paths = CalcResources.getPayments(2, ResourceType.any, pool, products);
+      var paths = cr.getPayments(2, ResourceType.any, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 3);
 
       pool.add1(ResourceType.diamond);
       pool.add1(ResourceType.club);
       pool.add1(ResourceType.spade);
-      paths = CalcResources.getPayments(2, ResourceType.any, pool, products);
+      paths = cr.getPayments(2, ResourceType.any, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 6);
 
@@ -145,14 +180,14 @@ void main() {
       pool2.add1(ResourceType.diamond);
       products.add(tp.spadeDoubler);
       products.add(tp.heartConverter);
-      paths = CalcResources.getPayments(2, ResourceType.any, pool2, products);
+      paths = cr.getPayments(2, ResourceType.any, pool2, products);
       //dumpPaths(paths);
       expect(paths.length, 2);
 
       products.add(tp.clubDoubler);
       pool2.add1(ResourceType.spade);
       products.add(tp.heartDoubler);
-      paths = CalcResources.getPayments(2, ResourceType.any, pool2, products);
+      paths = cr.getPayments(2, ResourceType.any, pool2, products);
       //dumpPaths(paths);
       expect(paths.length, 7);
     });
@@ -167,12 +202,12 @@ void main() {
       pool.add1(ResourceType.spade);
 
       products.add(tp.anyConverter);
-      var paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      var paths = cr.getPayments(2, ResourceType.diamond, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 2);
 
       products.add(tp.clubConverter);
-      paths = CalcResources.getPayments(2, ResourceType.diamond, pool, products);
+      paths = cr.getPayments(2, ResourceType.diamond, pool, products);
       //dumpPaths(paths);
       expect(paths.length, 4);
     });
@@ -189,19 +224,19 @@ void main() {
       var pool = ResourcePool();
       pool.add1(ResourceType.club);
 
-      var max = CalcResources.getMaxResources(pool, products);
+      var max = cr.getMaxResources(pool, products);
       //print(max);
       checkPool(max, 1, 1, 2, 1, 2);
 
       pool.add1(ResourceType.diamond);
       products.add(tp.heartDoubler);
-      max = CalcResources.getMaxResources(pool, products);
+      max = cr.getMaxResources(pool, products);
       //print(max);
       checkPool(max, 2, 1, 3, 1, 4);
 
       products.add(tp.clubConverter);
       pool.add1(ResourceType.club);
-      max = CalcResources.getMaxResources(pool, products);
+      max = cr.getMaxResources(pool, products);
       //print(max);
       checkPool(max, 3, 2, 4, 2, 5);
 
@@ -212,7 +247,7 @@ void main() {
       products2.add(tp.heartConverter);
       products2.add(tp.spadeConverter);
       products2.add(tp.spadeConverter);
-      max = CalcResources.getMaxResources(pool2, products2);
+      max = cr.getMaxResources(pool2, products2);
       //print(max);
       checkPool(max, 2, 2, 2, 2, 2);
 
@@ -226,7 +261,7 @@ void main() {
       pool3.add1(ResourceType.heart);
       pool3.add1(ResourceType.diamond);
 
-      max = CalcResources.getMaxResources(pool3, products3);
+      max = cr.getMaxResources(pool3, products3);
       //print(max);
       checkPool(max, 2, 3, 2, 2, 6);
     });

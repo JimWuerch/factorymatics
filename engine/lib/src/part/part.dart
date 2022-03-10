@@ -18,55 +18,14 @@ abstract class Part extends GameObject {
   final List<Product> products;
   final ResourceType resource;
   int get vp;
-  //final GameStateVar<bool> ready;
 
-  Part(String id, this.level, this.partType, this.cost, this.triggers, this.products, this.resource)
-      : // ready = GameStateVar('part:$id:ready', false),
-        super(id) {
+  Part(String id, this.level, this.partType, this.cost, this.triggers, this.products, this.resource) : super(id) {
     // take ownership of the products
     for (var index = 0; index < products.length; ++index) {
       products[index].part = this;
       products[index].prodIndex = index;
     }
   }
-
-  // void resetActivations() {
-  //   for (var product in products) {
-  //     product.activated.reinitialize(false);
-  //   }
-  // }
-
-  // for serialization, we just need to know which parts
-  // have been activated
-  // String getProductsState() {
-  //   var ret = "P";
-  //   for (var product in products) {
-  //     if (product.activated.value) {
-  //       ret += "1";
-  //     } else {
-  //       ret += "0";
-  //     }
-  //   }
-  //   return ret;
-  // }
-
-  // The string is the letter P followed by a 1 or 0 for each product
-  // void setProductsState(String states) {
-  //   if (states[0] != 'P') throw ArgumentError("states must start with P");
-  //   for (var index = 0; index < products.length; ++index) {
-  //     products[index].activated.reinitialize(states[index + 1] == '1');
-  //   }
-  // }
-
-  // String getPartSerializeString() {
-  //   return '${ready.value ? '1' : '0'}:${getProductsState()}';
-  // }
-
-  // void setPartFromSerializeString(String state) {
-  //   var index = state.indexOf(':');
-  //   ready.reinitialize(state.substring(0, index) == '1');
-  //   setProductsState(state.substring(index + 1));
-  // }
 
   Product productFromIndex(int index) {
     return products[index];
@@ -100,7 +59,6 @@ List<Part> createParts() {
       Part.startingPartId, -1, PartType.storage, 0, [StoreTrigger()], [MysteryMeatProduct()], ResourceType.none, 0));
 
   // level 1 parts
-  //game.partDecks[0] = ListState<Part>('level0Parts')
   parts
     ..add(ConverterPart((partId++).toString(), 0, 1, ConvertTrigger(ResourceType.club),
         ConvertProduct(ResourceType.club, ResourceType.any), ResourceType.heart, 1))
@@ -168,16 +126,6 @@ List<Part> createParts() {
     ..add(SimplePart(
         (partId++).toString(), 0, PartType.storage, 1, [StoreTrigger()], [AcquireProduct()], ResourceType.spade, 1));
 
-  //var testPartId = 100;
-  // remove these test parts when we add real ones
-  // parts
-  //   ..add(ConverterPart((testPartId++).toString(), 0, 1, ConvertTrigger(ResourceType.heart), ConvertProduct(ResourceType.heart, ResourceType.any), ResourceType.club, 1))
-  //   ..add(ConverterPart((testPartId++).toString(), 0, 1, ConvertTrigger(ResourceType.diamond), ConvertProduct(ResourceType.diamond, ResourceType.any), ResourceType.spade, 1))
-  //   ..add(ConverterPart((testPartId++).toString(), 0, 1, ConvertTrigger(ResourceType.spade), ConvertProduct(ResourceType.spade, ResourceType.any), ResourceType.diamond, 1))
-  //   ..add(SimplePart((testPartId++).toString(), 0, PartType.acquire, 1, [ConstructTrigger(ResourceType.club), ConstructTrigger(ResourceType.heart)], [VpProduct(1)],
-  //       ResourceType.heart, 2));
-
-  //game.partDecks[1] = ListState<Part>('level1Parts')
   parts
     ..add(EnhancementPart((partId++).toString(), 1, 3, ResourceType.club, 3, 2, 1, 2))
     ..add(EnhancementPart((partId++).toString(), 1, 3, ResourceType.spade, 3, 2, 1, 2))
@@ -402,7 +350,6 @@ List<Part> createParts() {
         [MysteryMeatProduct(), MysteryMeatProduct(), MysteryMeatProduct()], ResourceType.diamond, 4))
     ..add(SimplePart((partId++).toString(), 2, PartType.storage, 4, [StoreTrigger()],
         [MysteryMeatProduct(), MysteryMeatProduct(), MysteryMeatProduct()], ResourceType.club, 4))
-    // TODO: fix StoreProduct
     ..add(SimplePart(
         (partId++).toString(),
         2,
@@ -422,7 +369,6 @@ List<Part> createParts() {
         ResourceType.spade,
         5))
     // partId == 79
-    // TODO: fix Level2ConstructDiscountPart
     ..add(Level2ConstructDiscountPart((partId++).toString(), 2, 5, ResourceType.diamond, 5, 1))
     ..add(Level2ConstructDiscountPart((partId++).toString(), 2, 5, ResourceType.club, 5, 1))
     ..add(SimplePart(
@@ -443,7 +389,6 @@ List<Part> createParts() {
         [SearchProduct()],
         ResourceType.club,
         7))
-    // TODO: fix ConstructLevelTrigger
     ..add(SimplePart((partId++).toString(), 2, PartType.construct, 6, [ConstructLevelTrigger(1)],
         [AcquireProduct(), AcquireProduct()], ResourceType.heart, 6))
     ..add(SimplePart((partId++).toString(), 2, PartType.construct, 6, [ConstructLevelTrigger(1)],
@@ -466,12 +411,10 @@ List<Part> createParts() {
         [VpProduct(2)],
         ResourceType.heart,
         5))
-    // TODO: fix ConstructFromStoreTrigger
     ..add(SimplePart((partId++).toString(), 2, PartType.construct, 5, [ConstructFromStoreTrigger()], [VpProduct(2)],
         ResourceType.heart, 5))
     ..add(SimplePart((partId++).toString(), 2, PartType.construct, 5, [ConstructFromStoreTrigger()], [VpProduct(2)],
         ResourceType.diamond, 5))
-    // TODO: fix FreeConstructProduct
     ..add(SimplePart(
         (partId++).toString(),
         2,
@@ -510,45 +453,24 @@ List<Part> createParts() {
             ResourceType.any, 1),
         ResourceType.spade,
         5))
-    // TODO: fix Any to Any converter
     ..add(ConverterPart((partId++).toString(), 2, 4, ConvertTrigger(ResourceType.any),
         ConvertProduct(ResourceType.any, ResourceType.any), ResourceType.diamond, 4))
     ..add(ConverterPart((partId++).toString(), 2, 4, ConvertTrigger(ResourceType.any),
         ConvertProduct(ResourceType.any, ResourceType.any), ResourceType.heart, 4))
     ..add(EnhancementPart((partId++).toString(), 2, 4, ResourceType.club, 4, 4, 0, 0))
     ..add(EnhancementPart((partId++).toString(), 2, 4, ResourceType.spade, 4, 4, 0, 0))
-    // TODO: fix ConstructFromStoreDiscountPart
     ..add(ConstructFromStoreDiscountPart((partId++).toString(), 2, 5, ResourceType.club, 5, 1))
     ..add(ConstructFromStoreDiscountPart((partId++).toString(), 2, 5, ResourceType.heart, 5, 1))
     // partId == 99
-    // TODO: fix VpChitDoublerPart
     ..add(VpChitDoublerPart((partId++).toString(), 2, 7))
     ..add(VpChitDoublerPart((partId++).toString(), 2, 7))
-    // TODO: fix VpIsResourcesPart
     ..add(VpIsResourcesPart((partId++).toString(), 2, 7))
     ..add(VpIsResourcesPart((partId++).toString(), 2, 7))
-    // TODO: fix ConstructFromSearchDiscountPart
     ..add(ConstructFromSearchDiscountPart((partId++).toString(), 2, 6, ResourceType.spade, 6, 1))
     ..add(ConstructFromSearchDiscountPart((partId++).toString(), 2, 6, ResourceType.diamond, 6, 1))
-    // TODO: fix DisallowStorePart
     ..add(DisallowStorePart((partId++).toString(), 2, 4, ResourceType.club, 7))
     ..add(DisallowStorePart((partId++).toString(), 2, 4, ResourceType.heart, 7))
-    // TODO: fix DisallowSearchPart
     ..add(DisallowSearchPart((partId++).toString(), 2, 4, ResourceType.diamond, 8))
     ..add(DisallowSearchPart((partId++).toString(), 2, 4, ResourceType.spade, 8));
-
-  // save all the parts into the parts dictionary
-  // for (var part in parts) {
-  //   game.allParts[part.id] = part;
-  // }
-
-  // for (var i = 0; i < 3; ++i) {
-  //   for (var part in game.partDecks[i]) {
-  //     game.allParts[part.id] = part;
-  //   }
-  // }
-
-  // game.level3Parts.removeRange(16, game.level3Parts.length);
-
   return parts;
 }

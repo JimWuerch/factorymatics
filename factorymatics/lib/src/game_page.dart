@@ -265,7 +265,7 @@ class _GamePageState extends State<GamePage> {
                     // Here we take the value from the MyHomePage object that was created by
                     // the App.build method, and use it to set our appbar title.
                     title: Text(
-                        '${model.displayPlayer.id} VP:${model.displayPlayer.score} Parts:${model.displayPlayer.partCount}'),
+                        '${model.displayPlayer.id} VP:${model.displayPlayer.score} Parts:${model.displayPlayer.partCount} Round:${model.game.round}'),
                     actions: model.isGameEnded
                         ? <Widget>[]
                         : <Widget>[

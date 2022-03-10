@@ -46,6 +46,7 @@ class Game {
   List<int> partsRemaining; // this is maintained for the client to query
   ListState<ResourceType> well;
   List<ListState<Part>> saleParts;
+  CalcResources calcResources;
   Turn currentTurn;
   int round = 0;
 
@@ -86,6 +87,7 @@ class Game {
     //allParts = <String, Part>{};
     uuidGen = Uuid();
     players = <PlayerData>[];
+    calcResources = CalcResources();
   }
 
   String getUuid() {
@@ -165,10 +167,7 @@ class Game {
 
   Part drawPart(int level) {
     Part ret;
-    do {
-      ret = partDecks[level].removeLast();
-      // TODO: we are throwing away the 7 cost multicolor parts
-    } while (ret.resource == ResourceType.any);
+    ret = partDecks[level].removeLast();
     partsRemaining[level] = partDecks[level].length;
     return ret;
   }

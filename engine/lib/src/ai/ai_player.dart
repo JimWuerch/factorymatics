@@ -25,6 +25,9 @@ class AiPlayer {
 
     stopwatch.reset();
     for (var loop = 0; loop < 2500; ++loop) {
+      // if (loop % 1000 == 0) {
+      //   print('loop $loop');
+      // }
       if (stopwatch.elapsedMilliseconds > 10000) break;
       //while (stopwatch.elapsedMilliseconds < 5000) {
       var node = ts.root;
@@ -73,6 +76,32 @@ class AiPlayer {
         _backPropagate(node, 0.0);
         continue;
       }
+      // force the AI to construct early game if it can, otherwise, prioritize storing one of the 4 acquire after build parts
+      List<GameAction> forceStore;
+      if (node.game.round <= 8) {
+        // if we can construct, we must.
+        var forceConstruct = <GameAction>[];
+        for (var action in actions) {
+          if (action is SelectActionAction && action.selectedAction == ActionType.construct) {
+            forceConstruct.add(action);
+          }
+        }
+        if (forceConstruct.isNotEmpty) {
+          actions = forceConstruct;
+        } else if (node.game.currentPlayer.hasPartStorageSpace && node.game.currentPlayer.canStore) {
+          forceStore = <GameAction>[];
+          for (var part in node.game.saleParts[0]) {
+            if (part.id == '4' || part.id == '16' || part.id == '17' || part.id == '18') {
+              forceStore.add(StoreAction(node.game.currentPlayer.id, part, null));
+            }
+          }
+          if (forceStore.isNotEmpty) {
+            actions = <GameAction>[SelectActionAction(node.game.currentPlayer.id, ActionType.store)];
+          } else {
+            forceStore = null;
+          }
+        }
+      }
       node.game.currentPlayer.updateMaxResources(node.game.currentTurn);
       for (var action in actions) {
         var tmpGame = _duplicateGame(node.game);
@@ -114,7 +143,12 @@ class AiPlayer {
 
           case ActionType.store:
             {
-              var storeActions = tmpGame.currentTurn.getAvailableActions(isAi: true);
+              List<GameAction> storeActions;
+              if (forceStore != null) {
+                storeActions = forceStore;
+              } else {
+                storeActions = tmpGame.currentTurn.getAvailableActions(isAi: true);
+              }
               for (var a2 in storeActions) {
                 // if (a2 is StoreAction &&
                 //     a2.part.cost > tmpGame.currentPlayer.maxResources.count(a2.part.resource) - 1) {
@@ -164,6 +198,8 @@ class AiPlayer {
     var action = actionFromJson(startGame, best.action.toJson());
     _processAction(startGame, action);
     _doTriggers(startGame);
+    // bias the scoring towards having more resources for the same score
+    best.score += startGame.currentPlayer.resourceCount() / startGame.round;
     print(
         'Took action: ${best.action.actionType} score:${best.score} avg:${best.score / best.visits} visits:${best.visits}');
     _processAction(startGame, GameModeAction(startGame.currentPlayer.id, GameModeType.endTurn));
@@ -385,9 +421,7 @@ class AiPlayer {
         }
       }
     }
-    // TODO: fix this, we are avoiding the ResourceType.any parts
-    //if (part == null) {
-    while (part == null || part.resource == ResourceType.any) {
+    if (part == null) {
       part = (actions[game.random.nextInt(actions.length)] as ConstructAction).part;
     }
     _constructPart(game, part);

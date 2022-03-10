@@ -264,8 +264,8 @@ class PlayerData {
   }
 
   void updateMaxResources(Turn turn) {
-    maxResources = CalcResources.getMaxResources(
-        ResourcePool.fromResources(resources), CalcResources.makeProductList(parts, turn));
+    maxResources = game.calcResources
+        .getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts, turn));
   }
 
   void invalidateMaxResources() {
@@ -273,14 +273,14 @@ class PlayerData {
   }
 
   List<SpendHistory> getPayments(Part part, int discount, Turn turn) {
-    return CalcResources.getPayments(part.cost - discount, part.resource, ResourcePool.fromResources(resources),
+    return game.calcResources.getPayments(part.cost - discount, part.resource, ResourcePool.fromResources(resources),
         CalcResources.makeProductList(parts, turn));
   }
 
   bool canAfford(Part part, int discount, Map<ResourceType, GameStateVar<int>> convertedResources, Turn turn) {
     if (maxResources == null) {
-      maxResources = CalcResources.getMaxResources(
-          ResourcePool.fromResources(resources), CalcResources.makeProductList(parts, turn));
+      maxResources = game.calcResources
+          .getMaxResources(ResourcePool.fromResources(resources), CalcResources.makeProductList(parts, turn));
     }
     if (part.resource == ResourceType.any) {
       return (part.cost - discount) <=

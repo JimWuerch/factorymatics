@@ -29,6 +29,9 @@ class MCTSNode {
       if (child.visits == 0) {
         return child;
       }
+      // var a = child.score / child.visits;
+      // var b = math.sqrt(math.log(visits) / child.visits);
+      // print('child: ${child.score}/${child.visits}=$a visits=$visits b=$b');
       child._UCB = (child.score / child.visits) + c * math.sqrt(math.log(visits) / child.visits);
     }
     // if we got here, our children all have run, so we don't need our game info any more

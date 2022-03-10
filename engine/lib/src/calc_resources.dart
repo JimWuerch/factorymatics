@@ -186,7 +186,7 @@ class _AnyToAnyProduct extends ConvertProduct {
   final ConvertProduct src;
   // instances are so we can have separate id's for each source type, so the dedup still works
   Map<ResourceType, ConvertProduct> instances;
-  _AnyToAnyProduct(this.src) : super(src.source, src.dest) {
+  _AnyToAnyProduct(this.src, CalcResources cr) : super(src.source, src.dest) {
     part = src.part;
     prodIndex = src.prodIndex;
     instances = <ResourceType, ConvertProduct>{};
@@ -196,22 +196,28 @@ class _AnyToAnyProduct extends ConvertProduct {
       newProd.part = src.part;
       newProd.prodIndex = src.prodIndex;
       if (src.part == null) {
-        print('hmmm');
+        //print('hmmm');
       }
       newProd.prodIndex = src.prodIndex;
       instances[rt] = newProd;
-      CalcResources._idToProd[1 << CalcResources.prodCount] = newProd;
-      CalcResources._prodIds[newProd] = 1 << CalcResources.prodCount;
-      CalcResources.prodCount++;
+      cr.addProduct(newProd);
+      // CalcResources._idToProd[1 << CalcResources.prodCount] = newProd;
+      // CalcResources._prodIds[newProd] = 1 << CalcResources.prodCount;
+      // CalcResources.prodCount++;
     }
   }
 }
 
 class CalcResources {
-  // TODO: make these not static
-  static final Map<ConverterBaseProduct, int> _prodIds = <ConverterBaseProduct, int>{};
-  static final Map<int, ConverterBaseProduct> _idToProd = <int, ConverterBaseProduct>{};
-  static int prodCount = 0;
+  Map<ConverterBaseProduct, int> _prodIds;
+  Map<int, ConverterBaseProduct> _idToProd;
+  int _prodCount = 0;
+
+  void addProduct(ConverterBaseProduct conv) {
+    _idToProd[1 << _prodCount] = conv;
+    _prodIds[conv] = 1 << _prodCount;
+    _prodCount++;
+  }
 
   // helper function for PlayerData usage
   static List<ConverterBaseProduct> makeProductList(MapState<PartType, ListState<Part>> parts, Turn turn) {
@@ -233,21 +239,25 @@ class CalcResources {
     return products;
   }
 
-  static List<SpendHistory> getPayments(
+  List<SpendHistory> getPayments(
       int needed, ResourceType neededResource, ResourcePool sourcePool, List<ConverterBaseProduct> products) {
     var paths = <SpendHistory>[];
     var anyToAny = <_AnyToAnyProduct>[];
+    _prodIds = <ConverterBaseProduct, int>{};
+    _idToProd = <int, ConverterBaseProduct>{};
+    _prodCount = 0;
 
     if (sourcePool.getResourceCount() == 0) return paths;
 
     // create our mapping of converters to identifiers so we can de-dup later
     for (var prod in products) {
       if (prod is ConvertProduct && prod.source == ResourceType.any) {
-        anyToAny.add(_AnyToAnyProduct(prod));
+        anyToAny.add(_AnyToAnyProduct(prod, this));
       } else {
-        _idToProd[1 << prodCount] = prod;
-        _prodIds[prod] = 1 << prodCount;
-        prodCount++;
+        addProduct(prod);
+        // _idToProd[1 << prodCount] = prod;
+        // _prodIds[prod] = 1 << prodCount;
+        // prodCount++;
       }
     }
     // remove the any to any prods and add in our proxies
@@ -266,17 +276,14 @@ class CalcResources {
           if (rt == neededResource || neededResource == ResourceType.any) {
             for (var count = 0; count < sourcePool.count(rt); ++count) {
               spenders.add(SpendResourceProduct(rt));
-              _idToProd[1 << prodCount] = spenders.last;
-              _prodIds[spenders.last] = 1 << prodCount;
-              prodCount++;
+              addProduct(spenders.last);
             }
           }
         }
       }
-      _getSpendPaths(paths, products, spenders, sourcePool, SpendHistory(), needed, neededResource, _prodIds);
+      _getSpendPaths(paths, products, spenders, sourcePool, SpendHistory(), needed, neededResource);
     } else {
-      _getConvertersPaths(
-          paths, products, sourcePool, ResourcePool(), SpendHistory(), needed, neededResource, _prodIds);
+      _getConvertersPaths(paths, products, sourcePool, ResourcePool(), SpendHistory(), needed, neededResource);
     }
 
     // now de-dup paths
@@ -285,13 +292,10 @@ class CalcResources {
       dedup[path.id()] = path;
     }
 
-    _idToProd.clear();
-    _prodIds.clear();
-
     return dedup.values.toList();
   }
 
-  static void _getSpendPaths(
+  void _getSpendPaths(
     List<SpendHistory> paths,
     List<ConverterBaseProduct> conv,
     List<SpendResourceProduct> spenders,
@@ -299,12 +303,13 @@ class CalcResources {
     SpendHistory history,
     int needed,
     ResourceType neededResource,
-    Map<ConverterBaseProduct, int> prodIds,
+    //Map<ConverterBaseProduct, int> prodIds,
   ) {
     if (needed == 0) {
       return;
     }
-    _getConvertersPaths(paths, conv, inputPool, ResourcePool(), history, needed, neededResource, prodIds);
+
+    _getConvertersPaths(paths, conv, inputPool, ResourcePool(), history, needed, neededResource);
     // for ResourceType.any we need to try every permutation of the spending order
     if (neededResource == ResourceType.any) {
       for (var spender in spenders) {
@@ -312,13 +317,13 @@ class CalcResources {
         var history2 = SpendHistory.of(history);
         var ip2 = ResourcePool.of(inputPool);
         var sp2 = List<SpendResourceProduct>.of(spenders);
-        history2.add(UsedProduct(spender, true, prodIds[spender]));
+        history2.add(UsedProduct(spender, true, _prodIds[spender]));
         sp2.remove(spender);
         ip2.sub1(spender.resourceType);
         if (needed - 1 == 0) {
           paths.add(history2);
         } else {
-          _getSpendPaths(paths, conv, sp2, ip2, history2, needed - 1, neededResource, prodIds);
+          _getSpendPaths(paths, conv, sp2, ip2, history2, needed - 1, neededResource);
         }
       }
     } else {
@@ -333,13 +338,13 @@ class CalcResources {
         var resourceCount = 0;
         for (var cv in currentSpenders) {
           resourceCount++;
-          history2.add(UsedProduct(cv, true, prodIds[cv]));
+          history2.add(UsedProduct(cv, true, _prodIds[cv]));
           ip2.sub1(cv.resourceType);
           if (needed - resourceCount == 0) {
             paths.add(history2);
             break;
           } else {
-            _getSpendPaths(paths, conv, sp2, ip2, history2, needed - resourceCount, neededResource, prodIds);
+            _getSpendPaths(paths, conv, sp2, ip2, history2, needed - resourceCount, neededResource);
           }
         }
       }
@@ -364,15 +369,17 @@ class CalcResources {
   // }
 
 // recursively try all permutations of products
-  static void _getConvertersPaths(
-      List<SpendHistory> paths,
-      List<ConverterBaseProduct> conv,
-      ResourcePool inputPool,
-      ResourcePool outputPool,
-      SpendHistory history,
-      int needed,
-      ResourceType neededResource,
-      Map<ConverterBaseProduct, int> prodIds) {
+  void _getConvertersPaths(
+    List<SpendHistory> paths,
+    List<ConverterBaseProduct> conv,
+    ResourcePool inputPool,
+    ResourcePool outputPool,
+    SpendHistory history,
+    int needed,
+    ResourceType neededResource,
+  ) {
+    //Map<ConverterBaseProduct, int> prodIds),
+
     for (var c in conv) {
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;
@@ -381,7 +388,7 @@ class CalcResources {
           for (var destRt in ResourceType.values) {
             if (destRt == cv.source || destRt == ResourceType.any || destRt == ResourceType.none) continue;
             //if (needed > 0 && rt != neededResource) continue;
-            if (neededResource == ResourceType.any && ((needed - 1 <= outputPool.getResourceCount()))) {
+            if (neededResource == ResourceType.any && ((needed <= outputPool.getResourceCount()) || needed == 1)) {
               // we already have enough, no need to run a converter
               continue;
             }
@@ -420,11 +427,11 @@ class CalcResources {
               if (inputPool.count(srcRt) > 0) {
                 ip2.sub1(srcRt);
                 history2.add(UsedProduct(newProd, true,
-                    cv.source == ResourceType.any ? prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : prodIds[c]));
+                    cv.source == ResourceType.any ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : _prodIds[c]));
               } else {
                 op2.sub1(srcRt);
                 history2.add(UsedProduct(newProd, false,
-                    cv.source == ResourceType.any ? prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : prodIds[c]));
+                    cv.source == ResourceType.any ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : _prodIds[c]));
               }
               op2.add1(destRt);
               var conv2 = List<ConverterBaseProduct>.of(conv);
@@ -434,7 +441,7 @@ class CalcResources {
                 if (total == needed) {
                   paths.add(history2);
                 } else {
-                  _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource, prodIds);
+                  _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource);
                 }
               } else if (op2.count(neededResource) == needed) {
                 if (op2.getResourceCount() - op2.count(neededResource) != 0) {
@@ -444,7 +451,7 @@ class CalcResources {
                   paths.add(history2);
                 }
               } else {
-                _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource, prodIds);
+                _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource);
               }
             }
           }
@@ -458,12 +465,12 @@ class CalcResources {
           var op2 = ResourcePool.of(outputPool);
           if (op2.count(cv.resourceType) > 0) {
             op2.add1(cv.resourceType);
-            history2.add(UsedProduct(c, false, prodIds[c]));
+            history2.add(UsedProduct(c, false, _prodIds[c]));
           } else if (ip2.count(cv.resourceType) > 0) {
             ip2.sub1(cv.resourceType);
             op2.add1(cv.resourceType);
             op2.add1(cv.resourceType);
-            history2.add(UsedProduct(c, true, prodIds[c]));
+            history2.add(UsedProduct(c, true, _prodIds[c]));
           }
           var conv2 = List<ConverterBaseProduct>.of(conv);
           conv2.remove(c);
@@ -477,7 +484,7 @@ class CalcResources {
               //   _addRemainingResources(paths, ip2, history2, prodIds, spenders);
               // }
             } else {
-              _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource, prodIds);
+              _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource);
             }
           } else if (op2.count(neededResource) == needed) {
             if (op2.getResourceCount() - op2.count(neededResource) != 0) {
@@ -487,7 +494,7 @@ class CalcResources {
               paths.add(history2);
             }
           } else {
-            _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource, prodIds);
+            _getConvertersPaths(paths, conv2, ip2, op2, history2, needed, neededResource);
           }
         }
       } else {
@@ -498,11 +505,11 @@ class CalcResources {
 
 // for each ResourceType, calc the max available, using available converters
 // returns the max attainable for each type
-  static ResourcePool getMaxResources(ResourcePool sourcePool, List<ConverterBaseProduct> products) {
+  ResourcePool getMaxResources(ResourcePool sourcePool, List<ConverterBaseProduct> products) {
     return _getMaxResourcesI(sourcePool, products);
   }
 
-  static ResourcePool _getMaxResourcesI(ResourcePool sourcePool, List<ConverterBaseProduct> products) {
+  ResourcePool _getMaxResourcesI(ResourcePool sourcePool, List<ConverterBaseProduct> products) {
     var max = ResourcePool.of(sourcePool);
 
     // fix the ResourceType.any max
@@ -514,26 +521,27 @@ class CalcResources {
   }
 
 // recursively try all permutations of products
-  static void _findMaxResources(
+  void _findMaxResources(
       ResourcePool max, List<ConverterBaseProduct> conv, ResourcePool inputPool, ResourcePool outputPool) {
     for (var c in conv) {
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;
         if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
           // we have a matching resource, so use it
-          for (var i = 0; i < 6; i++) {
+          for (var i = 1; i < 5; i++) {
+            // 0 == none, 5 == any, so we skip those two
             //for (var destRt in ResourceType.values) {
             var destRt = ResourceType.values[i];
-            if (destRt == cv.source || destRt == ResourceType.any || destRt == ResourceType.none) continue;
-            for (var i2 = 0; i2 < 6; i2++) {
+            // shortened due to the loop change
+            //if (destRt == cv.source || destRt == ResourceType.any || destRt == ResourceType.none) continue;
+            if (destRt == cv.source) continue;
+            for (var i2 = 1; i2 < 5; i2++) {
+              // again skipping any and none
               //for (var srcRt in ResourceType.values) {
               var srcRt = ResourceType.values[i2];
               // we will try using every type as the "from". So for non any to any converters,
               // we will skip anything but the rt that matches what the converter source is
-              if (srcRt == ResourceType.any ||
-                  srcRt == ResourceType.none ||
-                  srcRt == destRt ||
-                  (cv.source != ResourceType.any && srcRt != cv.source)) continue;
+              if (srcRt == destRt || (cv.source != ResourceType.any && srcRt != cv.source)) continue;
 
               // this can happen for cv.source == ResourceType.any
               if (inputPool.count(srcRt) == 0 && outputPool.count(srcRt) == 0) continue;
@@ -546,9 +554,14 @@ class CalcResources {
                 op2.sub1(srcRt);
               }
               op2.add1(destRt);
-              // var conv2 = List<ConverterBaseProduct>.of(conv, growable: false);
-              // conv2.remove(c);
-              var conv2 = conv.takeWhile((value) => value != c).toList();
+              var conv2 = List<ConverterBaseProduct>.of(conv);
+              conv2.remove(c);
+              // var conv2 = <ConverterBaseProduct>[];
+              // for (var element in conv) {
+              //   if (conv2 != c) {
+              //     conv2.add(element);
+              //   }
+              // }
               if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
                 max.set(destRt, op2.count(destRt) + ip2.count(destRt));
               }

@@ -50,6 +50,11 @@ class ConvertProduct extends ConverterBaseProduct {
   GameAction produce(String player) {
     return ConvertAction(player, source, dest, this);
   }
+
+  @override
+  String toString() {
+    return 'Convert ${source.name} to ${dest.name}';
+  }
 }
 
 class VpProduct extends Product {
@@ -74,6 +79,11 @@ class DoubleResourceProduct extends ConverterBaseProduct {
   @override
   GameAction produce(String player) {
     return DoubleConvertAction(player, resourceType, this);
+  }
+
+  @override
+  String toString() {
+    return 'Double ${resourceType.name}';
   }
 }
 
@@ -119,5 +129,10 @@ class SpendResourceProduct extends ConverterBaseProduct {
   @override
   GameAction produce(String player) {
     throw InvalidOperationError('Spend product should not be produced');
+  }
+
+  @override
+  String toString() {
+    return 'Spend ${resourceType.name}';
   }
 }

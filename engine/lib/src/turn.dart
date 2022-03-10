@@ -685,6 +685,10 @@ class Turn {
       if (action.part.level == 1) costRemaining -= player.constructLevel2Discount;
       if (action.fromStorage) costRemaining -= player.constructFromStoreDiscount;
       if (turnState.value == TurnState.searchSelected) costRemaining -= player.constructFromSearchDiscount;
+      if (costRemaining < 0) {
+        // in case we have lots of discounts
+        costRemaining = 0;
+      }
       for (var resource in action.payment) {
         if (convertedResources[resource].value > 0) {
           convertedResources[resource].value--;

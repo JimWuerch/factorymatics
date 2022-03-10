@@ -60,7 +60,10 @@ void main(List<String> arguments) async {
   var games = 0;
   var numberFormat = NumberFormat('0000000', "en_US");
 
-  final outputFile = arguments.isEmpty ? 'card_data.txt' : arguments[0];
+  String outputFile;
+  if (arguments.isNotEmpty) {
+    outputFile = arguments[0];
+  }
 
   while (true) {
     _createGame();
@@ -96,12 +99,14 @@ void main(List<String> arguments) async {
       }
     }
     list.sort();
-    var f = File(outputFile).openWrite();
-    for (var l in list) {
-      print(l);
-      f.writeln(l);
+    if (outputFile != null) {
+      var f = File(outputFile).openWrite();
+      for (var l in list) {
+        print(l);
+        f.writeln(l);
+      }
+      await f.close();
     }
-    await f.close();
     print('Game $games complete');
   }
 }
