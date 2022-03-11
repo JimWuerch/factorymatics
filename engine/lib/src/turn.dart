@@ -27,7 +27,6 @@ class Turn {
   final GameStateVar<ActionType> selectedAction;
   final ChangeStack changeStack;
   final Map<ResourceType, GameStateVar<int>> convertedResources;
-  bool isGameEndTriggered;
   ListState<Part> searchedParts;
   DefaultValueMapState<String, bool> partReady;
   DefaultValueMapState<String, bool> productActivated;
@@ -39,7 +38,6 @@ class Turn {
         turnState = GameStateVar(game, 'turnState', TurnState.notStarted),
         selectedAction = GameStateVar(game, 'selectedAction', null),
         convertedResources = <ResourceType, GameStateVar<int>>{},
-        isGameEndTriggered = false,
         searchedParts = ListState<Part>(game, 'searchedParts'),
         partReady = DefaultValueMapState(game, "turn:partReady", false),
         productActivated = DefaultValueMapState(game, "turn:productActivated", false) {
@@ -76,7 +74,6 @@ class Turn {
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', state),
         selectedAction = GameStateVar(game, 'selectedAction', selected),
-        isGameEndTriggered = false,
         searchedParts = ListState<Part>(game, 'searchedParts', starting: searchedParts),
         partReady = DefaultValueMapState(game, 'turn:partReady', false, starting: ready),
         productActivated = DefaultValueMapState(game, 'turn:productActivated', false, starting: activated) {
@@ -441,8 +438,8 @@ class Turn {
     for (var item in convertedResources.values) {
       item.value = 0;
     }
-    if (!isGameEndTriggered) {
-      isGameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
+    if (!game.gameEndTriggered) {
+      game.gameEndTriggered = (player.partCount > 15) || (player.level3PartCount > 3);
     }
 
     changeStack.clear();

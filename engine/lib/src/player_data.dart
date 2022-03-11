@@ -22,21 +22,23 @@ class PlayerData {
         _vpChits = GameStateVar<int>(game, '$id:vpChits', 0),
         resources = <ResourceType, GameStateVar<int>>{},
         maxResources = null {
-    initResourceMap(game, resources, id);
+    initResourceMap(game, resources, id, callback: _onChangedCallback, callbackParam: this);
     _initParts(parts);
   }
 
-  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int>> resources, String label) {
+  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int>> resources, String label,
+      {StateVarCallback callback, Object callbackParam}) {
     for (var resource in ResourceType.values) {
       if (resource != ResourceType.none && resource != ResourceType.any) {
-        resources[resource] = GameStateVar(game, '$label:${resource.toString()}', 0);
+        resources[resource] =
+            GameStateVar(game, '$label:${resource.toString()}', 0, onChanged: callback, onChangedParam: callbackParam);
       }
     }
   }
 
   void _initParts(MapState<PartType, ListState<Part>> parts) {
     for (var p in PartType.values) {
-      parts[p] = ListState<Part>(game, '$id:$p:parts');
+      parts[p] = ListState<Part>(game, '$id:$p:parts', onChanged: _onChangedCallback, onChangedParam: this);
     }
   }
 
@@ -68,7 +70,7 @@ class PlayerData {
 
   PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts)
       : maxResources = null {
-    initResourceMap(game, resources, id);
+    initResourceMap(game, resources, id, callback: _onChangedCallback, callbackParam: this);
     _initParts(parts);
   }
 
@@ -100,6 +102,10 @@ class PlayerData {
     ret.resources[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
 
     return ret;
+  }
+
+  static void _onChangedCallback<T>(GameState state, Object param) {
+    (param as PlayerData)?.invalidateMaxResources();
   }
 
   void _doParts(void Function(Part) fn) {
@@ -215,12 +221,12 @@ class PlayerData {
 
   void buyPart(Part part) {
     parts[part.partType].add(part);
-    invalidateMaxResources();
+    //invalidateMaxResources();
   }
 
   void removePart(Part part) {
     parts[part.partType].remove(part);
-    invalidateMaxResources();
+    //invalidateMaxResources();
   }
 
   void savePart(Part part) {
@@ -255,12 +261,12 @@ class PlayerData {
 
   void storeResource(ResourceType resource) {
     resources[resource].value = resources[resource].value + 1;
-    invalidateMaxResources();
+    //invalidateMaxResources();
   }
 
   void removeResource(ResourceType resource) {
     resources[resource].value = resources[resource].value - 1;
-    invalidateMaxResources();
+    //invalidateMaxResources();
   }
 
   void updateMaxResources(Turn turn) {

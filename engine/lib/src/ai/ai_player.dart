@@ -150,10 +150,9 @@ class AiPlayer {
                 storeActions = tmpGame.currentTurn.getAvailableActions(isAi: true);
               }
               for (var a2 in storeActions) {
-                // if (a2 is StoreAction &&
-                //     a2.part.cost > tmpGame.currentPlayer.maxResources.count(a2.part.resource) - 1) {
-                //   continue;
-                // }
+                if (a2 is StoreAction && tmpGame.round <= 5 && a2.part.cost > 3) {
+                  continue;
+                }
                 var newNode = MCTSNode(node, _duplicateGame(tmpGame));
                 if (newNode.parent == ts.root) {
                   newNode.action = a2;

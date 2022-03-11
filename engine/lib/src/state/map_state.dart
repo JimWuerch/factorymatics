@@ -6,17 +6,17 @@ class MapState<K, V> extends GameStateBase {
   final Map<K, V> _map;
   Map<K, V> get getMap => Map<K, V>.unmodifiable(_map);
 
-  MapState(Game game, String label, {StateVarCallback onChanged, Map<K, V> starting})
+  MapState(Game game, String label, {StateVarCallback onChanged, Object onChangedParam, Map<K, V> starting})
       : _map = <K, V>{},
-        super(game, label, onChanged) {
+        super(game, label, onChanged, onChangedParam) {
     if (starting != null) {
       _map.addAll(starting);
     }
   }
 
-  MapState.fromMap(Game game, String label, Map<K, V> map, {StateVarCallback onChanged})
+  MapState.fromMap(Game game, String label, Map<K, V> map, {StateVarCallback onChanged, Object onChangedParam})
       : _map = map,
-        super(game, label, onChanged);
+        super(game, label, onChanged, onChangedParam);
 
   void operator []=(K key, V value) {
     MapChange<K, V>.add(this, key, value);
@@ -66,5 +66,6 @@ class MapState<K, V> extends GameStateBase {
     } else {
       _map[key] = value;
     }
+    if (onChanged != null) onChanged(this, onChangedParam);
   }
 }

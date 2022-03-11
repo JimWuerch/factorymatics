@@ -47,9 +47,12 @@ class _FinalScoreWidgetState extends State<FinalScoreWidget> {
     // first get the high score
     var _highScore = -1;
     for (var player in widget.players) {
-      if (player.score >= _highScore) {
+      if (player.score > _highScore) {
+        firstPass.clear();
         firstPass.add(player);
         _highScore = player.score;
+      } else if (player.score == _highScore) {
+        firstPass.add(player);
       }
     }
     if (firstPass.length == 1) {

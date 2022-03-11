@@ -79,8 +79,8 @@ Color resourceToColor(ResourceType resourceType) {
     case ResourceType.club:
       return Colors.blue[800];
     case ResourceType.any:
-      //return Colors.pink[300];
-      return Colors.black;
+      return Colors.purple;
+    //return Colors.black;
     default:
       return Colors.lightGreen[600];
   }

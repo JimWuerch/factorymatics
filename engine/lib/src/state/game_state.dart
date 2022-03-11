@@ -5,7 +5,7 @@ export 'default_value_map_state.dart';
 export 'list_state.dart';
 export 'map_state.dart';
 
-typedef StateVarCallback = void Function(GameStateVar);
+typedef StateVarCallback = void Function(GameState, Object);
 
 abstract class GameState {
   String get label;
@@ -16,11 +16,12 @@ abstract class GameState {
 abstract class GameStateBase implements GameState {
   final String _label;
   final Game _game;
+  final Object onChangedParam;
 
   @override
   StateVarCallback onChanged;
 
-  GameStateBase(this._game, this._label, this.onChanged);
+  GameStateBase(this._game, this._label, this.onChanged, this.onChangedParam);
 
   @override
   Game get game => _game;
@@ -33,10 +34,11 @@ class GameStateVar<T> extends GameStateBase {
   T _value;
   final ChangeStack _changeStack; // used for unit testing only
 
-  GameStateVar(Game game, String name, T startValue, {StateVarCallback onChanged, ChangeStack changeStack})
+  GameStateVar(Game game, String name, T startValue,
+      {StateVarCallback onChanged, Object onChangedParam, ChangeStack changeStack})
       : _value = startValue,
         _changeStack = changeStack,
-        super(game, name, onChanged);
+        super(game, name, onChanged, onChangedParam);
 
   T get value => _value;
   set value(T newValue) {
@@ -56,9 +58,9 @@ class GameStateVar<T> extends GameStateBase {
   }
 
   void _change(T newValue) {
-    log.fine('Change $label from $_value to $newValue');
+    //log.fine('Change $label from $_value to $newValue');
     _value = newValue;
-    if (onChanged != null) onChanged(this);
+    if (onChanged != null) onChanged(this, onChangedParam);
   }
 
   @override

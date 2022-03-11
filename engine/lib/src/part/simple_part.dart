@@ -13,4 +13,19 @@ class SimplePart extends Part {
 
   @override
   String get desc => 'Level $level Part $id';
+
+  @override
+  String toString() {
+    var sb = StringBuffer();
+    sb.write(triggers[0]);
+    for (var i = 1; i < triggers.length; ++i) {
+      sb.write(' or ${triggers[i]}');
+    }
+    if (products.isEmpty) return sb.toString();
+    sb.write(' -> ${products[0].toString()}');
+    for (var i = 1; i < products.length; i++) {
+      sb.write(' and ${products[i].toString()}');
+    }
+    return sb.toString();
+  }
 }

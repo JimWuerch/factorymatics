@@ -26,6 +26,11 @@ class MysteryMeatProduct extends Product {
   GameAction produce(String player) {
     return MysteryMeatAction(player, this);
   }
+
+  @override
+  String toString() {
+    return 'gain random resource';
+  }
 }
 
 class AcquireProduct extends Product {
@@ -34,6 +39,11 @@ class AcquireProduct extends Product {
   @override
   GameAction produce(String player) {
     return RequestAcquireAction(player, this);
+  }
+
+  @override
+  String toString() {
+    return 'acquire resource';
   }
 }
 
@@ -53,7 +63,7 @@ class ConvertProduct extends ConverterBaseProduct {
 
   @override
   String toString() {
-    return 'Convert ${source.name} to ${dest.name}';
+    return 'to ${dest.name}';
   }
 }
 
@@ -65,6 +75,11 @@ class VpProduct extends Product {
   @override
   GameAction produce(String player) {
     return VpAction(player, vp, this);
+  }
+
+  @override
+  String toString() {
+    return 'gain $vp VP${vp > 1 ? "s" : ""}';
   }
 }
 
@@ -83,7 +98,7 @@ class DoubleResourceProduct extends ConverterBaseProduct {
 
   @override
   String toString() {
-    return 'Double ${resourceType.name}';
+    return 'to two ${resourceType.name}s';
   }
 }
 
@@ -94,6 +109,11 @@ class SearchProduct extends Product {
   GameAction produce(String player) {
     return RequestSearchAction(player, this);
   }
+
+  @override
+  String toString() {
+    return 'perform search action';
+  }
 }
 
 class StoreProduct extends Product {
@@ -102,6 +122,11 @@ class StoreProduct extends Product {
   @override
   GameAction produce(String player) {
     return RequestStoreAction(player, this);
+  }
+
+  @override
+  String toString() {
+    return 'perform store action';
   }
 }
 
@@ -113,6 +138,11 @@ class FreeConstructL1Product extends Product {
   @override
   GameAction produce(String player) {
     return RequestConstructL1Action(player, this);
+  }
+
+  @override
+  String toString() {
+    return 'construct level 1 part for free';
   }
 }
 

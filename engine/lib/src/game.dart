@@ -2,11 +2,8 @@ import 'dart:math';
 
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/ai_player.dart';
-//import 'package:engine/src/player/player_service.dart';
 import 'package:tuple/tuple.dart';
 import 'package:uuid/uuid.dart';
-
-//import 'turn.dart';
 
 export 'turn.dart';
 
@@ -49,6 +46,7 @@ class Game {
   CalcResources calcResources;
   Turn currentTurn;
   int round = 0;
+  bool gameEndTriggered = false;
 
   int _currentPlayerIndex = 0;
   PlayerData get currentPlayer => players[_currentPlayerIndex];
@@ -285,7 +283,7 @@ class Game {
 
   void endTurn() {
     // check for game end at end of round
-    if (currentTurn.isGameEndTriggered && ((_currentPlayerIndex == players.length - 1) || inSimulation)) {
+    if (gameEndTriggered && ((_currentPlayerIndex == players.length - 1) || inSimulation)) {
       // if (currentTurn.isGameEndTriggered && (_currentPlayerIndex == players.length - 1)) {
       currentTurn.setGameComplete();
     } else {
@@ -301,8 +299,6 @@ class Game {
 
   void startGame() {
     _currentPlayerIndex = -1; // so we can call get next
-    // _currentTurn = -1;
-    // gameTurns = <Turn>[];
   }
 
   bool isInDeck(Part part) {
@@ -372,6 +368,7 @@ class Game {
     ret['players'] = players.map<Map<String, dynamic>>((e) => e.toJson()).toList();
     ret['pr'] = partsRemaining;
     ret['rd'] = round;
+    ret['end'] = gameEndTriggered;
 
     if (!isAuthoritativeSave) {
       // only the client uses this value, it's not saved/restored on the server
@@ -400,6 +397,7 @@ class Game {
 
     game._currentPlayerIndex = json['cp'] as int;
     game.round = json['rd'] as int;
+    game.gameEndTriggered = json['end'] as bool;
 
     var item = json['players'] as List<dynamic>;
     game.players =

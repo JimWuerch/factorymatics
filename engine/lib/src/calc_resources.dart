@@ -34,6 +34,66 @@ class UsedProduct {
   }
 }
 
+List<int> _poolMasks = [0xF, 0xF << 4, 0xF << 8, 0xF << 12, 0xF << 16, 0xF << 20];
+
+int _resourcePoolFromRP(ResourcePool rp) {
+  var pool = 0;
+  for (var rt = 1; rt < 5; rt++) {
+    pool = _resourcePoolSet(pool, ResourceType.values[rt], rp.count(ResourceType.values[rt]));
+  }
+  return pool;
+}
+
+int _resourcePoolCount(int pool, ResourceType rt) {
+  return (pool & _poolMasks[rt.index]) >> (4 * rt.index);
+}
+
+int _resourcePoolAddOne(int pool, ResourceType rt) {
+  return pool + (1 << (4 * rt.index));
+}
+
+int _resourcePoolSubOne(int pool, ResourceType rt) {
+  if (pool & _poolMasks[rt.index] == 0) {
+    throw InvalidOperationError('No resource');
+  }
+  return pool - (1 << (4 * rt.index));
+}
+
+int _resourcePoolSet(int pool, ResourceType rt, int value) {
+  if (value < 0) {
+    throw InvalidOperationError('Negative value set');
+  }
+  var tmp = pool & ~_poolMasks[rt.index];
+  return tmp + (value << (rt.index * 4));
+}
+
+int _resourcePoolTotal(int pool) {
+  var tmp = pool >> 4;
+  var count = 0;
+  for (var i = 0; i < 4; i++) {
+    count += tmp & 0xF;
+    tmp >>= 4;
+  }
+  return count;
+}
+
+// ignore: unused_element
+ResourcePool _resourcePoolToRP(int pool) {
+  var ret = ResourcePool();
+  for (var i = 1; i < 5; i++) {
+    ret.set(ResourceType.values[i], _resourcePoolCount(pool, ResourceType.values[i]));
+  }
+  return ret;
+}
+
+// ignore: unused_element
+String _resourcePoolToString(int pool) {
+  if (_resourcePoolCount(pool, ResourceType.any) > 0) {
+    return 'heart:${_resourcePoolCount(pool, ResourceType.heart)} spade:${_resourcePoolCount(pool, ResourceType.spade)} diamond: ${_resourcePoolCount(pool, ResourceType.diamond)} club: ${_resourcePoolCount(pool, ResourceType.club)} any: ${_resourcePoolCount(pool, ResourceType.any)}';
+  }
+  return 'heart:${_resourcePoolCount(pool, ResourceType.heart)} spade:${_resourcePoolCount(pool, ResourceType.spade)} diamond: ${_resourcePoolCount(pool, ResourceType.diamond)} club: ${_resourcePoolCount(pool, ResourceType.club)}';
+}
+
 class ResourcePool {
   final Int8List _resources;
 
@@ -351,23 +411,6 @@ class CalcResources {
     }
   }
 
-  // add spend products for all resources left in the inputPool
-  // static void _addRemainingResources(
-  //   List<SpendHistory> paths,
-  //   ResourcePool inputPool,
-  //   SpendHistory history,
-  //   Map<ConverterBaseProduct, int> prodIds,
-  //   List<SpendResourceProduct> spenders,
-  // ) {
-  //   var s2 = List<SpendResourceProduct>.of(spenders);
-  //   // add spend products for all resources left in the inputPool
-  //   for (var resource in inputPool.toList()) {
-  //     var spender = s2.firstWhere((element) => element.sourceResource == resource);
-  //     history.add(UsedProduct(spender, true, prodIds[spender]));
-  //     s2.remove(spender);
-  //   }
-  // }
-
 // recursively try all permutations of products
   void _getConvertersPaths(
     List<SpendHistory> paths,
@@ -515,18 +558,19 @@ class CalcResources {
     // fix the ResourceType.any max
     max.set(ResourceType.any, sourcePool.getResourceCount());
 
-    _findMaxResources(max, products, sourcePool, ResourcePool());
+    _findMaxResources(max, products, _resourcePoolFromRP(sourcePool), 0);
 
     return max;
   }
 
 // recursively try all permutations of products
-  void _findMaxResources(
-      ResourcePool max, List<ConverterBaseProduct> conv, ResourcePool inputPool, ResourcePool outputPool) {
+  void _findMaxResources(ResourcePool max, List<ConverterBaseProduct> conv, int inputPool, int outputPool) {
     for (var c in conv) {
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;
-        if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
+        //if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
+        if (cv.source == ResourceType.any ||
+            (_resourcePoolCount(inputPool, cv.source) > 0 || _resourcePoolCount(outputPool, cv.source) > 0)) {
           // we have a matching resource, so use it
           for (var i = 1; i < 5; i++) {
             // 0 == none, 5 == any, so we skip those two
@@ -544,26 +588,31 @@ class CalcResources {
               if (srcRt == destRt || (cv.source != ResourceType.any && srcRt != cv.source)) continue;
 
               // this can happen for cv.source == ResourceType.any
-              if (inputPool.count(srcRt) == 0 && outputPool.count(srcRt) == 0) continue;
-
-              var ip2 = ResourcePool.of(inputPool);
-              var op2 = ResourcePool.of(outputPool);
-              if (ip2.count(srcRt) > 0) {
-                ip2.sub1(srcRt);
+              //if (inputPool.count(srcRt) == 0 && outputPool.count(srcRt) == 0) continue;
+              if (_resourcePoolCount(inputPool, srcRt) == 0 && _resourcePoolCount(outputPool, srcRt) == 0) continue;
+              // var ip2 = ResourcePool.of(inputPool);
+              // var op2 = ResourcePool.of(outputPool);
+              var ip2 = inputPool;
+              var op2 = outputPool;
+              // if (ip2.count(srcRt) > 0) {
+              //   ip2.sub1(srcRt);
+              // } else {
+              //   op2.sub1(srcRt);
+              // }
+              // op2.add1(destRt);
+              if (_resourcePoolCount(ip2, srcRt) > 0) {
+                ip2 = _resourcePoolSubOne(ip2, srcRt);
               } else {
-                op2.sub1(srcRt);
+                op2 = _resourcePoolSubOne(op2, srcRt);
               }
-              op2.add1(destRt);
+              op2 = _resourcePoolAddOne(op2, destRt);
               var conv2 = List<ConverterBaseProduct>.of(conv);
               conv2.remove(c);
-              // var conv2 = <ConverterBaseProduct>[];
-              // for (var element in conv) {
-              //   if (conv2 != c) {
-              //     conv2.add(element);
-              //   }
+              // if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
+              //   max.set(destRt, op2.count(destRt) + ip2.count(destRt));
               // }
-              if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
-                max.set(destRt, op2.count(destRt) + ip2.count(destRt));
+              if (max.count(destRt) < _resourcePoolCount(op2, destRt) + _resourcePoolCount(ip2, destRt)) {
+                max.set(destRt, _resourcePoolCount(op2, destRt) + _resourcePoolCount(ip2, destRt));
               }
               _findMaxResources(max, conv2, ip2, op2);
             }
@@ -571,24 +620,40 @@ class CalcResources {
         }
       } else if (c.productType == ProductType.doubleResource) {
         var cv = c as DoubleResourceProduct;
-        if (inputPool.count(cv.resourceType) > 0 || outputPool.count(cv.resourceType) > 0) {
-          var ip2 = ResourcePool.of(inputPool);
-          var op2 = ResourcePool.of(outputPool);
-          if (op2.count(cv.resourceType) > 0) {
-            op2.add1(cv.resourceType);
-          } else if (ip2.count(cv.resourceType) > 0) {
-            ip2.sub1(cv.resourceType);
-            op2.add1(cv.resourceType);
-            op2.add1(cv.resourceType);
+        //if (inputPool.count(cv.resourceType) > 0 || outputPool.count(cv.resourceType) > 0) {
+        if (_resourcePoolCount(inputPool, cv.resourceType) > 0 || _resourcePoolCount(outputPool, cv.resourceType) > 0) {
+          // var ip2 = ResourcePool.of(inputPool);
+          // var op2 = ResourcePool.of(outputPool);
+          var ip2 = inputPool;
+          var op2 = outputPool;
+          // if (op2.count(cv.resourceType) > 0) {
+          //   op2.add1(cv.resourceType);
+          // } else if (ip2.count(cv.resourceType) > 0) {
+          //   ip2.sub1(cv.resourceType);
+          //   op2.add1(cv.resourceType);
+          //   op2.add1(cv.resourceType);
+          // }
+          if (_resourcePoolCount(op2, cv.resourceType) > 0) {
+            op2 = _resourcePoolAddOne(op2, cv.resourceType);
+          } else if (_resourcePoolCount(ip2, cv.resourceType) > 0) {
+            ip2 = _resourcePoolSubOne(ip2, cv.resourceType);
+            op2 = _resourcePoolAddOne(op2, cv.resourceType);
+            op2 = _resourcePoolAddOne(op2, cv.resourceType);
           }
           var conv2 = List<ConverterBaseProduct>.of(conv);
           conv2.remove(c);
 
-          if (max.count(cv.resourceType) < op2.count(cv.resourceType) + ip2.count(cv.resourceType)) {
-            max.set(cv.resourceType, op2.count(cv.resourceType) + ip2.count(cv.resourceType));
+          // if (max.count(cv.resourceType) < op2.count(cv.resourceType) + ip2.count(cv.resourceType)) {
+          //   max.set(cv.resourceType, op2.count(cv.resourceType) + ip2.count(cv.resourceType));
+          // }
+          if (max.count(cv.resourceType) <
+              _resourcePoolCount(op2, cv.resourceType) + _resourcePoolCount(ip2, cv.resourceType)) {
+            max.set(
+                cv.resourceType, _resourcePoolCount(op2, cv.resourceType) + _resourcePoolCount(ip2, cv.resourceType));
           }
 
-          var total = op2.getResourceCount() + ip2.getResourceCount();
+          // var total = op2.getResourceCount() + ip2.getResourceCount();
+          var total = _resourcePoolTotal(op2) + _resourcePoolTotal(ip2);
           if (max.count(ResourceType.any) < total) {
             max.set(ResourceType.any, total);
           }

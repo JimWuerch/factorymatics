@@ -13,6 +13,11 @@ class EnhancementPart extends Part {
 
   @override
   int get vp => _vp;
+
+  @override
+  String toString() {
+    return 'Increase resource limit by $resourceStorage, storage by $partStorage, search by $search';
+  }
 }
 
 class Level2ConstructDiscountPart extends Part {
@@ -26,6 +31,11 @@ class Level2ConstructDiscountPart extends Part {
 
   @override
   int get vp => _vp;
+
+  @override
+  String toString() {
+    return 'Discount of $level2ConstructDiscount when constructing level 2 part';
+  }
 }
 
 class ConstructFromSearchDiscountPart extends Part {
@@ -39,6 +49,11 @@ class ConstructFromSearchDiscountPart extends Part {
 
   @override
   int get vp => _vp;
+
+  @override
+  String toString() {
+    return 'Discount of $constructFromSearchDiscount when constructing part during search';
+  }
 }
 
 class ConstructFromStoreDiscountPart extends Part {
@@ -52,6 +67,11 @@ class ConstructFromStoreDiscountPart extends Part {
 
   @override
   int get vp => _vp;
+
+  @override
+  String toString() {
+    return 'Discount of $constructFromStoreDiscount when constructing part from storage';
+  }
 }
 
 class DisallowStorePart extends Part {
@@ -63,6 +83,11 @@ class DisallowStorePart extends Part {
 
   @override
   int get vp => _vp;
+
+  @override
+  String toString() {
+    return 'Disallow store action';
+  }
 }
 
 class DisallowSearchPart extends Part {
@@ -74,6 +99,11 @@ class DisallowSearchPart extends Part {
 
   @override
   int get vp => _vp;
+
+  @override
+  String toString() {
+    return 'Disallow search action';
+  }
 }
 
 abstract class CalculatedVpPart extends Part {
@@ -94,6 +124,11 @@ class VpChitDoublerPart extends CalculatedVpPart {
   void updateVp(PlayerData player) {
     _vp = player.vpChits;
   }
+
+  @override
+  String toString() {
+    return '1 VP per VP chit';
+  }
 }
 
 class VpIsResourcesPart extends CalculatedVpPart {
@@ -102,5 +137,10 @@ class VpIsResourcesPart extends CalculatedVpPart {
   @override
   void updateVp(PlayerData player) {
     _vp = player.resourceCount();
+  }
+
+  @override
+  String toString() {
+    return '1VP per resource';
   }
 }

@@ -121,8 +121,12 @@ class _PartWidgetState extends State<PartWidget> {
           break;
         case TriggerType.convert:
           var t = trigger as ConvertTrigger;
-          items.add(resourceToIcon(
-              t.resourceType, _fixColor(resourceToColor(widget.part.resource), resourceToColor(t.resourceType))));
+          if (t.resourceType != ResourceType.any) {
+            items.add(resourceToIcon(
+                t.resourceType, _fixColor(resourceToColor(widget.part.resource), resourceToColor(t.resourceType))));
+          } else {
+            items.add(resourceToIcon(t.resourceType, _fixColor(resourceToColor(widget.part.resource), Colors.black)));
+          }
           items.add(Icon(partTypeToIcon(PartType.converter),
               color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
           if (part.products[0].productType == ProductType.convert) {
@@ -185,6 +189,7 @@ class _PartWidgetState extends State<PartWidget> {
     for (var product in products) {
       if (product is DoubleResourceProduct || product is ConvertProduct) continue;
       items.add(Tooltip(
+        waitDuration: Duration(milliseconds: 550),
         message: productTooltipString(product),
         child: ElevatedButton(
           style: ButtonStyle(
@@ -242,72 +247,76 @@ class _PartWidgetState extends State<PartWidget> {
             },
             child: Padding(
               padding: EdgeInsets.all(8),
-              child: Container(
-                //color: widget.enabled ? Colors.white : Colors.grey[400],
-                //color: widget.enabled ? Colors.white : resourceToColor(widget.part.resource),
-                color: resourceToColor(widget.part.resource),
-                child: Column(
-                  children: <Widget>[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        // Container(
-                        //   width: iconSize,
-                        //   height: iconSize,
-                        //   decoration: BoxDecoration(
-                        //     //color: Colors.grey[300],
-                        //     color: widget.enabled ? Colors.white : resourceToColor(widget.part.resource),
-                        //     //borderRadius: BorderRadius.all(Radius.circular(24.0)),
-                        //   ),
-                        //   child: Icon(
-                        //     partTypeToIcon(widget.part.partType),
-                        //     color: Colors.black,
-                        //   ),
-                        // ),
-                        Row(
-                          children: [
-                            Text('${widget.part.id}'),
-                            Icon(
-                              partTypeToIcon(widget.part.partType),
-                              color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
+              child: Tooltip(
+                waitDuration: Duration(milliseconds: 500),
+                message: widget.part.toString(),
+                child: Container(
+                  //color: widget.enabled ? Colors.white : Colors.grey[400],
+                  //color: widget.enabled ? Colors.white : resourceToColor(widget.part.resource),
+                  color: resourceToColor(widget.part.resource),
+                  child: Column(
+                    children: <Widget>[
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          // Container(
+                          //   width: iconSize,
+                          //   height: iconSize,
+                          //   decoration: BoxDecoration(
+                          //     //color: Colors.grey[300],
+                          //     color: widget.enabled ? Colors.white : resourceToColor(widget.part.resource),
+                          //     //borderRadius: BorderRadius.all(Radius.circular(24.0)),
+                          //   ),
+                          //   child: Icon(
+                          //     partTypeToIcon(widget.part.partType),
+                          //     color: Colors.black,
+                          //   ),
+                          // ),
+                          Row(
+                            children: [
+                              Text('${widget.part.id}'),
+                              Icon(
+                                partTypeToIcon(widget.part.partType),
+                                color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
+                              ),
+                            ],
+                          ),
+                          if (widget.part.cost > 0)
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text('${widget.part.cost}'),
+                                resourceToIcon(
+                                  widget.part.resource,
+                                  _fixColor(resourceToColor(widget.part.resource), Colors.black),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        if (widget.part.cost > 0)
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.baseline,
                             textBaseline: TextBaseline.alphabetic,
                             children: [
-                              Text('${widget.part.cost}'),
-                              resourceToIcon(
-                                widget.part.resource,
-                                _fixColor(resourceToColor(widget.part.resource), Colors.black),
+                              Text('${widget.part.vp}'),
+                              Icon(
+                                productTypeToIcon(ProductType.vp),
+                                color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
                               ),
                             ],
                           ),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.baseline,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text('${widget.part.vp}'),
-                            Icon(
-                              productTypeToIcon(ProductType.vp),
-                              color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    Wrap(
-                      spacing: 4.0,
-                      runSpacing: 4.0,
-                      alignment: WrapAlignment.center,
-                      crossAxisAlignment: WrapCrossAlignment.center,
-                      children: _productionLine(),
-                    ),
-                  ],
+                        ],
+                      ),
+                      Wrap(
+                        spacing: 4.0,
+                        runSpacing: 4.0,
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: _productionLine(),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

@@ -17,6 +17,11 @@ class StoreTrigger extends Trigger {
   bool isTriggeredBy(GameAction action) {
     return action.actionType == ActionType.store;
   }
+
+  @override
+  String toString() {
+    return 'Store';
+  }
 }
 
 class AcquireTrigger extends Trigger {
@@ -30,6 +35,11 @@ class AcquireTrigger extends Trigger {
       return action?.acquiredResource == resourceType;
     }
     return false;
+  }
+
+  @override
+  String toString() {
+    return 'Acquire ${resourceType.name}';
   }
 }
 
@@ -45,6 +55,11 @@ class ConstructTrigger extends Trigger {
     }
     return false;
   }
+
+  @override
+  String toString() {
+    return 'Construct ${resourceType.name}';
+  }
 }
 
 class ConstructLevelTrigger extends Trigger {
@@ -59,6 +74,11 @@ class ConstructLevelTrigger extends Trigger {
     }
     return false;
   }
+
+  @override
+  String toString() {
+    return 'Construct level ${level + 1}';
+  }
 }
 
 class ConstructFromStoreTrigger extends Trigger {
@@ -70,6 +90,11 @@ class ConstructFromStoreTrigger extends Trigger {
       return action.fromStorage;
     }
     return false;
+  }
+
+  @override
+  String toString() {
+    return 'Construct from storage';
   }
 }
 
@@ -84,5 +109,10 @@ class ConvertTrigger extends Trigger {
       return action.source == resourceType;
     }
     return false;
+  }
+
+  @override
+  String toString() {
+    return 'Convert ${resourceType.name}';
   }
 }

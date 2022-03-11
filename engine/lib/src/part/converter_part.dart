@@ -19,6 +19,11 @@ class ConverterPart extends Part {
     }
     return false;
   }
+
+  @override
+  String toString() {
+    return '${triggers.first.toString()} ${products.first.toString()}';
+  }
 }
 
 class MultipleConverterPart extends Part {
@@ -42,5 +47,10 @@ class MultipleConverterPart extends Part {
       return true;
     }
     return false;
+  }
+
+  @override
+  String toString() {
+    return '${converters[0].toString()} and ${converters[1].toString()}';
   }
 }
