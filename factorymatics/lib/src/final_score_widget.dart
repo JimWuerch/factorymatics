@@ -21,12 +21,12 @@ class _FinalScoreWidgetState extends State<FinalScoreWidget> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('${player.id} ${player.score}'),
+            Text('${player.id}  ${player.score}'),
             Icon(productTypeToIcon(ProductType.vp)),
-            Text(' ${player.partCount}'),
+            Text('  ${player.partCount}'),
             Icon(partIcon(), color: Colors.black),
-            Text(' ${player.resourceCount()}'),
-            resourceToIcon(ResourceType.any, resourceToColor(ResourceType.any)),
+            Text('  ${player.resourceCount()}'),
+            resourceToIcon(ResourceType.any, Colors.black),
           ],
         ),
       );

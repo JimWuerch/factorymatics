@@ -207,7 +207,8 @@ class _PartWidgetState extends State<PartWidget> {
           onPressed: widget.gamePageModel != null &&
                   !widget.isResourcePickerEnabled &&
                   widget.gamePageModel.isPartReady(widget.part) &&
-                  !widget.gamePageModel.isProductActivated(product) &&
+                  //!widget.gamePageModel.isProductActivated(product) &&
+                  widget.gamePageModel.isActivationAllowed(product) &&
                   //widget.part.ready.value &&
                   //!product.activated.value &&
                   (widget.onProductTap != null)
@@ -248,6 +249,7 @@ class _PartWidgetState extends State<PartWidget> {
             child: Padding(
               padding: EdgeInsets.all(8),
               child: Tooltip(
+                preferBelow: false,
                 waitDuration: Duration(milliseconds: 500),
                 message: widget.part.toString(),
                 child: Container(

@@ -6,9 +6,11 @@ import 'package:flutter/services.dart';
 
 import 'main_page_model.dart';
 
+String version = '1.0';
+
 class MainPage extends StatefulWidget {
   MainPage({Key key}) : super(key: key);
-  final String title = 'Factorymatics';
+  final String title = 'Factorymatics $version';
 
   @override
   State<MainPage> createState() => _MainPageState();
@@ -17,7 +19,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   MainPageModel model;
   TextEditingController _textEditController;
-  final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'player names form');
   final RegExp _validPlayerNames = RegExp(r'^[a-zA-Z0-9_\-\^]+$');
   int _numPlayers;
 
@@ -51,6 +53,9 @@ class _MainPageState extends State<MainPage> {
           enabled: index < model.numPlayers,
           autocorrect: false,
           initialValue: model.players[index],
+          onSaved: (value) {
+            model.players[index] = value;
+          },
           decoration: const InputDecoration(
             icon: Icon(Icons.person),
             //hintText: 'Enter your email',
@@ -109,7 +114,7 @@ class _MainPageState extends State<MainPage> {
   //   );
   // }
 
-  Widget _buildPanel() {
+  Form _buildPanel() {
     return Form(
       key: _formKey,
       child: Column(
@@ -187,11 +192,13 @@ class _MainPageState extends State<MainPage> {
                     //   },
                     // ),
                     _buildPanel(),
+                    Text('Start player name with AI to create an AI player.'),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 16.0),
                       child: ElevatedButton(
                         child: Text('Start Game'),
                         onPressed: () async {
+                          _formKey.currentState?.save();
                           await model.createLocalGame();
                           Navigator.push<void>(
                             context,

@@ -277,6 +277,10 @@ class Game {
       }
     }
     currentTurn.startTurn();
+    if (!inSimulation && currentPlayer.id.startsWith('AI')) {
+      var ai = AiPlayer(currentPlayer);
+      ai.takeTurn(this);
+    }
 
     return currentTurn;
   }

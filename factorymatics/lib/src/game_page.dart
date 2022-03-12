@@ -69,18 +69,44 @@ class _GamePageState extends State<GamePage> {
     );
   }
 
+  List<Widget> _makeStorage() {
+    var enabledParts = model.getEnabledParts();
+    var items = <Widget>[];
+    items.add(Card(
+      child: ListTile(
+        title: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(partTypeToIcon(PartType.storage)),
+            //Text('Storage', style: const TextStyle(fontWeight: FontWeight.bold)),
+            Text(' Storage'),
+          ],
+        ),
+      ),
+    ));
+    for (var part in model.displayPlayer.savedParts) {
+      items.add(PartWidget(
+        part: part,
+        enabled: enabledParts.contains(part.id),
+        onTap: _onPartTapped,
+        onProductTap: null,
+        isResourcePickerEnabled: model.isResourcePickerEnabled,
+        gamePageModel: model,
+      ));
+    }
+    return items;
+  }
+
   Column _makeColumn(int index) {
     var children = <Widget>[];
     var enabledParts = model.getEnabledParts();
     switch (index) {
       case 0:
+        children.add(_makeActionButton(ActionType.search, true, 'Search'));
+        children.add(SizedBox(height: 4));
         children.add(SizedBox(
           width: 200,
-          // child: ElevatedButton.icon(
-          //   icon: Icon(partTypeToIcon(PartType.enhancement)),
-          //   label: Text(''),
-          //   onPressed: null,
-          // ),
           child: ElevatedButton(
             onPressed: null,
             child: Row(
@@ -264,8 +290,7 @@ class _GamePageState extends State<GamePage> {
                   appBar: AppBar(
                     // Here we take the value from the MyHomePage object that was created by
                     // the App.build method, and use it to set our appbar title.
-                    title: Text(
-                        '${model.displayPlayer.id} VP:${model.displayPlayer.score} Parts:${model.displayPlayer.partCount} Round:${model.game.round}'),
+                    title: Text('Round:${model.game.round}, ${model.displayPlayer.id}\'s Turn'),
                     actions: model.isGameEnded
                         ? <Widget>[]
                         : <Widget>[
@@ -274,7 +299,9 @@ class _GamePageState extends State<GamePage> {
                               style: TextButton.styleFrom(
                                 primary: Colors.white, // foreground
                               ),
-                              onPressed: () async => await model.onDoAiTurn(),
+                              onPressed: model.isActivePlayer && model.game.currentPlayer.id.startsWith('AI')
+                                  ? () async => await model.onDoAiTurn()
+                                  : null,
                               child: Text("Ai Turn"),
                               //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
                             ),
@@ -314,77 +341,90 @@ class _GamePageState extends State<GamePage> {
                                   children: <Widget>[
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Column(
+                                        Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
                                           children: [
-                                            PlayerListWidget(
-                                              game: model.game,
-                                              onTap: (model.game.currentTurn.turnState.value == TurnState.started ||
-                                                      model.game.currentTurn.turnState.value ==
-                                                          TurnState.selectedActionCompleted)
-                                                  ? model.playerNameTapped
-                                                  : null,
-                                            ),
-                                          ],
-                                        ),
-                                        Column(
-                                          children: [
-                                            Container(
-                                              decoration: BoxDecoration(
-                                                  border: Border.all(
-                                                      width: 5,
-                                                      color:
-                                                          model.isResourcePickerEnabled ? Colors.orange : Colors.blue),
-                                                  borderRadius: BorderRadius.all(Radius.circular(20))),
-                                              padding: EdgeInsets.only(left: 10, right: 10),
-                                              width: 350,
-                                              child: ResourcePicker(
-                                                resources: model.game.availableResources.toList(),
-                                                enabled: model.isResourcePickerEnabled,
-                                                onTap: _onResourceTapped,
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 10,
-                                            ),
-                                            ConstrainedBox(
-                                              constraints: BoxConstraints(minWidth: 900),
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                    border: Border.all(width: 5, color: Colors.blue),
-                                                    borderRadius: BorderRadius.all(Radius.circular(20))),
-                                                padding: EdgeInsets.all(10),
-                                                //width: 900,
-                                                child: _buildCardArea(context),
-                                                // Column(
-                                                //   mainAxisAlignment: MainAxisAlignment.center,
-                                                //   children: <Widget>[
-                                                //     _makePartList(model.game.saleParts[2].list),
-                                                //     _makePartList(model.game.saleParts[1].list),
-                                                //     _makePartList(model.game.saleParts[0].list),
-                                                //   ],
-                                                // ),
-                                              ),
-                                            ),
-                                            SizedBox(
-                                              height: 10,
-                                            ),
-                                            Row(
+                                            Column(
                                               children: [
-                                                ResourceStorageWidget(resources: model.getAvailableResources()),
-                                                Text(
-                                                  '  ${model.displayPlayer.vpChits}',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.black,
-                                                    fontSize: 24,
+                                                PlayerListWidget(
+                                                  model: model,
+                                                  onTap: (model.game.currentTurn.turnState.value == TurnState.started ||
+                                                          model.game.currentTurn.turnState.value ==
+                                                              TurnState.selectedActionCompleted)
+                                                      ? model.playerNameTapped
+                                                      : null,
+                                                ),
+                                                SizedBox(
+                                                  width: 200,
+                                                  child: Column(
+                                                    children: _makeStorage(),
                                                   ),
                                                 ),
-                                                Icon(productTypeToIcon(ProductType.vp)),
                                               ],
                                             ),
+                                            SizedBox(width: 10),
+                                            Column(
+                                              children: [
+                                                Container(
+                                                  decoration: BoxDecoration(
+                                                      border: Border.all(
+                                                          width: 5,
+                                                          color: model.isResourcePickerEnabled
+                                                              ? Colors.orange
+                                                              : Colors.blue),
+                                                      borderRadius: BorderRadius.all(Radius.circular(20))),
+                                                  padding: EdgeInsets.only(left: 10, right: 10),
+                                                  width: 350,
+                                                  child: ResourcePicker(
+                                                    resources: model.game.availableResources.toList(),
+                                                    enabled: model.isResourcePickerEnabled,
+                                                    onTap: _onResourceTapped,
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  height: 10,
+                                                ),
+                                                ConstrainedBox(
+                                                  constraints: BoxConstraints(minWidth: 800),
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                        border: Border.all(width: 5, color: Colors.blue),
+                                                        borderRadius: BorderRadius.all(Radius.circular(20))),
+                                                    padding: EdgeInsets.all(10),
+                                                    child: _buildCardArea(context),
+                                                  ),
+                                                ),
+                                                SizedBox(
+                                                  height: 10,
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    ResourceStorageWidget(resources: model.getAvailableResources()),
+                                                    Text(
+                                                      '  ${model.displayPlayer.vpChits}',
+                                                      style: TextStyle(
+                                                        fontWeight: FontWeight.bold,
+                                                        color: Colors.black,
+                                                        fontSize: 24,
+                                                      ),
+                                                    ),
+                                                    Icon(productTypeToIcon(ProductType.vp)),
+                                                  ],
+                                                ),
+                                              ],
+                                            ),
+                                            SizedBox(width: 10),
                                           ],
                                         ),
+                                        // SizedBox(
+                                        //   width: 200,
+                                        //   child: Column(
+                                        //     children: _makeStorage(),
+                                        //   ),
+                                        // ),
                                       ],
                                     ),
                                     SizedBox(
@@ -400,7 +440,7 @@ class _GamePageState extends State<GamePage> {
                                         _makeColumn(2),
                                         _makeColumn(3),
                                         _makeColumn(4),
-                                        _makeColumn(5),
+                                        //_makeColumn(5),
                                       ],
                                     ),
                                   ],

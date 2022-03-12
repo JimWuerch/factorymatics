@@ -43,32 +43,36 @@ class GamePageModel {
         availableActions = game.currentTurn.getAvailableActions();
       }
       if (gameInfoModel.client is LocalClient) {
+        var showTurnDlg = false;
         if (displayPlayer == null) {
           displayPlayer = game.currentPlayer;
+          showTurnDlg = true;
         } else {
           // we make a new game object so we need to refresh the player object
           displayPlayer = game.getPlayerFromId(displayPlayer.id);
         }
-        if (game.currentPlayer.id != playerId) {
+        if (game.currentPlayer.id != playerId || showTurnDlg) {
           playerId = game.currentPlayer.id;
           playerName = game.currentPlayer.id;
-          await showDialog<void>(
-            context: gamePageContext,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text('New Turn'),
-                content: Text('Player $playerName\'s turn'),
-                actions: <Widget>[
-                  TextButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: const Text('OK'),
-                  ),
-                ],
-              );
-            },
-          );
+          if (!isGameEnded) {
+            showDialog<void>(
+              context: gamePageContext,
+              builder: (context) {
+                return AlertDialog(
+                  title: const Text('New Turn'),
+                  content: Text('Player $playerName\'s turn'),
+                  actions: <Widget>[
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                      },
+                      child: const Text('OK'),
+                    ),
+                  ],
+                );
+              },
+            );
+          }
         }
       } else {
         // not a local game
@@ -94,7 +98,7 @@ class GamePageModel {
   //   }
   // }
 
-  bool get isGameEnded => game.currentTurn.gameEnded;
+  bool get isGameEnded => game.currentTurn.turnState.value == TurnState.gameEnded;
   bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
 
   bool get isResourcePickerEnabled => ((game.currentTurn?.selectedAction?.value == ActionType.acquire &&
@@ -189,6 +193,17 @@ class GamePageModel {
 
   bool isPartReady(Part part) => game.currentTurn.partReady[part.id];
   bool isProductActivated(Product product) => game.currentTurn.productActivated[game.currentTurn.productCode(product)];
+
+  bool isActivationAllowed(Product product) {
+    for (var action in availableActions) {
+      if (action.producedBy != null &&
+          action.producedBy.part.id == product.part.id &&
+          action.producedBy.prodIndex == product.prodIndex) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   Future<ResponseCode> _postAction(GameAction action) async {
     var response = await gameInfoModel.client.postAction(game, action);
@@ -321,7 +336,7 @@ class GamePageModel {
     if (action != null) {
       var response = await gameInfoModel.client.postAction(game, action);
       if (response.responseCode != ResponseCode.ok) {
-        return;
+        //return;
         // response.responseCode;
       }
       await doGameUpdate();
