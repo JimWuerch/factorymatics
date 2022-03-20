@@ -8,7 +8,6 @@ import 'package:factorymatics/src/player_list_widget.dart';
 import 'package:factorymatics/src/resource_picker.dart';
 import 'package:factorymatics/src/resource_storage_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 class GamePage extends StatefulWidget {
   final String title = 'Factorymatics';
@@ -46,6 +45,7 @@ class _GamePageState extends State<GamePage> {
         onProductTap: null,
         isResourcePickerEnabled: model.isResourcePickerEnabled,
         gamePageModel: model,
+        displaySizes: model.displaySizes,
       ));
     }
     return Row(
@@ -56,7 +56,7 @@ class _GamePageState extends State<GamePage> {
 
   Widget _makeActionButton(ActionType actionType, bool isEnabled, String label) {
     return SizedBox(
-      width: 200,
+      width: model.displaySizes.partWidth,
       child: ElevatedButton.icon(
         icon: Icon(actionToIcon(actionType)),
         onPressed: model.isActionSelection && isEnabled && model.isActivePlayer
@@ -93,6 +93,7 @@ class _GamePageState extends State<GamePage> {
         onProductTap: null,
         isResourcePickerEnabled: model.isResourcePickerEnabled,
         gamePageModel: model,
+        displaySizes: model.displaySizes,
       ));
     }
     return items;
@@ -106,7 +107,7 @@ class _GamePageState extends State<GamePage> {
         children.add(_makeActionButton(ActionType.search, true, 'Search'));
         children.add(SizedBox(height: 4));
         children.add(SizedBox(
-          width: 200,
+          width: model.displaySizes.partWidth,
           child: ElevatedButton(
             onPressed: null,
             child: Row(
@@ -129,6 +130,7 @@ class _GamePageState extends State<GamePage> {
             enabled: false,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
             gamePageModel: model,
+            displaySizes: model.displaySizes,
           ));
         }
         break;
@@ -140,6 +142,7 @@ class _GamePageState extends State<GamePage> {
             enabled: false,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
             gamePageModel: model,
+            displaySizes: model.displaySizes,
           ));
         }
         break;
@@ -152,6 +155,7 @@ class _GamePageState extends State<GamePage> {
             onProductTap: _onProductTapped,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
             gamePageModel: model,
+            displaySizes: model.displaySizes,
           ));
         }
         break;
@@ -164,6 +168,7 @@ class _GamePageState extends State<GamePage> {
             onProductTap: _onProductTapped,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
             gamePageModel: model,
+            displaySizes: model.displaySizes,
           ));
         }
         break;
@@ -176,6 +181,7 @@ class _GamePageState extends State<GamePage> {
             onProductTap: _onProductTapped,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
             gamePageModel: model,
+            displaySizes: model.displaySizes,
           ));
         }
         break;
@@ -189,6 +195,7 @@ class _GamePageState extends State<GamePage> {
             onProductTap: null,
             isResourcePickerEnabled: model.isResourcePickerEnabled,
             gamePageModel: model,
+            displaySizes: model.displaySizes,
           ));
         }
         break;
@@ -258,6 +265,21 @@ class _GamePageState extends State<GamePage> {
     }
   }
 
+  Widget _displayWait() {
+    var items = <Widget>[];
+    if (model.showWait) {
+      items.add(Text('Waiting for other players...', style: model.displaySizes.cardTextStyle));
+      //items.add(CircularProgressIndicator());
+    }
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: items,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -294,17 +316,16 @@ class _GamePageState extends State<GamePage> {
                     actions: model.isGameEnded
                         ? <Widget>[]
                         : <Widget>[
-                            TextButton(
-                              //textColor: Colors.white,
-                              style: TextButton.styleFrom(
-                                primary: Colors.white, // foreground
-                              ),
-                              onPressed: model.isActivePlayer && model.game.currentPlayer.id.startsWith('AI')
-                                  ? () async => await model.onDoAiTurn()
-                                  : null,
-                              child: Text("Ai Turn"),
-                              //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
-                            ),
+                            // TextButton(
+                            //   //textColor: Colors.white,
+                            //   style: TextButton.styleFrom(
+                            //     primary: Colors.white, // foreground
+                            //   ),
+                            //   onPressed: model.isActivePlayer && model.game.currentPlayer.id.startsWith('AI')
+                            //       ? () async => await model.onDoAiTurn()
+                            //       : null,
+                            //   child: Text("Ai Turn"),
+                            // ),
                             TextButton(
                               //textColor: Colors.white,
                               style: TextButton.styleFrom(
@@ -325,10 +346,6 @@ class _GamePageState extends State<GamePage> {
                               //shape: CircleBorder(side: BorderSide(color: Colors.transparent)),
                             ),
                           ],
-                    // bottom: PreferredSize(
-                    //   preferredSize: Size.fromHeight(0.0),
-                    //   child: ResourceStorageWidget(resources: model.getAvailableResources()),
-                    // ),
                   ),
                   body: SafeArea(
                     child: model.isGameEnded
@@ -339,6 +356,7 @@ class _GamePageState extends State<GamePage> {
                               child: Center(
                                 child: Column(
                                   children: <Widget>[
+                                    _displayWait(),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -358,7 +376,7 @@ class _GamePageState extends State<GamePage> {
                                                       : null,
                                                 ),
                                                 SizedBox(
-                                                  width: 200,
+                                                  width: model.displaySizes.partWidth,
                                                   child: Column(
                                                     children: _makeStorage(),
                                                   ),
@@ -377,7 +395,7 @@ class _GamePageState extends State<GamePage> {
                                                               : Colors.blue),
                                                       borderRadius: BorderRadius.all(Radius.circular(20))),
                                                   padding: EdgeInsets.only(left: 10, right: 10),
-                                                  width: 350,
+                                                  width: model.displaySizes.resourcePickerWidth,
                                                   child: ResourcePicker(
                                                     resources: model.game.availableResources.toList(),
                                                     enabled: model.isResourcePickerEnabled,
@@ -388,7 +406,8 @@ class _GamePageState extends State<GamePage> {
                                                   height: 10,
                                                 ),
                                                 ConstrainedBox(
-                                                  constraints: BoxConstraints(minWidth: 800),
+                                                  constraints:
+                                                      BoxConstraints(minWidth: model.displaySizes.cardAreaMinWidth),
                                                   child: Container(
                                                     decoration: BoxDecoration(
                                                         border: Border.all(width: 5, color: Colors.blue),
@@ -505,6 +524,11 @@ class _GamePageState extends State<GamePage> {
         return;
       }
     }
-    model.doEndTurn();
+
+    model.showWait = true;
+    model.RequestUpdate();
+
+    await Future<Object>.delayed(Duration(milliseconds: 20));
+    await model.doEndTurn();
   }
 }

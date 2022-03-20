@@ -71,7 +71,7 @@ void main(List<String> arguments) async {
 //    var ai2 = AiPlayer(game.players[1]);
 
     while (!game.currentTurn.gameEnded) {
-      ai.takeTurn(game);
+      await ai.takeTurn(game);
       //ai2.takeTurn(game);
       for (var i = 0; i < game.players.length; i++) {
         print('Score for ${game.players[i].id} is ${game.players[i].score} at round ${game.round}');

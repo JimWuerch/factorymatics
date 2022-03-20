@@ -219,19 +219,19 @@ class Turn {
               part.partType == PartType.construct) {
             if (partReady[part.id]) {
               for (var product in part.products) {
-                if (!productActivated[productCode(product)]) {
-                  if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
-                    if (!player.hasResourceStorageSpace) {
-                      continue;
-                    }
-                  } else if (product.productType == ProductType.store &&
-                      (!player.hasPartStorageSpace || !player.canStore)) {
-                    continue;
-                  } else if (product.productType == ProductType.freeConstructL1 && game.saleParts[0].isEmpty) {
-                    continue;
-                  } else if (product.productType == ProductType.search && !player.canSearch) {
-                    continue;
-                  }
+                if (!productActivated[productCode(product)] && _productCanActivate(product)) {
+                  // if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
+                  //   if (!player.hasResourceStorageSpace) {
+                  //     continue;
+                  //   }
+                  // } else if (product.productType == ProductType.store &&
+                  //     (!player.hasPartStorageSpace || !player.canStore)) {
+                  //   continue;
+                  // } else if (product.productType == ProductType.freeConstructL1 && game.saleParts[0].isEmpty) {
+                  //   continue;
+                  // } else if (product.productType == ProductType.search && !player.canSearch) {
+                  //   continue;
+                  // }
                   _addAllAvailableActions(ret, part, product.produce(player.id));
                 }
               }
@@ -242,6 +242,22 @@ class Turn {
     }
 
     return ret;
+  }
+
+  /// Check to see if [product] is prevented from activating, even though it's ready
+  bool _productCanActivate(Product product) {
+    if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
+      if (!player.hasResourceStorageSpace) {
+        return false;
+      }
+    } else if (product.productType == ProductType.store && (!player.hasPartStorageSpace || !player.canStore)) {
+      return false;
+    } else if (product.productType == ProductType.freeConstructL1 && game.saleParts[0].isEmpty) {
+      return false;
+    } else if (product.productType == ProductType.search && !player.canSearch) {
+      return false;
+    }
+    return true;
   }
 
   void _addSearchedPartActions(List<GameAction> actions) {
@@ -899,7 +915,7 @@ class Turn {
         for (var part in player.parts[partType]) {
           if (!partReady[part.id]) continue;
           for (var product in part.products) {
-            if (!productActivated[productCode(product)]) {
+            if (!productActivated[productCode(product)] && _productCanActivate(product)) {
               count++;
             }
           }

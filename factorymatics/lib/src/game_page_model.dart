@@ -8,12 +8,14 @@ import 'package:flutter/material.dart';
 
 import 'dialogs/ask_payment_dialog.dart';
 import 'dialogs/ask_search_deck_dialog.dart';
+import 'display_sizes.dart';
 
 enum SearchExecutionOptions { doNothing, construct, store, unselected }
 
 class GamePageModel {
-  Game game;
+  DisplaySizes displaySizes = DisplaySizes();
 
+  Game game;
   String playerId; // = 'id1';
   String playerName; // = 'bob';
   PlayerData displayPlayer;
@@ -23,11 +25,16 @@ class GamePageModel {
   final BuildContext gamePageContext;
   final GameInfoModel gameInfoModel;
   SearchExecutionOptions _searchExecutionOption = SearchExecutionOptions.unselected;
+  bool showWait = false;
 
   GamePageModel(this.gameInfoModel, this.gamePageContext);
 
   Future<void> init() async {
     await doGameUpdate();
+  }
+
+  void RequestUpdate() {
+    _notifierController.add(2);
   }
 
   /// Update the game state.  Set [noNotify] to true to prevent listeners from getting notified
@@ -85,6 +92,7 @@ class GamePageModel {
       //   await doGameUpdate(noNotify: true);
       // }
       _searchExecutionOption = SearchExecutionOptions.unselected;
+      showWait = false;
       _notifierController.add(1);
     } else {
       _notifierController.addError(null);
@@ -106,7 +114,7 @@ class GamePageModel {
       game.currentTurn?.turnState?.value == TurnState.acquireRequested);
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
-  bool get isActivePlayer => displayPlayer.id == game.currentPlayer.id;
+  bool get isActivePlayer => !showWait && displayPlayer.id == game.currentPlayer.id;
 
   bool get canUndo => game.canUndo && isOurTurn;
 

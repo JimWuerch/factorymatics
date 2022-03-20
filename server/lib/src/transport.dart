@@ -14,21 +14,23 @@ class LocalServerTransport implements GameTransport {
 
   LocalServerTransport(this.server);
 
-  Future<ResponseModel> receiveLocalRequest(Map<String, dynamic> json) {
+  Future<ResponseModel> receiveLocalRequest(Map<String, dynamic> json) async {
     var gameModelType = gameModelTypeFromJson(json);
     Game game;
-    if (gameModelType == GameModelType.actionRequest || gameModelType == GameModelType.actionResponse || gameModelType == GameModelType.joinGameResponse) {
+    if (gameModelType == GameModelType.actionRequest ||
+        gameModelType == GameModelType.actionResponse ||
+        gameModelType == GameModelType.joinGameResponse) {
       var gameId = gameIdFromJson(json);
       var gameController = server.games.find(gameId);
       game = gameController.game;
     }
     var model = gameModelFromJson(game, json);
-    return sendRequest(model);
+    return await sendRequest(model);
   }
 
   @override
   Future<ResponseModel> sendRequest(GameModel model) async {
-    return server.handleRequest(model);
+    return await server.handleRequest(model);
   }
 
   @override
@@ -43,7 +45,7 @@ class LocalClientTransport implements GameTransport {
   @override
   Future<ResponseModel> sendRequest(GameModel model) async {
     var json = model.toJson();
-    return serverTransport.receiveLocalRequest(json);
+    return await serverTransport.receiveLocalRequest(json);
     //return serverTransport.sendRequest(model);
   }
 

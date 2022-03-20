@@ -194,7 +194,7 @@ class Game {
     }
   }
 
-  Tuple2<ValidateResponseCode, GameAction> applyAction(GameAction action) {
+  Future<Tuple2<ValidateResponseCode, GameAction>> applyAction(GameAction action) async {
     if (action is GameModeAction && action.mode == GameModeType.doAiTurn) {
       var ai = AiPlayer(getPlayerFromId(action.owner));
       ai.takeTurn(this);

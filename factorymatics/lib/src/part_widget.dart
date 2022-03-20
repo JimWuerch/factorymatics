@@ -3,12 +3,19 @@ import 'package:factorymatics/src/game_page_model.dart';
 import 'package:flutter/material.dart';
 
 //import 'game_page_model.dart';
+import 'display_sizes.dart';
 import 'icons.dart';
 import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
   PartWidget(
-      {this.part, this.enabled, this.onTap, this.onProductTap, this.isResourcePickerEnabled, this.gamePageModel});
+      {this.part,
+      this.enabled,
+      this.onTap,
+      this.onProductTap,
+      this.isResourcePickerEnabled,
+      this.gamePageModel,
+      this.displaySizes});
 
   final Part part;
   final bool enabled;
@@ -16,6 +23,7 @@ class PartWidget extends StatefulWidget {
   final void Function(Product product) onProductTap;
   final bool isResourcePickerEnabled;
   final GamePageModel gamePageModel;
+  final DisplaySizes displaySizes;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -63,10 +71,6 @@ class _PartWidgetState extends State<PartWidget> {
 
   List<Widget> _triggersToIcons(Part part) {
     var items = <Widget>[];
-    // items.add(Text(
-    //   'Triggers: ',
-    //   style: const TextStyle(fontWeight: FontWeight.bold),
-    // ));
     if (part is EnhancementPart) {
       if (part.resourceStorage > 0) {
         items.add(Icon(partTypeToIcon(PartType.acquire),
@@ -90,10 +94,6 @@ class _PartWidgetState extends State<PartWidget> {
                 fontWeight: FontWeight.bold, color: _fixColor(resourceToColor(widget.part.resource), Colors.black))));
       }
       return items;
-      // return Row(
-      //   children: items,
-      //   mainAxisAlignment: MainAxisAlignment.center,
-      // );
     }
     for (var index = 0; index < part.triggers.length; ++index) {
       var trigger = part.triggers[index];
@@ -132,7 +132,6 @@ class _PartWidgetState extends State<PartWidget> {
           if (part.products[0].productType == ProductType.convert) {
             items.add(Icon(productTypeToIcon(ProductType.convert),
                 color: _fixColor(resourceToColor(widget.part.resource), Colors.black)));
-            //items.add(Icon(FontAwesome.question_circle));
           } else if (part.products[0].productType == ProductType.doubleResource) {
             items.add(resourceToIcon(
                 (part.products[0] as DoubleResourceProduct).sourceResource,
@@ -163,10 +162,6 @@ class _PartWidgetState extends State<PartWidget> {
       }
     }
     return items;
-    // return Row(
-    //   children: items,
-    //   mainAxisAlignment: MainAxisAlignment.center,
-    // );
   }
 
   Widget _productWidget(Product product) {
@@ -225,7 +220,7 @@ class _PartWidgetState extends State<PartWidget> {
     //var iconSize = 24.0;
     //Icon(_resourceToIcon(ResourceType.spade)).size;
     return SizedBox(
-      width: 200,
+      width: widget.displaySizes.partWidth,
       child: Card(
         shape: widget.enabled
             ? RoundedRectangleBorder(
@@ -237,10 +232,11 @@ class _PartWidgetState extends State<PartWidget> {
             : null,
         color: resourceToColor(widget.part.resource),
         child: DefaultTextStyle(
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
+          style: widget.displaySizes.cardTextStyle.copyWith(
             color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
-            fontSize: 24,
+            // fontWeight: FontWeight.bold,
+            // color: _fixColor(resourceToColor(widget.part.resource), Colors.black),
+            // fontSize: 24,
           ),
           child: InkWell(
             onTap: () {

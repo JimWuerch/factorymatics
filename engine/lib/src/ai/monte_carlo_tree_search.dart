@@ -22,6 +22,15 @@ class MCTSNode {
     }
   }
 
+  Map<String, dynamic> toJson() {
+    var ret = <String, dynamic>{
+      'selected': ActionType.values.indexOf(selectedAction),
+      'action': action.toJson(),
+    };
+
+    return ret;
+  }
+
   MCTSNode getBestChild() {
     const c = 1.414; //15; //1.414;
 

@@ -49,12 +49,12 @@ class GameServer {
     games.delete(gameId);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> doAction(String gameId, GameAction action) {
+  Future<Tuple2<ValidateResponseCode, GameAction>> doAction(String gameId, GameAction action) async {
     var game = games.find(gameId).game;
-    return game.applyAction(action);
+    return await game.applyAction(action);
   }
 
-  ResponseModel handleRequest(GameModel model) {
+  Future<ResponseModel> handleRequest(GameModel model) async {
     //TODO: add validator
     // validateRequest(model);
 
@@ -66,8 +66,9 @@ class GameServer {
 
       case GameModelType.actionRequest:
         var request = model as ActionRequest;
-        var response = doAction(request.gameId, request.action);
-        return ActionResponse(request.gameId, request.ownerId, response.item1 == ValidateResponseCode.ok ? ResponseCode.ok : ResponseCode.error, response.item2);
+        var response = await doAction(request.gameId, request.action);
+        return ActionResponse(request.gameId, request.ownerId,
+            response.item1 == ValidateResponseCode.ok ? ResponseCode.ok : ResponseCode.error, response.item2);
 
       case GameModelType.joinGameRequest:
         var request = model as JoinGameRequest;

@@ -122,6 +122,7 @@ class VpChitDoublerPart extends CalculatedVpPart {
 
   @override
   void updateVp(PlayerData player) {
+    // TODO: this isn't getting called at the right time when it's a player's turn
     _vp = player.vpChits;
   }
 

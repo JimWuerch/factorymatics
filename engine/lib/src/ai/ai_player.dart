@@ -1,29 +1,71 @@
+import 'dart:convert';
+import 'dart:isolate';
+
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/monte_carlo_tree_search.dart';
+import 'package:tuple/tuple.dart';
 
 class AiPlayer {
   //final Game srcGame;
   final PlayerData aiPlayer;
-  GameController gc = GameController();
-  Stopwatch stopwatch = Stopwatch()..start();
+  //GameController gc = GameController();
+  //Stopwatch stopwatch = Stopwatch()..start();
 
   AiPlayer(this.aiPlayer);
-  int gameCount = 0;
-  Game _duplicateGame(Game game) {
+  //int gameCount = 0;
+  static Game _duplicateGame(Game game) {
+    var gc = GameController();
     gc.game = game;
     var g = gc.gameFromJson(game.playerService, gc.toJson());
     gc.game = null;
     g.inSimulation = true;
-    g.nextObjectId = ++gameCount;
+    //g.nextObjectId = ++gameCount;
     return g;
   }
 
+  void takeTurn(Game game) {
+    var best = _takeTurnInternal(game);
+    // rehome action to this game
+    var srcAction = actionFromJson(game, best.action.toJson());
+    _finishTurn(game, best.selectedAction, srcAction);
+  }
+
+  Future<void> takeTurnAsync(Game game) async {
+    final p = ReceivePort();
+    var gc = GameController();
+    gc.game = game;
+    await Isolate.spawn(_takeTurnIsolate, Tuple3(p.sendPort, gc.toJson(), game.playerService.toJson()));
+    var json = await p.first as Map<String, dynamic>;
+    var srcAction = actionFromJson(game, json['action'] as Map<String, dynamic>);
+    var selectedAction = ActionType.values[json['selected'] as int];
+    _finishTurn(game, selectedAction, srcAction);
+  }
+
+  void _finishTurn(Game game, ActionType selectedAction, GameAction srcAction) {
+    _takeSelectActionAction(game, selectedAction);
+    // re-home action to this game, as internal bits point to other game objects
+    var action = actionFromJson(game, srcAction.toJson());
+    _processAction(game, action);
+    _doTriggers(game);
+    _processAction(game, GameModeAction(game.currentPlayer.id, GameModeType.endTurn));
+  }
+
+  Future<void> _takeTurnIsolate(Tuple3<SendPort, Map<String, dynamic>, Map<String, dynamic>> input) async {
+    var port = input.item1;
+    var gc = GameController();
+    var playerService = PlayerService.createService();
+    playerService.loadFromJson(input.item3);
+    var startGame = gc.gameFromJson(playerService, input.item2);
+    var best = _takeTurnInternal(startGame);
+    Isolate.exit(port, best.toJson());
+  }
+
   /// Take the turn of game.currentPlayer
-  void takeTurn(Game startGame) {
+  MCTSNode _takeTurnInternal(Game startGame) {
     // now calculate the best action
     var ts = MCTreeSearch(startGame);
 
-    stopwatch.reset();
+    var stopwatch = Stopwatch()..start();
     for (var loop = 0; loop < 2500; ++loop) {
       // if (loop % 1000 == 0) {
       //   print('loop $loop');
@@ -31,31 +73,6 @@ class AiPlayer {
       if (stopwatch.elapsedMilliseconds > 10000) break;
       //while (stopwatch.elapsedMilliseconds < 5000) {
       var node = ts.root;
-      // if (node.game.currentTurn.turnState == TurnState.notStarted) {
-      //   _processAction(node.game, GameModeAction(node.game.currentPlayer.id, GameModeType.startTurn));
-      // }
-
-      // if (node.game.round == 9999999) {
-      //   // we will prioritize storing something good on round 1
-      //   var part = node.game.saleParts[0].firstWhere((part) {
-      //     return (part.products.isNotEmpty && part.products.first.productType == ProductType.aquire);
-      //   }, orElse: () => null);
-      //   if (part == null) {
-      //     // no construct to acquire, so try to find an acquire for mystery meat part
-      //     part = node.game.saleParts[0].firstWhere((part) => part.partType == PartType.acquire, orElse: () => null);
-      //   }
-      //   if (part != null) {
-      //     // found something to do
-      //     var newNode = MCTSNode(node, _duplicateGame(node.game));
-      //     _takeSelectActionAction(newNode.game, ActionType.store);
-      //     var a = StoreAction(node.game.currentPlayer.id, part, null);
-      //     newNode.action = a;
-      //     newNode.selectedAction = ActionType.store;
-      //     _processAction(newNode.game, a);
-      //     _doTriggers(newNode.game);
-      //     _processAction(newNode.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
-      //   }
-      // } else {
       // find leaf node
       while (node.visits != 0) {
         if (node.children.isEmpty) {
@@ -190,18 +207,16 @@ class AiPlayer {
       var score = _rollout(node.children.first.game);
       _backPropagate(node.children.first, score);
     }
-    //print('found answer');
     var best = ts.root.getMostVistedChild();
-    _takeSelectActionAction(startGame, best.selectedAction);
-    // re-home action to this game, as internal bits point to other game objects
-    var action = actionFromJson(startGame, best.action.toJson());
-    _processAction(startGame, action);
-    _doTriggers(startGame);
-    // bias the scoring towards having more resources for the same score
-    best.score += startGame.currentPlayer.resourceCount() / startGame.round;
     print(
         'Took action: ${best.action.actionType} score:${best.score} avg:${best.score / best.visits} visits:${best.visits}');
-    _processAction(startGame, GameModeAction(startGame.currentPlayer.id, GameModeType.endTurn));
+    return best;
+    // _takeSelectActionAction(startGame, best.selectedAction);
+    // // re-home action to this game, as internal bits point to other game objects
+    // var action = actionFromJson(startGame, best.action.toJson());
+    // _processAction(startGame, action);
+    // _doTriggers(startGame);
+    // _processAction(startGame, GameModeAction(startGame.currentPlayer.id, GameModeType.endTurn));
   }
 
   void _backPropagate(MCTSNode node, double score) {

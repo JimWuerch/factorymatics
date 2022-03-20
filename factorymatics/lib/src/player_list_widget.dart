@@ -28,9 +28,10 @@ class _PlayerListWidgetState extends State<PlayerListWidget> {
             subtitle: Row(
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                Text('${player.score}', style: TextStyle(fontSize: 24)),
+                Text('${player.score}', style: TextStyle(fontSize: widget.model.displaySizes.cardTextStyle.fontSize)),
                 Icon(productTypeToIcon(ProductType.vp)),
-                Text(' ${player.partCount}', style: TextStyle(fontSize: 24)),
+                Text(' ${player.partCount}',
+                    style: TextStyle(fontSize: widget.model.displaySizes.cardTextStyle.fontSize)),
                 Icon(partIcon(), color: Colors.black),
               ],
             ),
@@ -49,43 +50,43 @@ class _PlayerListWidgetState extends State<PlayerListWidget> {
     return items;
   }
 
-  Widget _buildList() {
-    var items = <Widget>[];
-    for (var player in widget.model.game.players) {
-      items.add(
-        InkWell(
-          onTap: widget.onTap == null
-              ? null
-              : () {
-                  widget.onTap(player.id);
-                },
-          child: Row(
-            children: [
-              Tooltip(
-                child: Text(
-                  '${player.id} VP:${player.score} Parts:${player.partCount}',
-                  style: widget.model.game.currentPlayer.id == player.id
-                      ? TextStyle(backgroundColor: Colors.blue[300])
-                      : null,
-                ),
-                message: 'Select to switch view to this player',
-                waitDuration: Duration(milliseconds: 500),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
+  // Widget _buildList() {
+  //   var items = <Widget>[];
+  //   for (var player in widget.model.game.players) {
+  //     items.add(
+  //       InkWell(
+  //         onTap: widget.onTap == null
+  //             ? null
+  //             : () {
+  //                 widget.onTap(player.id);
+  //               },
+  //         child: Row(
+  //           children: [
+  //             Tooltip(
+  //               child: Text(
+  //                 '${player.id} VP:${player.score} Parts:${player.partCount}',
+  //                 style: widget.model.game.currentPlayer.id == player.id
+  //                     ? TextStyle(backgroundColor: Colors.blue[300])
+  //                     : null,
+  //               ),
+  //               message: 'Select to switch view to this player',
+  //               waitDuration: Duration(milliseconds: 500),
+  //             ),
+  //           ],
+  //         ),
+  //       ),
+  //     );
+  //   }
 
-    return Column(
-      children: items,
-    );
-  }
+  //   return Column(
+  //     children: items,
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
     return ConstrainedBox(
-      constraints: BoxConstraints(maxWidth: 200),
+      constraints: BoxConstraints(maxWidth: widget.model.displaySizes.partWidth),
       child: Column(
         children: _buildPlayerCards(),
       ),

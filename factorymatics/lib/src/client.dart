@@ -33,8 +33,8 @@ class LocalClient extends Client {
   Stream<GameAction> get inbound => server.actions;
 
   @override
-  Future<ResponseModel> postAction(Game game, GameAction action) {
-    return postRequest(ActionRequest(game, action));
+  Future<ResponseModel> postAction(Game game, GameAction action) async {
+    return await postRequest(ActionRequest(game, action));
   }
 
   @override
@@ -47,8 +47,8 @@ class LocalClient extends Client {
   }
 
   @override
-  Future<ResponseModel> postRequest(GameModel model) {
-    return clientTransport.sendRequest(model);
+  Future<ResponseModel> postRequest(GameModel model) async {
+    return await clientTransport.sendRequest(model);
   }
 
   // @override

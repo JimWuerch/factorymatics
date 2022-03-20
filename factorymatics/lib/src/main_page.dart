@@ -1,4 +1,5 @@
 import 'package:engine/engine.dart';
+import 'package:factorymatics/src/display_sizes.dart';
 import 'package:factorymatics/src/game_page.dart';
 import 'package:factorymatics/src/part_test_page.dart';
 import 'package:flutter/material.dart';
@@ -61,58 +62,14 @@ class _MainPageState extends State<MainPage> {
             //hintText: 'Enter your email',
             border: OutlineInputBorder(),
           ),
-          // validator: (value) {
-          //   // if (value == null || value.isEmpty) {
-          //   //   return 'Please enter some text';
-          //   // }
-          //   if (value != null && !_validPlayerNames.hasMatch(value)) {
-          //     return 'Invalid chars in name';
-          //   }
-          //   return null;
-          // },
           inputFormatters: <TextInputFormatter>[
             FilteringTextInputFormatter.allow(_validPlayerNames),
           ],
         ),
-        // TextField(
-        //   controller: _textEditController,
-        //   inputFormatters: <TextInputFormatter>[
-        //     FilteringTextInputFormatter.allow(RegExp(r'\w')),
-        //   ],
-        //   onSubmitted: (value) {
-        //     model.players[index] = value;
-        //   },
-        //),
       );
     }
     return list;
   }
-
-  // Widget _buildPanel() {
-  //   return ExpansionPanelList(
-  //     expansionCallback: (index, isExpanded) {
-  //       setState(() {
-  //         model.isLocalGame = isExpanded;
-  //       });
-  //     },
-  //     children: [
-  //       ExpansionPanel(
-  //         headerBuilder: (context, isExpanded) {
-  //           return ListTile(
-  //             title: Text('Players'),
-  //           );
-  //         },
-  //         body: Form(
-  //           key: _formKey,
-  //           child: Column(
-  //             children: _buildNameEntry(),
-  //           ),
-  //         ),
-  //         isExpanded: model.isLocalGame,
-  //       ),
-  //     ],
-  //   );
-  // }
 
   Form _buildPanel() {
     return Form(
@@ -126,18 +83,8 @@ class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child:
-          // StreamBuilder<Object>(
-          //   stream: model.notifier,
-          //   builder: (context, snapshot) {
-          //     if (!snapshot.hasData) {
-          //       return Center(child: Text('loading...'));
-          //     } else {
-          // return
-          Scaffold(
+      child: Scaffold(
         appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
           title: Text(widget.title),
         ),
         body: SafeArea(
@@ -174,23 +121,6 @@ class _MainPageState extends State<MainPage> {
                         });
                       },
                     ),
-                    // TextField(
-                    //   autocorrect: false,
-                    //   //initialValue: model.numPlayers.toString(),
-                    //   controller: _textEditController,
-                    //   decoration: const InputDecoration(
-                    //     prefixText: 'Number of Players: ',
-                    //     border: OutlineInputBorder(),
-                    //   ),
-                    //   inputFormatters: <TextInputFormatter>[
-                    //     FilteringTextInputFormatter.allow(RegExp(r'[1234]')),
-                    //   ],
-                    //   onSubmitted: (value) {
-                    //     setState(() {
-                    //       model.numPlayers = int.parse(value);
-                    //     });
-                    //   },
-                    // ),
                     _buildPanel(),
                     Text('Start player name with AI to create an AI player.'),
                     Padding(
@@ -226,9 +156,6 @@ class _MainPageState extends State<MainPage> {
           ),
         ),
       ),
-      //}
-      // }, // else in streambuilder
-      //), // streambuilder
     );
   }
 }
