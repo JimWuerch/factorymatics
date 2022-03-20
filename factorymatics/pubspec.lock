@@ -154,7 +154,7 @@ packages:
       name: collection
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "1.15.0"
+    version: "1.16.0"
   community_material_icon:
     dependency: "direct main"
     description:
@@ -585,7 +585,7 @@ packages:
       name: vm_service
       url: "https://pub.dartlang.org"
     source: hosted
-    version: "8.2.0"
+    version: "8.2.1"
   watcher:
     dependency: transitive
     description:
