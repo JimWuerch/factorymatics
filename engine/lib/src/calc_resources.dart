@@ -286,7 +286,7 @@ class CalcResources {
     for (var part in parts[PartType.converter]) {
       if (!turn.partReady[part.id]) continue;
       for (var index = 0; index < part.products.length; ++index) {
-        if (!turn.productActivated[turn.productCode(part.products[index])]) {
+        if (!turn.productActivated[part.products[index].productCode]) {
           // if (part is MultipleConverterPart) {
           //   products.add(part.converters[0].products[0] as ConverterBaseProduct);
           //   products.add(part.converters[1].products[0] as ConverterBaseProduct);

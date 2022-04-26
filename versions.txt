@@ -3,3 +3,9 @@
 1.0.0+2
 - Fixed:  If you run out of resource storage but still have unused acquire products and then try to end the turn, you'll get a warning you have unused products.
 - Added: Game displays a message while other players are taking their turn.
+
+1.0.0+3
+- Fixed: Game would freeze with "loading..." screen if player tried to search when they weren't allowed.
+
+1.0.0+4
+- Fixed: If more than 4 parts were searched, they could flow off the edge of the screen.

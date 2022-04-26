@@ -11,7 +11,7 @@ class MainPageModel {
   Stream<int> get notifier => _notifierController.stream;
   final BuildContext context;
   bool isLocalGame = true;
-  List<String> players = <String>['Player1', 'Player2', 'Player3', 'Player4'];
+  List<String> players = <String>['Player1', 'AI1', 'AI2', 'AI3'];
   int numPlayers = 4;
   GameInfoModel gameInfoModel;
 

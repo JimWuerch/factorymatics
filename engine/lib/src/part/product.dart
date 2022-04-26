@@ -10,6 +10,10 @@ abstract class Product {
 
   Product(this.productType); // : activated = GameStateVar(game, 'product:activated', false);
 
+  String get productCode {
+    return '${part.id}:$prodIndex';
+  }
+
   GameAction produce(String player);
 }
 

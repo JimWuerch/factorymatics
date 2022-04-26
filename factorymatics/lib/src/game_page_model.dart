@@ -41,7 +41,7 @@ class GamePageModel {
   Future<void> doGameUpdate({bool noNotify = false}) async {
     var response = await gameInfoModel.client.postRequest(JoinGameRequest(gameInfoModel.gameId, playerId));
     if (response.responseCode != ResponseCode.ok) {
-      _notifierController.addError(null);
+      _notifierController.addError('JoinGameRequest response:${response.responseCode.name}');
     }
     if (response is JoinGameResponse) {
       game = GameController.restoreGame(null, response.gameState);
@@ -95,7 +95,7 @@ class GamePageModel {
       showWait = false;
       _notifierController.add(1);
     } else {
-      _notifierController.addError(null);
+      _notifierController.addError('Response not JoinGameResponse');
     }
   }
 
@@ -195,12 +195,14 @@ class GamePageModel {
 
   bool get canAcquire => game.currentPlayer.hasResourceStorageSpace;
 
+  bool get canSearch => game.currentPlayer.canSearch;
+
   bool get canConstruct => game.currentTurn.getAffordableParts().isNotEmpty;
 
   bool get inSearch => game.currentTurn.turnState.value == TurnState.searchSelected;
 
   bool isPartReady(Part part) => game.currentTurn.partReady[part.id];
-  bool isProductActivated(Product product) => game.currentTurn.productActivated[game.currentTurn.productCode(product)];
+  bool isProductActivated(Product product) => game.currentTurn.productActivated[product.productCode];
 
   bool isActivationAllowed(Product product) {
     for (var action in availableActions) {
@@ -241,7 +243,7 @@ class GamePageModel {
     var response = await gameInfoModel.client.postAction(game, SelectActionAction(playerId, ActionType.search));
     if (response.responseCode != ResponseCode.ok) {
       // TODO: report error to player
-      _notifierController.addError(null);
+      _notifierController.addError('SelectActionAction with search response: ${response.responseCode.name}');
       return;
     }
 
@@ -249,7 +251,7 @@ class GamePageModel {
     if (response.responseCode != ResponseCode.ok) {
       // try to undo the previous action
       doUndo();
-      _notifierController.addError(null);
+      _notifierController.addError('Unwinding search action, ${response.responseCode.name}');
       return;
     }
 
@@ -326,7 +328,7 @@ class GamePageModel {
     if (action != null) {
       var response = await gameInfoModel.client.postAction(game, action);
       if (response.responseCode != ResponseCode.ok) {
-        _notifierController.addError(1);
+        _notifierController.addError('Action ${action.actionType.name} response ${response.responseCode.name}');
         return;
         // response.responseCode;
       }

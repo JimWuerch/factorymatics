@@ -110,10 +110,6 @@ class Turn {
     return Turn._fromJsonHelper(game, player, turnState, selectedAction, searchedParts, convRes, ready, activated);
   }
 
-  String productCode(Product product) {
-    return '${product.part.id}:${product.prodIndex}';
-  }
-
   /// Returns a list of possible actions for the current state of the turn
   /// When [isAi] is true, don't include non-active actions, like undo, end turn, etc
   List<GameAction> getAvailableActions({bool isAi = false}) {
@@ -163,7 +159,7 @@ class Turn {
     if (!isAi) {
       for (var part in player.parts[PartType.converter]) {
         for (var product in part.products) {
-          if (!productActivated[productCode(product)]) {
+          if (!productActivated[product.productCode]) {
             _addAllAvailableActions(ret, part, product.produce(player.id));
           }
         }
@@ -219,7 +215,7 @@ class Turn {
               part.partType == PartType.construct) {
             if (partReady[part.id]) {
               for (var product in part.products) {
-                if (!productActivated[productCode(product)] && _productCanActivate(product)) {
+                if (!productActivated[product.productCode] && _productCanActivate(product)) {
                   // if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
                   //   if (!player.hasResourceStorageSpace) {
                   //     continue;
@@ -575,7 +571,7 @@ class Turn {
   // don't make the user manually trigger VP actions
   void _doTriggeredVpProducts(Game game, Part part, String playerId) {
     for (var product in part.products) {
-      if (!productActivated[productCode(product)] && product is VpProduct) {
+      if (!productActivated[product.productCode] && product is VpProduct) {
         _doVp((product.produce(playerId)) as VpAction);
       }
     }
@@ -588,9 +584,9 @@ class Turn {
     for (var partList in player.parts.values) {
       for (var part in partList) {
         for (var product in part.products) {
-          if (!productActivated[productCode(product)] &&
+          if (!productActivated[product.productCode] &&
               (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat)) {
-            productActivated[productCode(product)] = true;
+            productActivated[product.productCode] = true;
           }
         }
       }
@@ -640,7 +636,7 @@ class Turn {
     }
 
     if (action.producedBy != null) {
-      productActivated[productCode(action.producedBy)] = true;
+      productActivated[action.producedBy.productCode] = true;
     }
 
     _doTriggers(game, action, PartType.storage);
@@ -678,7 +674,7 @@ class Turn {
 
     // do this first so we don't trigger ourself
     if (action.producedBy != null) {
-      productActivated[productCode(action.producedBy)] = true;
+      productActivated[action.producedBy.productCode] = true;
     }
 
     if (turnState.value != TurnState.searchSelected) {
@@ -754,7 +750,7 @@ class Turn {
       player.storeResource(action.acquiredResource);
 
       if (action.producedBy != null) {
-        productActivated[productCode(action.producedBy)] = true;
+        productActivated[action.producedBy.productCode] = true;
       }
 
       _doTriggers(game, action, PartType.acquire);
@@ -816,7 +812,7 @@ class Turn {
       throw InvalidOperationError('tried to spend non-existence resource');
     }
     convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -834,7 +830,7 @@ class Turn {
       throw InvalidOperationError('tried to spend non-existence resource');
     }
     convertedResources[action.source].value = convertedResources[action.source].value + 2;
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -846,7 +842,7 @@ class Turn {
       changeStack.group();
       action.resource = game.getFromWell();
       player.storeResource(action.resource);
-      productActivated[productCode(action.producedBy)] = true;
+      productActivated[action.producedBy.productCode] = true;
       _fixResourceAcquireProducts(player);
       changeStack.commit();
       changeStack.clear();
@@ -862,7 +858,7 @@ class Turn {
     for (var i = 0; i < action.vp; i++) {
       player.giveVpChit();
     }
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -872,7 +868,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.acquireRequested;
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -882,7 +878,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.searchRequested;
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -892,7 +888,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.constructL1Requested;
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -902,7 +898,7 @@ class Turn {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.storeRequested;
-    productActivated[productCode(action.producedBy)] = true;
+    productActivated[action.producedBy.productCode] = true;
     changeStack.commit();
 
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
@@ -915,7 +911,7 @@ class Turn {
         for (var part in player.parts[partType]) {
           if (!partReady[part.id]) continue;
           for (var product in part.products) {
-            if (!productActivated[productCode(product)] && _productCanActivate(product)) {
+            if (!productActivated[product.productCode] && _productCanActivate(product)) {
               count++;
             }
           }

@@ -48,10 +48,29 @@ class _GamePageState extends State<GamePage> {
         displaySizes: model.displaySizes,
       ));
     }
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: widgets,
-    );
+    if (widgets.length <= 4) {
+      return Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: widgets,
+      );
+    } else {
+      var rowsSrc = <List<Widget>>[];
+      for (var i = 0; i < widgets.length; ++i) {
+        if (i % 4 == 0) {
+          rowsSrc.add(<Widget>[]);
+        }
+        rowsSrc[i ~/ 4].add(widgets[i]);
+      }
+      var rows = <Row>[];
+      for (var item in rowsSrc) {
+        rows.add(Row(
+          children: item,
+        ));
+      }
+      return Column(
+        children: rows,
+      );
+    }
   }
 
   Widget _makeActionButton(ActionType actionType, bool isEnabled, String label) {
@@ -104,7 +123,7 @@ class _GamePageState extends State<GamePage> {
     var enabledParts = model.getEnabledParts();
     switch (index) {
       case 0:
-        children.add(_makeActionButton(ActionType.search, true, 'Search'));
+        children.add(_makeActionButton(ActionType.search, model.canSearch, 'Search'));
         children.add(SizedBox(height: 4));
         children.add(SizedBox(
           width: model.displaySizes.partWidth,
@@ -185,20 +204,20 @@ class _GamePageState extends State<GamePage> {
           ));
         }
         break;
-      case 5:
-        children.add(_makeActionButton(ActionType.search, true, 'Search'));
-        for (var part in model.displayPlayer.savedParts) {
-          children.add(PartWidget(
-            part: part,
-            enabled: enabledParts.contains(part.id),
-            onTap: _onPartTapped,
-            onProductTap: null,
-            isResourcePickerEnabled: model.isResourcePickerEnabled,
-            gamePageModel: model,
-            displaySizes: model.displaySizes,
-          ));
-        }
-        break;
+      // case 5:
+      //   children.add(_makeActionButton(ActionType.search, true, 'Search'));
+      //   for (var part in model.displayPlayer.savedParts) {
+      //     children.add(PartWidget(
+      //       part: part,
+      //       enabled: enabledParts.contains(part.id),
+      //       onTap: _onPartTapped,
+      //       onProductTap: null,
+      //       isResourcePickerEnabled: model.isResourcePickerEnabled,
+      //       gamePageModel: model,
+      //       displaySizes: model.displaySizes,
+      //     ));
+      //   }
+      //   break;
     }
 
     return Column(
@@ -286,7 +305,9 @@ class _GamePageState extends State<GamePage> {
       child: StreamBuilder<Object>(
           stream: model.notifier,
           builder: (context, snapshot) {
-            if (!snapshot.hasData) {
+            if (snapshot.hasError) {
+              return Center(child: Text('Error: ${snapshot.error}'));
+            } else if (!snapshot.hasData) {
               return Center(child: Text('loading...'));
             } else {
               return WillPopScope(
