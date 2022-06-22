@@ -334,6 +334,7 @@ class AiPlayer {
     // }
 
     // try to pick one that we can use next turn
+    // TODO: if there are no sale parts this crashes as get random(0)
     var i =
         game.availableResources.list.indexOf(game.saleParts[0][game.random.nextInt(game.saleParts[0].length)].resource);
     if (i != -1) {
