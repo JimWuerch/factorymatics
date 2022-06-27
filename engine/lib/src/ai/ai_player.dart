@@ -334,9 +334,16 @@ class AiPlayer {
     // }
 
     // try to pick one that we can use next turn
-    // TODO: if there are no sale parts this crashes as get random(0)
-    var i =
-        game.availableResources.list.indexOf(game.saleParts[0][game.random.nextInt(game.saleParts[0].length)].resource);
+    var level = 0;
+    while (game.saleParts[level].isEmpty) {
+      level++;
+      if (level == 3) {
+        // should never happen
+        throw InvalidOperationError('No items in store (ai player turn, trying to get optimal resource to take');
+      }
+    }
+    var i = game.availableResources.list
+        .indexOf(game.saleParts[level][game.random.nextInt(game.saleParts[level].length)].resource);
     if (i != -1) {
       return i;
     }

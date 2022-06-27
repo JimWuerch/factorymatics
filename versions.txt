@@ -9,3 +9,6 @@
 
 1.0.0+4
 - Fixed: If more than 4 parts were searched, they could flow off the edge of the screen.
+
+1.0.0+5
+- Fixed: AI player would crash if the level 1 store ran out and it tried to do an acquire action, leaving the game waiting for user input.
