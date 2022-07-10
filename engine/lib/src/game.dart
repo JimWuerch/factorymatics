@@ -77,13 +77,14 @@ class Game {
   }
 
   void _doTestSetup() {
-    var part = allParts["53"];
-    players[0].savePart(part);
+    var part = allParts["89"];
+    //players[0].savePart(part);
+    players[0].buyPart(part);
     removePart(part);
     players[0].storeResource(ResourceType.club);
     players[0].storeResource(ResourceType.club);
-    players[0].storeResource(ResourceType.club);
-    players[0].storeResource(ResourceType.heart);
+    players[0].storeResource(ResourceType.spade);
+    players[0].storeResource(ResourceType.spade);
   }
 
   Game._fromSerialize(this.gameId, this.playerService) {

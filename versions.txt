@@ -16,3 +16,4 @@
 1.0.0+6
 - Fixed: Part 77 didn't work.
 - Fixed: Part 53 will no longer trigger itself
+- Fixed: Part 89 didn't work. (Free L1 construct)

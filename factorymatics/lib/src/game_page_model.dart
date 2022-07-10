@@ -326,6 +326,8 @@ class GamePageModel {
       }
     } else if (game.currentTurn.turnState.value == TurnState.storeRequested) {
       action = StoreAction(playerId, part, null);
+    } else if (game.currentTurn.turnState.value == TurnState.constructL1Requested) {
+      action = await _handleConstructRequest(part);
     }
     if (action != null) {
       var response = await gameInfoModel.client.postAction(game, action);
