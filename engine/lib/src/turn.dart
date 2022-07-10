@@ -554,8 +554,12 @@ class Turn {
     }
   }
 
-  void _doTriggers(Game game, GameAction gameAction, PartType partType) {
+  void _doTriggers(Game game, GameAction gameAction, PartType partType, Part srcPart) {
     for (var part in player.parts[partType]) {
+      if (srcPart == part) {
+        // don't trigger ourself
+        continue;
+      }
       if (!partReady[part.id]) {
         for (var trigger in part.triggers) {
           if (trigger.isTriggeredBy(gameAction)) {
@@ -639,7 +643,7 @@ class Turn {
       productActivated[action.producedBy.productCode] = true;
     }
 
-    _doTriggers(game, action, PartType.storage);
+    _doTriggers(game, action, PartType.storage, action.part);
 
     if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.storeRequested) {
       turnState.value = TurnState.selectedActionCompleted;
@@ -719,7 +723,7 @@ class Turn {
     }
 
     player.buyPart(action.part);
-    _doTriggers(game, action, PartType.construct);
+    _doTriggers(game, action, PartType.construct, action.part);
 
     // we can use the new part this turn
     if (action.part.partType == PartType.converter) {
@@ -753,7 +757,7 @@ class Turn {
         productActivated[action.producedBy.productCode] = true;
       }
 
-      _doTriggers(game, action, PartType.acquire);
+      _doTriggers(game, action, PartType.acquire, null);
 
       if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.acquireRequested) {
         turnState.value = TurnState.selectedActionCompleted;

@@ -118,8 +118,8 @@ GameAction actionFromJson(Game game, Map<String, dynamic> json) {
       return RequestSearchAction.fromJson(game, json);
     case ActionType.requestConstructL1:
       return RequestConstructL1Action.fromJson(game, json);
-    // case ActionType.requestStore:
-    //   return RequestStoreAction.fromJson(game, json);
+    case ActionType.requestStore:
+      return RequestStoreAction.fromJson(game, json);
     // case ActionType.requestConstruct:
     //   return RequestConstructAction.fromJson(game, json);
     // case ActionType.requestAcquire:

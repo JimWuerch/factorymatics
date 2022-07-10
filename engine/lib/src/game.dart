@@ -76,6 +76,16 @@ class Game {
     _giveStartingParts();
   }
 
+  void _doTestSetup() {
+    var part = allParts["53"];
+    players[0].savePart(part);
+    removePart(part);
+    players[0].storeResource(ResourceType.club);
+    players[0].storeResource(ResourceType.club);
+    players[0].storeResource(ResourceType.club);
+    players[0].storeResource(ResourceType.heart);
+  }
+
   Game._fromSerialize(this.gameId, this.playerService) {
     _initialize();
     _createGame();
@@ -303,6 +313,9 @@ class Game {
 
   void startGame() {
     _currentPlayerIndex = -1; // so we can call get next
+    if (testMode) {
+      _doTestSetup();
+    }
   }
 
   bool isInDeck(Part part) {
