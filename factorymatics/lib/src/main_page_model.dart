@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:engine/engine.dart';
 import 'package:factorymatics/src/client.dart';
 import 'package:factorymatics/src/game_info_model.dart';
+import 'package:factorymatics/src/settings.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MainPageModel {
   Game game;
@@ -14,6 +16,7 @@ class MainPageModel {
   List<String> players = <String>['Player1', 'AI1', 'AI2', 'AI3'];
   int numPlayers = 4;
   GameInfoModel gameInfoModel;
+  FMSettings fmSettings = FMSettings();
 
   MainPageModel(this.context);
 
@@ -21,6 +24,11 @@ class MainPageModel {
     // Future.delayed(Duration(milliseconds: 100), () {
     //   _notifierController.add(1);
     // });
+    await fmSettings.updateFromPrefs();
+  }
+
+  Future<void> saveSettings() async {
+    await fmSettings.saveToPrefs();
   }
 
   Future<void> createLocalGame() async {

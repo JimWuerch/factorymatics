@@ -2,6 +2,7 @@ import 'package:engine/engine.dart';
 import 'package:factorymatics/src/display_sizes.dart';
 import 'package:factorymatics/src/game_page.dart';
 import 'package:factorymatics/src/part_test_page.dart';
+import 'package:factorymatics/src/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -145,6 +146,18 @@ class _MainPageState extends State<MainPage> {
                           Navigator.push<void>(
                             context,
                             MaterialPageRoute(builder: (context) => PartTestWidget(parts: createParts())),
+                          );
+                        },
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 16.0),
+                      child: ElevatedButton(
+                        child: Text('Settings'),
+                        onPressed: () async {
+                          Navigator.push<void>(
+                            context,
+                            MaterialPageRoute(builder: (context) => SettingsPage(model.fmSettings)),
                           );
                         },
                       ),
