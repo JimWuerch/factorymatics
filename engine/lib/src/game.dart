@@ -77,14 +77,17 @@ class Game {
   }
 
   void _doTestSetup() {
-    var part = allParts["89"];
-    //players[0].savePart(part);
-    players[0].buyPart(part);
-    removePart(part);
-    players[0].storeResource(ResourceType.club);
-    players[0].storeResource(ResourceType.club);
-    players[0].storeResource(ResourceType.spade);
-    players[0].storeResource(ResourceType.spade);
+    // var part = allParts["89"];
+    // players[0].buyPart(part);
+    // removePart(part);
+    // players[0].storeResource(ResourceType.club);
+    // players[0].storeResource(ResourceType.club);
+    // players[0].storeResource(ResourceType.spade);
+    // players[0].storeResource(ResourceType.spade);
+
+    while (partsRemaining[0] > 10) {
+      drawPart(0);
+    }
   }
 
   Game._fromSerialize(this.gameId, this.playerService) {
@@ -289,8 +292,13 @@ class Game {
     }
     currentTurn.startTurn();
     if (!inSimulation && currentPlayer.id.startsWith('AI')) {
-      var ai = AiPlayer(currentPlayer);
-      ai.takeTurn(this);
+      try {
+        var ai = AiPlayer(currentPlayer);
+        ai.takeTurn(this);
+      } on Exception catch (e, s) {
+        print('caught ai exception');
+        print(s);
+      }
     }
 
     return currentTurn;

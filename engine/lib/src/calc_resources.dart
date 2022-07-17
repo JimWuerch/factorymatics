@@ -106,6 +106,12 @@ class ResourcePool {
     }
   }
 
+  ResourcePool.fromList(List<ResourceType> src) : _resources = _createResourcePool() {
+    for (var item in src) {
+      add1(item);
+    }
+  }
+
   ResourcePool.of(ResourcePool src) : _resources = Int8List.fromList(src._resources);
 
   int count(ResourceType rt) => _resources[rt.index];
@@ -115,6 +121,12 @@ class ResourcePool {
       throw InvalidOperationError('No resource');
     } else {
       _resources[rt.index]--;
+    }
+  }
+
+  void clear() {
+    for (var i = 0; i < 6; ++i) {
+      _resources[i] = 0;
     }
   }
 
@@ -137,7 +149,7 @@ class ResourcePool {
   List<ResourceType> toList() {
     var ret = <ResourceType>[];
     for (var rt in ResourceType.values) {
-      if (rt == ResourceType.none || rt == ResourceType.any) continue;
+      //if (rt == ResourceType.none || rt == ResourceType.any) continue;
       for (var i = 0; i < _resources[rt.index]; ++i) {
         ret.add(rt);
       }
@@ -268,10 +280,15 @@ class _AnyToAnyProduct extends ConvertProduct {
   }
 }
 
+class TimeoutCalcResources implements Exception {
+  TimeoutCalcResources();
+}
+
 class CalcResources {
   Map<ConverterBaseProduct, int> _prodIds;
   Map<int, ConverterBaseProduct> _idToProd;
   int _prodCount = 0;
+  Stopwatch stopwatch;
 
   void addProduct(ConverterBaseProduct conv) {
     _idToProd[1 << _prodCount] = conv;
@@ -300,7 +317,8 @@ class CalcResources {
   }
 
   List<SpendHistory> getPayments(
-      int needed, ResourceType neededResource, ResourcePool sourcePool, List<ConverterBaseProduct> products) {
+      int needed, ResourceType neededResource, ResourcePool sourcePool, List<ConverterBaseProduct> products,
+      {bool firstAvailable = false}) {
     var paths = <SpendHistory>[];
     var anyToAny = <_AnyToAnyProduct>[];
     _prodIds = <ConverterBaseProduct, int>{};
@@ -341,9 +359,13 @@ class CalcResources {
           }
         }
       }
-      _getSpendPaths(paths, products, spenders, sourcePool, SpendHistory(), needed, neededResource);
+      _getSpendPaths(paths, products, spenders, sourcePool, SpendHistory(), needed, neededResource, firstAvailable);
     } else {
       _getConvertersPaths(paths, products, sourcePool, ResourcePool(), SpendHistory(), needed, neededResource);
+    }
+
+    if (firstAvailable) {
+      return paths;
     }
 
     // now de-dup paths
@@ -363,6 +385,7 @@ class CalcResources {
     SpendHistory history,
     int needed,
     ResourceType neededResource,
+    bool firstAvailable,
     //Map<ConverterBaseProduct, int> prodIds,
   ) {
     if (needed == 0) {
@@ -382,8 +405,11 @@ class CalcResources {
         ip2.sub1(spender.resourceType);
         if (needed - 1 == 0) {
           paths.add(history2);
+          if (firstAvailable) {
+            return;
+          }
         } else {
-          _getSpendPaths(paths, conv, sp2, ip2, history2, needed - 1, neededResource);
+          _getSpendPaths(paths, conv, sp2, ip2, history2, needed - 1, neededResource, firstAvailable);
         }
       }
     } else {
@@ -402,9 +428,12 @@ class CalcResources {
           ip2.sub1(cv.resourceType);
           if (needed - resourceCount == 0) {
             paths.add(history2);
+            if (firstAvailable) {
+              return;
+            }
             break;
           } else {
-            _getSpendPaths(paths, conv, sp2, ip2, history2, needed - resourceCount, neededResource);
+            _getSpendPaths(paths, conv, sp2, ip2, history2, needed - resourceCount, neededResource, firstAvailable);
           }
         }
       }
@@ -558,6 +587,11 @@ class CalcResources {
     // fix the ResourceType.any max
     max.set(ResourceType.any, sourcePool.getResourceCount());
 
+    // if the ai is running, it may limit the time to calc things
+    if (gameSettings.maxTimeCalcResources != 0) {
+      stopwatch = Stopwatch()..start();
+    }
+
     _findMaxResources(max, products, _resourcePoolFromRP(sourcePool), 0);
 
     return max;
@@ -565,6 +599,9 @@ class CalcResources {
 
 // recursively try all permutations of products
   void _findMaxResources(ResourcePool max, List<ConverterBaseProduct> conv, int inputPool, int outputPool) {
+    if (stopwatch != null && stopwatch.elapsedMilliseconds > gameSettings.maxTimeCalcResources) {
+      throw TimeoutCalcResources();
+    }
     for (var c in conv) {
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;

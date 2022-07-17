@@ -5,6 +5,7 @@ import 'package:engine/engine.dart';
 import 'package:factorymatics/src/client.dart';
 import 'package:factorymatics/src/game_info_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'dialogs/ask_payment_dialog.dart';
 import 'dialogs/ask_search_deck_dialog.dart';
@@ -79,6 +80,9 @@ class GamePageModel {
                 );
               },
             );
+          } else {
+            // TODO: remove this
+            SystemSound.play(SystemSoundType.alert);
           }
         }
       } else {

@@ -17,3 +17,9 @@
 - Fixed: Part 77 didn't work.
 - Fixed: Part 53 will no longer trigger itself
 - Fixed: Part 89 didn't work. (Free L1 construct)
+
+1.0.0+7
+- Fixed a crash associated with Search
+- Fixed a crash when AI had no legal actions
+- Improved AI by disallowing rollout turns from taking more than 5 converters.  Having lots of converters was making the AI take forever to process a turn.
+- Changed AI turn termination rules.  Now a selected play can require a minimum number of occurrances before considering the turn timer.

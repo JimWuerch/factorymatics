@@ -38,7 +38,12 @@ class PlayerData {
 
   void _initParts(MapState<PartType, ListState<Part>> parts) {
     for (var p in PartType.values) {
-      parts[p] = ListState<Part>(game, '$id:$p:parts', onChanged: _onChangedCallback, onChangedParam: this);
+      if (p == PartType.converter) {
+        // we only need to know if we buy a converter for updating maxResources
+        parts[p] = ListState<Part>(game, '$id:$p:parts', onChanged: _onChangedCallback, onChangedParam: this);
+      } else {
+        parts[p] = ListState<Part>(game, '$id:$p:parts');
+      }
     }
   }
 
@@ -64,6 +69,9 @@ class PlayerData {
       savedP.add(part.id);
     }
     ret['saved'] = savedP;
+    if (maxResources != null) {
+      ret['maxRes'] = resourceListToString(maxResources.toList());
+    }
 
     return ret;
   }
@@ -100,6 +108,11 @@ class PlayerData {
     ret.resources[ResourceType.club].reinitialize(res[ResourceType.club]);
     ret.resources[ResourceType.spade].reinitialize(res[ResourceType.spade]);
     ret.resources[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
+
+    // do this after initializing parts and resources, as they could call invalidateMaxResources()
+    if (json.containsKey('maxRes')) {
+      ret.maxResources = ResourcePool.fromList(stringToResourceList(json['maxRes'] as String));
+    }
 
     return ret;
   }
@@ -221,12 +234,10 @@ class PlayerData {
 
   void buyPart(Part part) {
     parts[part.partType].add(part);
-    //invalidateMaxResources();
   }
 
   void removePart(Part part) {
     parts[part.partType].remove(part);
-    //invalidateMaxResources();
   }
 
   void savePart(Part part) {
@@ -261,12 +272,10 @@ class PlayerData {
 
   void storeResource(ResourceType resource) {
     resources[resource].value = resources[resource].value + 1;
-    //invalidateMaxResources();
   }
 
   void removeResource(ResourceType resource) {
     resources[resource].value = resources[resource].value - 1;
-    //invalidateMaxResources();
   }
 
   void updateMaxResources(Turn turn) {
@@ -278,9 +287,10 @@ class PlayerData {
     maxResources = null;
   }
 
-  List<SpendHistory> getPayments(Part part, int discount, Turn turn) {
+  List<SpendHistory> getPayments(Part part, int discount, Turn turn, {bool firstAvailable = false}) {
     return game.calcResources.getPayments(part.cost - discount, part.resource, ResourcePool.fromResources(resources),
-        CalcResources.makeProductList(parts, turn));
+        CalcResources.makeProductList(parts, turn),
+        firstAvailable: firstAvailable);
   }
 
   bool canAfford(Part part, int discount, Map<ResourceType, GameStateVar<int>> convertedResources, Turn turn) {
@@ -295,23 +305,6 @@ class PlayerData {
       return (part.cost - discount) <= maxResources.count(part.resource) + convertedResources[part.resource].value;
     }
   }
-
-  // bool canConvert(ResourceType resourceType) {
-  //   for (var part in parts[PartType.converter]) {
-  //     if (part is ConverterPart) {
-  //       if (!part.products[0].activated.value && part.canConvert(resourceType)) {
-  //         return true;
-  //       }
-  //     } else if (part is MultipleConverterPart) {
-  //       for (var i = 0; i < 2; ++i) {
-  //         if (!part.products[i].activated.value && part.canConvert(i, resourceType)) {
-  //           return true;
-  //         }
-  //       }
-  //     }
-  //   }
-  //   return false;
-  // }
 
   bool isInStorage(Part part) {
     return savedParts.contains(part);

@@ -4,8 +4,11 @@
 library engine;
 
 import 'package:logging/logging.dart';
+import 'game_settings.dart';
+
 export 'package:logging/logging.dart';
 
+export 'game_settings.dart';
 export 'src/action/action.dart';
 export 'src/calc_resources.dart';
 export 'src/common/common.dart';
@@ -24,3 +27,4 @@ export 'src/state/game_state.dart';
 export 'src/undo/undo.dart';
 
 final log = Logger("engine");
+final gameSettings = GameSettings();

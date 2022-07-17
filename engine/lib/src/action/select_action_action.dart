@@ -26,4 +26,9 @@ class SelectActionAction extends GameAction {
   SelectActionAction.fromJson(Game game, Map<String, dynamic> json)
       : selectedAction = ActionType.values[json['selected'] as int],
         super.fromJson(game, json);
+
+  @override
+  String toString() {
+    return 'SelectActionAction:$selectedAction';
+  }
 }

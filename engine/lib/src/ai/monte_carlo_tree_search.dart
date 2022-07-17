@@ -31,9 +31,12 @@ class MCTSNode {
     return ret;
   }
 
-  MCTSNode getBestChild() {
+  double getExplorationScore(MCTSNode child) {
     const c = 1.414; //15; //1.414;
+    return c * math.sqrt(math.log(visits) / child.visits);
+  }
 
+  MCTSNode getBestChild() {
     for (var child in children) {
       if (child.visits == 0) {
         return child;
@@ -41,7 +44,7 @@ class MCTSNode {
       // var a = child.score / child.visits;
       // var b = math.sqrt(math.log(visits) / child.visits);
       // print('child: ${child.score}/${child.visits}=$a visits=$visits b=$b');
-      child._UCB = (child.score / child.visits) + c * math.sqrt(math.log(visits) / child.visits);
+      child._UCB = (child.score / child.visits) + getExplorationScore(child);
     }
     // if we got here, our children all have run, so we don't need our game info any more
     game = null;
@@ -54,6 +57,9 @@ class MCTSNode {
   }
 
   MCTSNode getMostVistedChild() {
+    if (children.isEmpty) {
+      return null;
+    }
     var ret = children.first;
     for (var child in children) {
       if (child.visits > ret.visits) {

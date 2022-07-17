@@ -43,7 +43,7 @@ class ListState<T> extends GameStateBase with IterableMixin<T> {
     if (_list.isEmpty) return;
 
     game.changeStack.group();
-    for (var i = _list.length - 1; i >= 0; i++) {
+    for (var i = _list.length - 1; i >= 0; i--) {
       removeAt(i);
     }
     game.changeStack.commit();
