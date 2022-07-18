@@ -150,18 +150,6 @@ class _MainPageState extends State<MainPage> {
                         },
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16.0),
-                      child: ElevatedButton(
-                        child: Text('Settings'),
-                        onPressed: () async {
-                          Navigator.push<void>(
-                            context,
-                            MaterialPageRoute(builder: (context) => SettingsPage(model.fmSettings)),
-                          );
-                        },
-                      ),
-                    ),
                   ],
                 ),
               ),

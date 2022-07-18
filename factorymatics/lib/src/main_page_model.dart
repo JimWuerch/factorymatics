@@ -5,7 +5,6 @@ import 'package:factorymatics/src/client.dart';
 import 'package:factorymatics/src/game_info_model.dart';
 import 'package:factorymatics/src/settings.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MainPageModel {
   Game game;
