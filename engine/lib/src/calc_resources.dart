@@ -506,8 +506,13 @@ class CalcResources {
                     cv.source == ResourceType.any ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : _prodIds[c]));
               }
               op2.add1(destRt);
-              var conv2 = List<ConverterBaseProduct>.of(conv);
-              conv2.remove(c);
+              var conv2 = <ConverterBaseProduct>[];
+              var c2count = conv.length;
+              for (var c2idx = 0; c2idx < c2count; ++c2idx) {
+                if (conv[c2idx] != c) {
+                  conv2.add(conv[c2idx]);
+                }
+              }
               if (neededResource == ResourceType.any) {
                 var total = op2.getResourceCount();
                 if (total == needed) {
@@ -544,9 +549,15 @@ class CalcResources {
             op2.add1(cv.resourceType);
             history2.add(UsedProduct(c, true, _prodIds[c]));
           }
-          var conv2 = List<ConverterBaseProduct>.of(conv);
-          conv2.remove(c);
-
+          // var conv2 = List<ConverterBaseProduct>.of(conv);
+          // conv2.remove(c);
+          var conv2 = <ConverterBaseProduct>[];
+          var c2count = conv.length;
+          for (var c2idx = 0; c2idx < c2count; ++c2idx) {
+            if (conv[c2idx] != c) {
+              conv2.add(conv[c2idx]);
+            }
+          }
           if (neededResource == ResourceType.any) {
             var total = op2.getResourceCount(); // + (spenders != null ? ip2.getResourceCount() : 0);
             if (total == needed) {
@@ -602,7 +613,9 @@ class CalcResources {
     if (stopwatch != null && stopwatch.elapsedMilliseconds > gameSettings.maxTimeCalcResources) {
       throw TimeoutCalcResources();
     }
-    for (var c in conv) {
+    var convCount = conv.length;
+    for (var convIdx = 0; convIdx < convCount; ++convIdx) {
+      var c = conv[convIdx];
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;
         //if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
@@ -643,8 +656,15 @@ class CalcResources {
                 op2 = _resourcePoolSubOne(op2, srcRt);
               }
               op2 = _resourcePoolAddOne(op2, destRt);
-              var conv2 = List<ConverterBaseProduct>.of(conv);
-              conv2.remove(c);
+              // var conv2 = List<ConverterBaseProduct>.of(conv);
+              // conv2.remove(c);
+              var conv2 = <ConverterBaseProduct>[];
+              var c2count = conv.length;
+              for (var c2idx = 0; c2idx < c2count; ++c2idx) {
+                if (conv[c2idx] != c) {
+                  conv2.add(conv[c2idx]);
+                }
+              }
               // if (max.count(destRt) < op2.count(destRt) + ip2.count(destRt)) {
               //   max.set(destRt, op2.count(destRt) + ip2.count(destRt));
               // }
@@ -677,9 +697,15 @@ class CalcResources {
             op2 = _resourcePoolAddOne(op2, cv.resourceType);
             op2 = _resourcePoolAddOne(op2, cv.resourceType);
           }
-          var conv2 = List<ConverterBaseProduct>.of(conv);
-          conv2.remove(c);
-
+          // var conv2 = List<ConverterBaseProduct>.of(conv);
+          // conv2.remove(c);
+          var conv2 = <ConverterBaseProduct>[];
+          var c2count = conv.length;
+          for (var c2idx = 0; c2idx < c2count; ++c2idx) {
+            if (conv[c2idx] != c) {
+              conv2.add(conv[c2idx]);
+            }
+          }
           // if (max.count(cv.resourceType) < op2.count(cv.resourceType) + ip2.count(cv.resourceType)) {
           //   max.set(cv.resourceType, op2.count(cv.resourceType) + ip2.count(cv.resourceType));
           // }

@@ -23,3 +23,9 @@
 - Fixed a crash when AI had no legal actions
 - Improved AI by disallowing rollout turns from taking more than 5 converters.  Having lots of converters was making the AI take forever to process a turn.
 - Changed AI turn termination rules.  Now a selected play can require a minimum number of occurrances before considering the turn timer.
+
+1.0.0+8
+- Fixed crash when AI's only option on a turn was to search.  The AI will try to search in that case.
+- Changed how the AI calculates moves, to get it to try to finish the game around turn 20.
+- Improvements to how calculating payments, resulting in the AI being able to run more simulations in the same time period.
+- Reverted how the AI chooses actions during a rollout, to get better results by trying to force the AI to consider constructing first.

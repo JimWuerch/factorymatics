@@ -210,18 +210,39 @@ class AiPlayer {
         tmpGame = null;
       }
       if (node.children.isEmpty) {
-        print('bad juju');
+        print('***** taking search turn *****');
+        // if we get here, likely the only thing we can do is search.
+        if ((actions.first as SelectActionAction)?.selectedAction == ActionType.search) {
+          var tmpGame = _duplicateGame(node.game);
+          var a = actions.first as SelectActionAction;
+          _takeSelectActionAction(tmpGame, a.selectedAction);
+          var searchActions = tmpGame.currentTurn.getAvailableActions(isAi: true);
+          var newNode = MCTSNode(node, _duplicateGame(tmpGame));
+          if (newNode.parent == ts.root) {
+            newNode.action = searchActions.first;
+          }
+          newNode.selectedAction = a.selectedAction;
+          takeSearchTurn(newNode.game);
+          _doTriggers(newNode.game);
+          _processAction(newNode.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+        } else {
+          print('bad juju');
+          // dunno what's up, try to force the end of the turn
+          node.game.testMode = true;
+          _processAction(node.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+        }
       }
 
       // now rollout from the first child
       var rGame = _rollout(node.children.first.game);
-      var score = _gameScore(rGame, node.children.first.game.currentPlayer.resourceCount() / 2.0);
+      var res = node.children.first.game.currentPlayer.resourceCount() * 1.0;
+      var score = _gameScore(rGame, res > 0 ? res - 1.0 : res);
       _backPropagate(node.children.first, score);
     }
     var best = ts.root.getMostVistedChild();
     if (best != null) {
       print(
-          '${best.action.owner} took action (${startGame.round}): ${best.action.actionType} score:${best.score}/${best.score - ts.root.getExplorationScore(best)} avg:${best.score / best.visits} visits:${best.visits}/$count time:${stopwatch.elapsedMilliseconds}');
+          '${best.action.owner} took action (${startGame.round}): ${best.action.actionType} score:${best.score} avg:${best.score / best.visits}/${ts.root.getExplorationScore(best)} visits:${best.visits}/$count time:${stopwatch.elapsedMilliseconds}');
     } else {
       print('${aiPlayer.id} skipped (${startGame.round})');
     }
@@ -237,7 +258,7 @@ class AiPlayer {
   }
 
   static double _gameScore(Game game, double resources) {
-    var score = (game.currentPlayer.score + resources) / (game.round);
+    var score = (game.currentPlayer.score + resources - (game.round > 20 ? (game.round - 20) * 3 : 0)) / (game.round);
     if (game.round > 28 || score < 0.0) {
       //if (score < 0.0) {
       return 0;
@@ -278,59 +299,66 @@ class AiPlayer {
         }
 
         var selectedActions = game.currentTurn.getAvailableActions(isAi: true);
+        if (game.currentPlayer.maxResources == null) {
+          print('no max res?');
+        }
         if (selectedActions.isEmpty) {
           // can't do anything, just end turn
           _processAction(game, GameModeAction(game.currentPlayer.id, GameModeType.endTurn));
           continue;
         }
 
-        // var i = selectedActions
-        //     .indexWhere((element) => (element as SelectActionAction).selectedAction == ActionType.construct);
-        // if (i != -1) {
-        //   // do construct if we can
-        //   _processAction(game, selectedActions[i]);
-        //   takeConstructTurn(game);
-        // } else {
-        //   // make a list of what we'd like to do
-        //   var wanted = <SelectActionAction>[];
-        //   var i = selectedActions
-        //       .indexWhere((element) => (element as SelectActionAction).selectedAction == ActionType.acquire);
-        //   if (i != -1) {
-        //     wanted.add(selectedActions[i] as SelectActionAction);
-        //   }
-        //   i = selectedActions.indexWhere((element) => (element as SelectActionAction).selectedAction == ActionType.store);
-        //   if (i != -1) {
-        //     wanted.add(selectedActions[i] as SelectActionAction);
-        //   }
-        //   if (wanted.isEmpty) {
-        //     // the only action we can do is to search
-        //     _processAction(game, selectedActions.first);
-        //     takeSearchTurn(game);
-        //   } else {
-        //     var i = game.random.nextInt(wanted.length);
-        //     _processAction(game, wanted[i]);
-        //     if (wanted[i].selectedAction == ActionType.acquire) {
-        //       takeAcquireTurn(game);
-        //     } else {
-        //       takeStoreTurn(game);
-        //     }
-        //   }
-        // }
-
         if (stopWatch.elapsedMilliseconds < gameSettings.maxAiRolloutTime) {
-          var i = game.random.nextInt(selectedActions.length);
-          _processAction(game, selectedActions[i]);
-          if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.acquire) {
-            takeAcquireTurn(game);
-          } else if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.construct) {
+          var i = selectedActions
+              .indexWhere((element) => (element as SelectActionAction).selectedAction == ActionType.construct);
+          if (i != -1) {
+            // do construct if we can
+            _processAction(game, selectedActions[i]);
+            if (game.currentPlayer.maxResources == null) {
+              print('no max res?');
+            }
             takeConstructTurn(game);
-          } else if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.store) {
-            takeStoreTurn(game);
-          } else if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.search) {
-            takeSearchTurn(game);
           } else {
-            throw InvalidOperationError('shouldnt get here, unknown action');
+            // make a list of what we'd like to do
+            var wanted = <SelectActionAction>[];
+            var i = selectedActions
+                .indexWhere((element) => (element as SelectActionAction).selectedAction == ActionType.acquire);
+            if (i != -1) {
+              wanted.add(selectedActions[i] as SelectActionAction);
+            }
+            i = selectedActions
+                .indexWhere((element) => (element as SelectActionAction).selectedAction == ActionType.store);
+            if (i != -1) {
+              wanted.add(selectedActions[i] as SelectActionAction);
+            }
+            if (wanted.isEmpty) {
+              // the only action we can do is to search
+              _processAction(game, selectedActions.first);
+              takeSearchTurn(game);
+            } else {
+              var i = game.random.nextInt(wanted.length);
+              _processAction(game, wanted[i]);
+              if (wanted[i].selectedAction == ActionType.acquire) {
+                takeAcquireTurn(game);
+              } else {
+                takeStoreTurn(game);
+              }
+            }
           }
+          // if (stopWatch.elapsedMilliseconds < gameSettings.maxAiRolloutTime) {
+          //   var i = game.random.nextInt(selectedActions.length);
+          //   _processAction(game, selectedActions[i]);
+          //   if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.acquire) {
+          //     takeAcquireTurn(game);
+          //   } else if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.construct) {
+          //     takeConstructTurn(game);
+          //   } else if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.store) {
+          //     takeStoreTurn(game);
+          //   } else if ((selectedActions[i] as SelectActionAction).selectedAction == ActionType.search) {
+          //     takeSearchTurn(game);
+          //   } else {
+          //     throw InvalidOperationError('shouldnt get here, unknown action');
+          //   }
 
           if (stopWatch.elapsedMilliseconds < gameSettings.maxAiRolloutTime) {
             _doTriggers(game);
