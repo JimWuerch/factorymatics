@@ -345,9 +345,39 @@ class GamePageModel {
     return;
   }
 
+  Future<void> handleSearchProduct(SearchProduct product) async {
+    if (product == null) return;
+
+    var level = await showAskSearchDeckDialog(gamePageContext, game);
+    if (level == null) return;
+
+    GameAction action;
+    action = product.produce(playerId);
+
+    var response = await gameInfoModel.client.postAction(game, action);
+    if (response.responseCode != ResponseCode.ok) {
+      // TODO: log something here
+      return;
+      // response.responseCode;
+    }
+    action = SearchAction(playerId, level);
+    response = await gameInfoModel.client.postAction(game, action);
+    if (response.responseCode != ResponseCode.ok) {
+      // TODO: log something here
+      return;
+      // response.responseCode;
+    }
+    await doGameUpdate();
+  }
+
   Future<void> productTapped(Product product) async {
     // acquire is handled elsewhere
     //if (product.productType == ProductType.aquire) return;
+
+    if (product is SearchProduct) {
+      return handleSearchProduct(product);
+    }
+
     GameAction action;
     action = product.produce(playerId);
 

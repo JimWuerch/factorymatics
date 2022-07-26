@@ -77,17 +77,13 @@ class Game {
   }
 
   void _doTestSetup() {
-    // var part = allParts["89"];
-    // players[0].buyPart(part);
-    // removePart(part);
-    // players[0].storeResource(ResourceType.club);
-    // players[0].storeResource(ResourceType.club);
-    // players[0].storeResource(ResourceType.spade);
-    // players[0].storeResource(ResourceType.spade);
-
-    while (partsRemaining[0] > 10) {
-      drawPart(0);
-    }
+    var part = allParts["81"];
+    players[0].buyPart(part);
+    removePart(part);
+    players[0].storeResource(ResourceType.club);
+    players[0].storeResource(ResourceType.club);
+    players[0].storeResource(ResourceType.spade);
+    players[0].storeResource(ResourceType.spade);
   }
 
   Game._fromSerialize(this.gameId, this.playerService) {

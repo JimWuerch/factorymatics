@@ -29,3 +29,6 @@
 - Changed how the AI calculates moves, to get it to try to finish the game around turn 20.
 - Improvements to how calculating payments, resulting in the AI being able to run more simulations in the same time period.
 - Reverted how the AI chooses actions during a rollout, to get better results by trying to force the AI to consider constructing first.
+
+1.0.0+9
+- Fixed part 81 (search after construct)

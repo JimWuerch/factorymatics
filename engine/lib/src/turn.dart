@@ -277,7 +277,7 @@ class Turn {
 
   void _addSearchActions(List<GameAction> actions) {
     for (var level = 0; level < 3; ++level) {
-      if (game.partDecks[level].isNotEmpty) {
+      if (game.partsRemaining[level] > 0) {
         actions.add(SearchAction(player.id, level));
       }
     }
@@ -649,6 +649,7 @@ class Turn {
       turnState.value = TurnState.selectedActionCompleted;
     }
 
+    game.refillMarket();
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
@@ -740,6 +741,7 @@ class Turn {
       turnState.value = TurnState.selectedActionCompleted;
     }
 
+    game.refillMarket();
     changeStack.commit();
     return Tuple2<ValidateResponseCode, GameAction>(ret, null);
   }
