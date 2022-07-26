@@ -452,7 +452,8 @@ class CalcResources {
   ) {
     //Map<ConverterBaseProduct, int> prodIds),
 
-    for (var c in conv) {
+    for (var convIdx = 0; convIdx < conv.length; ++convIdx) {
+      var c = conv[convIdx];
       if (c.productType == ProductType.convert) {
         var cv = c as ConvertProduct;
         if (cv.source == ResourceType.any || (inputPool.count(cv.source) > 0 || outputPool.count(cv.source) > 0)) {
@@ -506,10 +507,12 @@ class CalcResources {
                     cv.source == ResourceType.any ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : _prodIds[c]));
               }
               op2.add1(destRt);
+              // var conv2 = List<ConverterBaseProduct>.of(conv);
+              // conv2.remove(c);
               var conv2 = <ConverterBaseProduct>[];
               var c2count = conv.length;
               for (var c2idx = 0; c2idx < c2count; ++c2idx) {
-                if (conv[c2idx] != c) {
+                if (c2idx != convIdx) {
                   conv2.add(conv[c2idx]);
                 }
               }
@@ -554,7 +557,7 @@ class CalcResources {
           var conv2 = <ConverterBaseProduct>[];
           var c2count = conv.length;
           for (var c2idx = 0; c2idx < c2count; ++c2idx) {
-            if (conv[c2idx] != c) {
+            if (c2idx != convIdx) {
               conv2.add(conv[c2idx]);
             }
           }
@@ -661,7 +664,7 @@ class CalcResources {
               var conv2 = <ConverterBaseProduct>[];
               var c2count = conv.length;
               for (var c2idx = 0; c2idx < c2count; ++c2idx) {
-                if (conv[c2idx] != c) {
+                if (c2idx != convIdx) {
                   conv2.add(conv[c2idx]);
                 }
               }
@@ -702,7 +705,7 @@ class CalcResources {
           var conv2 = <ConverterBaseProduct>[];
           var c2count = conv.length;
           for (var c2idx = 0; c2idx < c2count; ++c2idx) {
-            if (conv[c2idx] != c) {
+            if (c2idx != convIdx) {
               conv2.add(conv[c2idx]);
             }
           }
