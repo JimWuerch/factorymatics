@@ -2,7 +2,7 @@ import 'local_player.dart';
 import 'player.dart';
 
 class PlayerService {
-  List<Player> players;
+  late List<Player> players;
 
   PlayerService._() {
     players = <Player>[];
@@ -25,7 +25,7 @@ class PlayerService {
     return player;
   }
 
-  Player getPlayer(String/*!*/ playerId) {
+  Player getPlayer(String playerId) {
     return players.firstWhere((element) => element.playerId == playerId);
   }
 

@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/ai_player.dart';
 import 'package:tuple/tuple.dart';
@@ -26,38 +27,38 @@ class Game {
 
   bool testMode = false;
 
-  List<PlayerData> players;
+  late List<PlayerData> players;
 
-  String/*!*/ tmpName;
+  late String tmpName;
 
-  String/*!*/ gameId;
+  String gameId;
   int nextObjectId = 0;
-  Uuid uuidGen;
-  PlayerService playerService;
+  late Uuid uuidGen;
+  PlayerService? playerService;
   //Map<String, Part> allParts;
   Random random = Random();
 
-  ListState<ResourceType>/*!*/ availableResources;
+  late ListState<ResourceType> availableResources;
 
-  List<ListState<Part/*!*/>/*!*/> partDecks;
-  List<int>/*!*/ partsRemaining; // this is maintained for the client to query
-  ListState<ResourceType>/*!*/ well;
-  List<ListState<Part/*!*/>/*!*/> saleParts;
-  CalcResources calcResources;
-  Turn/*!*/ currentTurn;
-  int/*!*/ round = 0;
-  bool/*!*/ gameEndTriggered = false;
+  late List<ListState<Part>> partDecks;
+  late List<int> partsRemaining; // this is maintained for the client to query
+  late ListState<ResourceType> well;
+  late List<ListState<Part>> saleParts;
+  late CalcResources calcResources;
+  late Turn currentTurn;
+  int round = 0;
+  bool gameEndTriggered = false;
 
-  int/*!*/ _currentPlayerIndex = 0;
+  int _currentPlayerIndex = 0;
   PlayerData get currentPlayer => players[_currentPlayerIndex];
 
-  ChangeStack changeStack;
+  late ChangeStack changeStack;
 
   // set true if GameController is saving the game
   bool isAuthoritativeSave = false;
 
   // this is only set for the client, it is not used or accurate for the server
-  bool/*!*/ canUndo;
+  late bool canUndo;
 
   // if the ai is simulating a game, this is true
   bool inSimulation = false;
@@ -67,7 +68,7 @@ class Game {
 
     changeStack = ChangeStack(); // we'll throw this away
     for (var p in playerNames) {
-      var playerId = playerService != null ? playerService.getPlayer(p).playerId : p;
+      var playerId = playerService != null ? playerService!.getPlayer(p).playerId : p;
       players.add(PlayerData(this, playerId));
     }
     changeStack.clear();
@@ -77,7 +78,7 @@ class Game {
   }
 
   void _doTestSetup() {
-    var part = allParts["81"];
+    var part = allParts["81"]!;
     players[0].buyPart(part);
     removePart(part);
     players[0].storeResource(ResourceType.club);
@@ -105,7 +106,7 @@ class Game {
   void _giveStartingParts() {
     // give players their starting parts
     for (var player in players) {
-      player.buyPart(allParts[Part.startingPartId]);
+      player.buyPart(allParts[Part.startingPartId]!);
     }
   }
 
@@ -113,13 +114,14 @@ class Game {
     // we'll discard this changeStack
     changeStack = ChangeStack();
 
-    partDecks = List<ListState<Part>/*!*/>.filled(3, null);
+    partDecks = <ListState<Part>>[]; //.filled(3, null);
     partsRemaining = List<int>.filled(3, 0);
     well = ListState<ResourceType>(this, 'well');
     availableResources = ListState(this, 'availableResources');
-    saleParts = List<ListState<Part>/*!*/>.filled(3, null);
+    saleParts = <ListState<Part>>[]; //.filled(3, null);
     for (var i = 0; i < 3; ++i) {
-      saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
+      //saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
+      saleParts.add(ListState<Part>(this, 'lvl${i}Sale'));
     }
     // var parts = createParts(this);
     // for (var part in parts) {
@@ -127,9 +129,10 @@ class Game {
     // }
   }
 
-  void assignStartingDecks(List<List<Part/*!*/>/*!*/> decks) {
+  void assignStartingDecks(List<List<Part>> decks) {
     for (var i = 0; i < 3; ++i) {
-      partDecks[i] = ListState<Part/*!*/>(this, 'lvl${i}Deck', starting: decks[i]);
+      //partDecks[i] = ListState<Part>(this, 'lvl${i}Deck', starting: decks[i]);
+      partDecks.add(ListState<Part>(this, 'lvl${i}Deck', starting: decks[i]));
       partsRemaining[i] = partDecks[i].length;
     }
   }
@@ -143,7 +146,7 @@ class Game {
     }
   }
 
-  ResourceType/*!*/ getFromWell() {
+  ResourceType getFromWell() {
     return well.removeAt(random.nextInt(well.length));
   }
 
@@ -157,9 +160,9 @@ class Game {
     }
   }
 
-  PlayerData getPartOwner(Part part) {
+  PlayerData? getPartOwner(Part part) {
     for (var player in players) {
-      for (var p in player.parts[part.partType]) {
+      for (var p in player.parts[part.partType]!) {
         if (p.id == part.id) {
           return player;
         }
@@ -204,11 +207,11 @@ class Game {
     }
   }
 
-  Future<Tuple2<ValidateResponseCode, GameAction>> applyAction(GameAction action) async {
+  Future<Tuple2<ValidateResponseCode, GameAction?>> applyAction(GameAction action) async {
     if (action is GameModeAction && action.mode == GameModeType.doAiTurn) {
-      var ai = AiPlayer(getPlayerFromId(action.owner));
+      var ai = AiPlayer(getPlayerFromId(action.owner)!);
       ai.takeTurn(this);
-      return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+      return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.ok, null);
     }
     return currentTurn.processAction(action);
   }
@@ -218,8 +221,8 @@ class Game {
     return currentPlayer;
   }
 
-  PlayerData getPlayerFromId(String/*!*/ id) {
-    return players.firstWhere((element) => element.id == id, orElse: () => null);
+  PlayerData? getPlayerFromId(String id) {
+    return players.firstWhereOrNull((element) => element.id == id);
   }
 
   PlayerData getWinner() {
@@ -268,7 +271,7 @@ class Game {
   }
 
   Turn startNextTurn() {
-    if (currentTurn?.gameEnded == true) {
+    if (round != 0 && currentTurn.gameEnded == true) {
       return currentTurn;
     }
 
@@ -342,10 +345,10 @@ class Game {
   }
 
   /// Returns playerIds unless non-authoritative, in which case player names are returned
-  List<String/*!*/> getPlayerIds() {
-    var ret = <String/*!*/>[];
+  List<String> getPlayerIds() {
+    var ret = <String>[];
     for (var player in players) {
-      ret.add(playerService != null ? playerService.getPlayer(player.id).name : player.id);
+      ret.add(playerService != null ? playerService!.getPlayer(player.id).name : player.id);
     }
 
     return ret;
@@ -354,12 +357,12 @@ class Game {
   List<String> getPlayerNames() {
     var ret = <String>[];
     for (var player in players) {
-      ret.add(playerService.getPlayer(player.id).name);
+      ret.add(playerService!.getPlayer(player.id).name);
     }
     return ret;
   }
 
-  ResourceType/*!*/ acquireResource(int index) {
+  ResourceType acquireResource(int index) {
     var ret = availableResources.removeAt(index);
     availableResources.add(getFromWell());
     return ret;
@@ -404,7 +407,7 @@ class Game {
     return ret;
   }
 
-  factory Game.fromJson(PlayerService playerService, Map<String, dynamic> json) {
+  factory Game.fromJson(PlayerService? playerService, Map<String, dynamic> json) {
     var gameId = json['gameId'] as String;
 
     var game = Game._fromSerialize(gameId, playerService);
@@ -442,7 +445,7 @@ class Game {
   }
 }
 
-String partListToString(List<Part/*!*/> parts) {
+String partListToString(List<Part> parts) {
   var buf = StringBuffer();
   for (var part in parts) {
     var i = int.parse(part.id);
@@ -451,15 +454,15 @@ String partListToString(List<Part/*!*/> parts) {
   return buf.toString();
 }
 
-void partStringToList(String src, void Function(Part/*!*/) addFn, Map<String, Part> allParts) {
+void partStringToList(String src, void Function(Part) addFn, Map<String, Part> allParts) {
   for (var i = 0; i <= src.length - 2; i += 2) {
     var hex = src.substring(i, i + 2);
     var partId = int.parse(hex, radix: 16).toString();
-    addFn(allParts[partId]);
+    addFn(allParts[partId]!);
   }
 }
 
-void stringToResourceListState(String/*!*/ src, ListState<ResourceType> list) {
+void stringToResourceListState(String src, ListState<ResourceType> list) {
   var resources = stringToResourceList(src);
   for (var resource in resources) {
     list.add(resource);

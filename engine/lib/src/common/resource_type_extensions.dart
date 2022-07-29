@@ -1,6 +1,6 @@
 import 'package:engine/engine.dart';
 
-String resourceListToString(List<ResourceType> src) {
+String resourceListToString(List<ResourceType>? src) {
   if (src == null) return '';
 
   var chars = <String>['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
@@ -11,7 +11,7 @@ String resourceListToString(List<ResourceType> src) {
   return s.toString();
 }
 
-List<ResourceType> stringToResourceList(String src) {
+List<ResourceType> stringToResourceList(String? src) {
   var ret = <ResourceType>[];
   if (src != null) {
     var a = 'A'.codeUnitAt(0);
@@ -35,7 +35,7 @@ String resourceMapToString(Map<ResourceType, int> resources) {
   return ret.toString();
 }
 
-Map<ResourceType, int> stringToResourceMap(String src) {
+Map<ResourceType, int> stringToResourceMap(String? src) {
   var ret = <ResourceType, int>{};
   ret[ResourceType.club] = 0;
   ret[ResourceType.diamond] = 0;
@@ -47,7 +47,7 @@ Map<ResourceType, int> stringToResourceMap(String src) {
     for (var i = 0; i < src.length; ++i) {
       var resource = ResourceType.values[src.codeUnitAt(i) - a];
       if (resource != ResourceType.any && resource != ResourceType.none) {
-        ret[resource] = ret[resource] + 1;
+        ret[resource] = ret[resource]! + 1;
       }
     }
   }
@@ -59,7 +59,7 @@ String resourceMapStateToString(Map<ResourceType, GameStateVar<int>> resources) 
   var ret = StringBuffer();
   resources.forEach((key, value) {
     if (value != null && key != ResourceType.any && key != ResourceType.none) {
-      for (var i = 0; i < value.value; i++) {
+      for (var i = 0; i < value.value!; i++) {
         ret.write(chars[ResourceType.values.indexOf(key)]);
       }
     }

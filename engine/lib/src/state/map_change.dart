@@ -1,12 +1,12 @@
 import 'package:engine/engine.dart';
 
 class MapChange<K, V> extends Change {
-  MapState<K, V> state;
+  MapState<K, V?> state;
   K key;
-  V newValue;
-  V oldValue;
-  bool existed;
-  bool remove;
+  V? newValue;
+  V? oldValue;
+  late bool existed;
+  late bool remove;
 
   // ignore: prefer_initializing_formals
   MapChange.add(this.state, this.key, V value) : newValue = value {

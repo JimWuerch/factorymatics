@@ -1,10 +1,10 @@
 import 'package:engine/engine.dart';
 
 class AcquireAction extends GameAction {
-  final int/*!*/ index;
-  ResourceType/*!*/ acquiredResource; // set by the engine after processing
+  final int index;
+  late ResourceType acquiredResource; // set by the engine after processing
 
-  AcquireAction(String player, this.index, Product producedBy) : super(player, producedBy);
+  AcquireAction(String player, this.index, Product? producedBy) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.acquire;
@@ -46,7 +46,7 @@ class MysteryMeatAction extends GameAction {
   MysteryMeatAction(String player, Product producedBy) : super(player, producedBy);
 
   // not sent over the wire
-  ResourceType/*!*/ resource;
+  late ResourceType resource;
 
   @override
   ActionType get actionType => ActionType.mysteryMeat;

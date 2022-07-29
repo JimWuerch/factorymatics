@@ -1,9 +1,9 @@
 import 'package:engine/engine.dart';
 
 class SearchAction extends GameAction {
-  final int/*!*/ level;
+  final int level;
 
-  SearchAction(String player, this.level, [Product producedBy]) : super(player, producedBy);
+  SearchAction(String player, this.level, [Product? producedBy]) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.search;
@@ -31,7 +31,7 @@ class SearchAction extends GameAction {
 class SearchActionResult extends GameAction {
   final List<String> parts;
 
-  SearchActionResult(String player, this.parts, [Product producedBy]) : super(player, producedBy);
+  SearchActionResult(String player, this.parts, [Product? producedBy]) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.searchActionResult;
@@ -55,7 +55,7 @@ class SearchActionResult extends GameAction {
 
 /// User did a search and decided (or couldn't) not to build or store anything.
 class SearchDeclinedAction extends GameAction {
-  SearchDeclinedAction(String player, [Product producedBy]) : super(player, producedBy);
+  SearchDeclinedAction(String player, [Product? producedBy]) : super(player, producedBy);
 
   @override
   ActionType get actionType => ActionType.searchDeclined;

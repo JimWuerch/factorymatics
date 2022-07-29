@@ -5,8 +5,8 @@ class JoinLobbyRequest extends GameModel {
   GameModelType get modelType => GameModelType.joinLobbyRequest;
 
   final String gameId;
-  final String/*!*/ playerName;
-  final String password;
+  final String playerName;
+  final String? password;
 
   JoinLobbyRequest(String ownerId, this.gameId, this.playerName, this.password) : super('create', ownerId, 'joinLobby request');
 
@@ -22,6 +22,6 @@ class JoinLobbyRequest extends GameModel {
   JoinLobbyRequest.fromJson(Map<String, dynamic> json)
       : gameId = json['gameId'] as String,
         playerName = json['playerName'] as String,
-        password = json['password'] as String,
+        password = json['password'] as String?,
         super.fromJson(json);
 }

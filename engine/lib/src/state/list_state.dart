@@ -7,7 +7,7 @@ import 'list_change.dart';
 class ListState<T> extends GameStateBase with IterableMixin<T> {
   final List<T> _list;
 
-  ListState(Game game, String label, {StateVarCallback onChanged, Object onChangedParam, List<T> starting})
+  ListState(Game game, String label, {StateVarCallback? onChanged, Object? onChangedParam, List<T>? starting})
       : _list = <T>[],
         super(game, label, onChanged, onChangedParam) {
     if (starting != null) {
@@ -15,7 +15,7 @@ class ListState<T> extends GameStateBase with IterableMixin<T> {
     }
   }
 
-  void add(T value) {
+  void add(T? value) {
     ListChange<T>.add(this, value, _list.length);
   }
 
@@ -65,7 +65,7 @@ class ListState<T> extends GameStateBase with IterableMixin<T> {
 
   List<T> get list => List<T>.unmodifiable(_list);
 
-  void change(T value, int index, ListChangeOperation/*!*/ operation) {
+  void change(T value, int index, ListChangeOperation operation) {
     switch (operation) {
       case ListChangeOperation.add:
         _list.insert(index, value);
@@ -77,6 +77,6 @@ class ListState<T> extends GameStateBase with IterableMixin<T> {
         _list[index] = value;
         break;
     }
-    if (onChanged != null) onChanged(this, onChangedParam);
+    if (onChanged != null) onChanged!(this, onChangedParam);
   }
 }

@@ -31,7 +31,7 @@ abstract class Part extends GameObject {
     return products[index];
   }
 
-  int getProductIndex(Product product) {
+  int? getProductIndex(Product product) {
     var index = products.indexOf(product);
     return index != -1 ? index : null;
   }

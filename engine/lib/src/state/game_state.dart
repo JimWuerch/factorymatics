@@ -5,21 +5,21 @@ export 'default_value_map_state.dart';
 export 'list_state.dart';
 export 'map_state.dart';
 
-typedef StateVarCallback = void Function(GameState, Object);
+typedef StateVarCallback = void Function(GameState, Object?);
 
 abstract class GameState {
   String get label;
-  StateVarCallback onChanged;
+  StateVarCallback? onChanged;
   Game get game;
 }
 
 abstract class GameStateBase implements GameState {
   final String _label;
   final Game _game;
-  final Object onChangedParam;
+  final Object? onChangedParam;
 
   @override
-  StateVarCallback onChanged;
+  StateVarCallback? onChanged;
 
   GameStateBase(this._game, this._label, this.onChanged, this.onChangedParam);
 
@@ -31,36 +31,36 @@ abstract class GameStateBase implements GameState {
 }
 
 class GameStateVar<T> extends GameStateBase {
-  T _value;
-  final ChangeStack _changeStack; // used for unit testing only
+  T? _value;
+  final ChangeStack? _changeStack; // used for unit testing only
 
   GameStateVar(Game game, String name, T startValue,
-      {StateVarCallback onChanged, Object onChangedParam, ChangeStack changeStack})
+      {StateVarCallback? onChanged, Object? onChangedParam, ChangeStack? changeStack})
       : _value = startValue,
         _changeStack = changeStack,
         super(game, name, onChanged, onChangedParam);
 
-  T get value => _value;
-  set value(T newValue) {
+  T? get value => _value;
+  set value(T? newValue) {
     if (_changeStack == null) {
       game.changeStack.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)),
           label: label);
     } else {
-      _changeStack.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)),
+      _changeStack!.add(undo.Change.property(_value, () => _change(newValue), (oldValue) => _change(oldValue as T)),
           label: label);
     }
   }
 
   // ignore: use_setters_to_change_properties
-  void reinitialize(T value) {
+  void reinitialize(T? value) {
     // using this skips the changestack
     _value = value;
   }
 
-  void _change(T newValue) {
+  void _change(T? newValue) {
     //log.fine('Change $label from $_value to $newValue');
     _value = newValue;
-    if (onChanged != null) onChanged(this, onChangedParam);
+    if (onChanged != null) onChanged!(this, onChangedParam);
   }
 
   @override

@@ -5,16 +5,16 @@ class PlayerData {
   static const int basePartStorage = 1;
   static const int baseSearch = 3;
 
-  final String/*!*/ id;
+  final String id;
   final MapState<PartType, ListState<Part>> parts;
-  final GameStateVar<int/*!*/> _vpChits;
-  final Map<ResourceType, GameStateVar<int/*!*/>> resources;
+  final GameStateVar<int> _vpChits;
+  final Map<ResourceType, GameStateVar<int>> resources;
   final Game game;
-  final ListState<Part/*!*/> savedParts;
+  final ListState<Part> savedParts;
   // maxResources is a cache, so it can be null.
-  ResourcePool maxResources;
+  ResourcePool? maxResources;
 
-  int/*!*/ get vpChits => _vpChits.value;
+  int get vpChits => _vpChits.value!;
 
   PlayerData(this.game, this.id)
       : parts = MapState<PartType, ListState<Part>>(game, '$id:parts'),
@@ -22,12 +22,13 @@ class PlayerData {
         _vpChits = GameStateVar<int>(game, '$id:vpChits', 0),
         resources = <ResourceType, GameStateVar<int>>{},
         maxResources = null {
-    initResourceMap(game, resources, id, callback: _onChangedCallback, callbackParam: this);
+    initResourceMap(game, resources, id,
+        callback: _onChangedCallback as void Function(GameState, Object?)?, callbackParam: this);
     _initParts(parts);
   }
 
-  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int/*!*/>> resources, String label,
-      {StateVarCallback callback, Object callbackParam}) {
+  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int>> resources, String label,
+      {StateVarCallback? callback, Object? callbackParam}) {
     for (var resource in ResourceType.values) {
       if (resource != ResourceType.none && resource != ResourceType.any) {
         resources[resource] =
@@ -40,7 +41,8 @@ class PlayerData {
     for (var p in PartType.values) {
       if (p == PartType.converter) {
         // we only need to know if we buy a converter for updating maxResources
-        parts[p] = ListState<Part>(game, '$id:$p:parts', onChanged: _onChangedCallback, onChangedParam: this);
+        parts[p] = ListState<Part>(game, '$id:$p:parts',
+            onChanged: _onChangedCallback as void Function(GameState, Object?)?, onChangedParam: this);
       } else {
         parts[p] = ListState<Part>(game, '$id:$p:parts');
       }
@@ -53,7 +55,7 @@ class PlayerData {
     if (game.isAuthoritativeSave) {
       ret['id'] = id;
     } else {
-      ret['id'] = game.playerService.getPlayer(id).name;
+      ret['id'] = game.playerService!.getPlayer(id).name;
     }
     var allP = <String>[];
     for (var plist in parts.values) {
@@ -70,7 +72,7 @@ class PlayerData {
     }
     ret['saved'] = savedP;
     if (maxResources != null) {
-      ret['maxRes'] = resourceListToString(maxResources.toList());
+      ret['maxRes'] = resourceListToString(maxResources!.toList());
     }
 
     return ret;
@@ -78,7 +80,8 @@ class PlayerData {
 
   PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts)
       : maxResources = null {
-    initResourceMap(game, resources, id, callback: _onChangedCallback, callbackParam: this);
+    initResourceMap(game, resources, id,
+        callback: _onChangedCallback as void Function(GameState, Object?)?, callbackParam: this);
     _initParts(parts);
   }
 
@@ -99,26 +102,26 @@ class PlayerData {
 
     var partsList = listFromJson<String>(json['parts']);
     for (var part in partsList) {
-      var p = allParts[part];
-      ret.parts[p.partType].add(p);
+      var p = allParts[part]!;
+      ret.parts[p.partType]!.add(p);
     }
 
-    var res = stringToResourceMap(json['res'] as String);
-    ret.resources[ResourceType.heart].reinitialize(res[ResourceType.heart]);
-    ret.resources[ResourceType.club].reinitialize(res[ResourceType.club]);
-    ret.resources[ResourceType.spade].reinitialize(res[ResourceType.spade]);
-    ret.resources[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
+    var res = stringToResourceMap(json['res'] as String?);
+    ret.resources[ResourceType.heart]!.reinitialize(res[ResourceType.heart]);
+    ret.resources[ResourceType.club]!.reinitialize(res[ResourceType.club]);
+    ret.resources[ResourceType.spade]!.reinitialize(res[ResourceType.spade]);
+    ret.resources[ResourceType.diamond]!.reinitialize(res[ResourceType.diamond]);
 
     // do this after initializing parts and resources, as they could call invalidateMaxResources()
     if (json.containsKey('maxRes')) {
-      ret.maxResources = ResourcePool.fromList(stringToResourceList(json['maxRes'] as String));
+      ret.maxResources = ResourcePool.fromList(stringToResourceList(json['maxRes'] as String?));
     }
 
     return ret;
   }
 
-  static void _onChangedCallback<T>(GameState state, Object param) {
-    (param as PlayerData)?.invalidateMaxResources();
+  static void _onChangedCallback(GameState state, Object? param) {
+    (param as PlayerData).invalidateMaxResources();
   }
 
   void _doParts(void Function(Part) fn) {
@@ -179,14 +182,14 @@ class PlayerData {
   }
 
   bool get canStore {
-    for (var part in parts[PartType.enhancement]) {
+    for (var part in parts[PartType.enhancement]!) {
       if (part is DisallowStorePart) return false;
     }
     return true;
   }
 
   bool get canSearch {
-    for (var part in parts[PartType.enhancement]) {
+    for (var part in parts[PartType.enhancement]!) {
       if (part is DisallowSearchPart) return false;
     }
     return true;
@@ -194,7 +197,7 @@ class PlayerData {
 
   int get constructFromStoreDiscount {
     var discount = 0;
-    for (var part in parts[PartType.enhancement]) {
+    for (var part in parts[PartType.enhancement]!) {
       if (part is ConstructFromStoreDiscountPart) {
         discount += part.constructFromStoreDiscount;
       }
@@ -204,7 +207,7 @@ class PlayerData {
 
   int get constructFromSearchDiscount {
     var discount = 0;
-    for (var part in parts[PartType.enhancement]) {
+    for (var part in parts[PartType.enhancement]!) {
       if (part is ConstructFromSearchDiscountPart) {
         discount += part.constructFromSearchDiscount;
       }
@@ -214,7 +217,7 @@ class PlayerData {
 
   int get constructLevel2Discount {
     var discount = 0;
-    for (var part in parts[PartType.enhancement]) {
+    for (var part in parts[PartType.enhancement]!) {
       if (part is Level2ConstructDiscountPart) {
         discount += part.level2ConstructDiscount;
       }
@@ -226,21 +229,21 @@ class PlayerData {
     var ret = 0;
     resources.forEach((key, value) {
       if (key != ResourceType.any && key != ResourceType.none) {
-        ret += value.value;
+        ret += value.value!;
       }
     });
     return ret;
   }
 
   void buyPart(Part part) {
-    parts[part.partType].add(part);
+    parts[part.partType]!.add(part);
   }
 
   void removePart(Part part) {
-    parts[part.partType].remove(part);
+    parts[part.partType]!.remove(part);
   }
 
-  void savePart(Part part) {
+  void savePart(Part? part) {
     if (savedParts.length >= partStorage) throw ArgumentError('can\'t save part, no space');
     savedParts.add(part);
   }
@@ -262,20 +265,20 @@ class PlayerData {
     return ret;
   }
 
-  void giveVpChit() => _vpChits.value = _vpChits.value + 1;
+  void giveVpChit() => _vpChits.value = _vpChits.value! + 1;
 
   bool get hasResourceStorageSpace => resourceStorage > resourceCount();
 
   bool get hasPartStorageSpace => partStorage > savedParts.length;
 
-  bool hasResource(ResourceType resourceType) => resources[resourceType].value > 0;
+  bool hasResource(ResourceType resourceType) => resources[resourceType]!.value! > 0;
 
   void storeResource(ResourceType resource) {
-    resources[resource].value = resources[resource].value + 1;
+    resources[resource]!.value = resources[resource]!.value! + 1;
   }
 
   void removeResource(ResourceType resource) {
-    resources[resource].value = resources[resource].value - 1;
+    resources[resource]!.value = resources[resource]!.value! - 1;
   }
 
   void updateMaxResources(Turn turn) {
@@ -300,9 +303,9 @@ class PlayerData {
     }
     if (part.resource == ResourceType.any) {
       return (part.cost - discount) <=
-          maxResources.count(part.resource) + ResourcePool.fromResources(convertedResources).getResourceCount();
+          maxResources!.count(part.resource) + ResourcePool.fromResources(convertedResources).getResourceCount();
     } else {
-      return (part.cost - discount) <= maxResources.count(part.resource) + convertedResources[part.resource].value;
+      return (part.cost - discount) <= maxResources!.count(part.resource) + convertedResources[part.resource]!.value!;
     }
   }
 

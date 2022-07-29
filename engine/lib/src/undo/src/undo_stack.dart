@@ -7,32 +7,32 @@ class ChangeStack extends ChangeGroupBase {
   final Queue<Change> _undos = ListQueue();
   final Queue<Change> _redos = ListQueue();
 
-  int max;
+  int? max;
 
   bool get canRedo => _redos.isNotEmpty && !isGrouping;
   bool get canUndo => _undos.isNotEmpty && !isGrouping;
 
-  String get redoLabel => canRedo ? _redos.first.label : '';
-  String get undoLabel => canUndo ? _undos.last.label : '';
+  String? get redoLabel => canRedo ? _redos.first.label : '';
+  String? get undoLabel => canUndo ? _undos.last.label : '';
 
   ChangeStack({this.max}) {
 //    _streamController.add(this);
   }
 
   @override
-  void _add(Change change, {String label, bool doExecute = true}) {
+  void _add(Change change, {String? label, bool? doExecute = true}) {
     if (label != null) {
       change.label = label;
     }
 
-    if (doExecute) {
+    if (doExecute!) {
       change.execute();
     }
 
     _undos.addLast(change);
     _redos.clear();
 
-    if (max != null && _undos.length > max) {
+    if (max != null && _undos.length > max!) {
       _undos.removeFirst();
     }
 

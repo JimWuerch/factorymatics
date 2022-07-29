@@ -4,10 +4,10 @@ import 'package:engine/engine.dart';
 // this works even for cases where V can be null
 class DefaultValueMapState<K, V> extends MapState<K, V> {
   final V defaultValue;
-  DefaultValueMapState(Game game, String label, this.defaultValue, {StateVarCallback onChanged, Map<K, V> starting})
+  DefaultValueMapState(Game game, String label, this.defaultValue, {StateVarCallback? onChanged, Map<K, V>? starting})
       : super(game, label, onChanged: onChanged, starting: starting);
 
-  V operator [](K key) {
+  V? operator [](K key) {
     if (containsKey(key)) {
       return getValue(key);
     } else {

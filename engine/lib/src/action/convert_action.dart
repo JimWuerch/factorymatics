@@ -12,7 +12,7 @@ class ConvertAction extends GameAction {
   @override
   bool matches(GameAction action) {
     if (action is ConvertAction) {
-      if ((producedBy.part.products[0] as ConverterBaseProduct).sourceResource == ResourceType.any) {
+      if ((producedBy!.part.products[0] as ConverterBaseProduct).sourceResource == ResourceType.any) {
         return true;
       } else {
         return action.source == source;

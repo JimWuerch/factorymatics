@@ -13,6 +13,28 @@ class TestProducts {
   final DoubleResourceProduct heartDoubler = DoubleResourceProduct(ResourceType.heart);
   final DoubleResourceProduct diamondDoubler = DoubleResourceProduct(ResourceType.diamond);
   final ConvertProduct anyConverter = ConvertProduct(ResourceType.any, ResourceType.any);
+  final List<Part> _parts;
+
+  TestProducts() : _parts = createParts() {
+    clubConverter.part = _parts[0];
+    spadeConverter.part = _parts[0];
+    heartConverter.part = _parts[0];
+    diamondConverter.part = _parts[0];
+    clubDoubler.part = _parts[0];
+    spadeDoubler.part = _parts[0];
+    heartDoubler.part = _parts[0];
+    diamondDoubler.part = _parts[0];
+    anyConverter.part = _parts[0];
+    clubConverter.prodIndex = 0;
+    spadeConverter.prodIndex = 0;
+    heartConverter.prodIndex = 0;
+    diamondConverter.prodIndex = 0;
+    clubDoubler.prodIndex = 0;
+    spadeDoubler.prodIndex = 0;
+    heartDoubler.prodIndex = 0;
+    diamondDoubler.prodIndex = 0;
+    anyConverter.prodIndex = 0;
+  }
 }
 
 void dumpPaths(List<SpendHistory> paths) {

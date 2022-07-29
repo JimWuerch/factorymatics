@@ -3,7 +3,7 @@ part of undo;
 abstract class Change {
   Change();
 
-  factory Change.property(Object oldValue, void Function() execute, void Function(Object oldValue) undo) {
+  factory Change.property(Object? oldValue, void Function() execute, void Function(Object oldValue) undo) {
     return _PropertyChange(oldValue, execute, undo);
   }
 
@@ -11,7 +11,7 @@ abstract class Change {
     return _InlineChange(execute, undo);
   }
 
-  String label;
+  String? label;
 
   void execute();
 
@@ -19,7 +19,7 @@ abstract class Change {
 
   @override
   String toString() {
-    return label;
+    return label!;
   }
 }
 
@@ -29,7 +29,7 @@ abstract class ChangeGroupBase {
 
   ChangeGroupBase() : _openGroups = <_ChangeGroup>[];
 
-  void add(Change change, {String label}) {
+  void add(Change change, {String? label}) {
     if (isGrouping) {
       _openGroups.last.add(change, label: label);
     } else {
@@ -37,11 +37,11 @@ abstract class ChangeGroupBase {
     }
   }
 
-  void _add(Change change, {String label, bool doExecute});
+  void _add(Change change, {String? label, bool? doExecute});
 
   void clear();
 
-  void group({String label}) {
+  void group({String? label}) {
     _openGroups.add(_ChangeGroup()..label = label);
   }
 
@@ -67,7 +67,7 @@ abstract class ChangeGroupBase {
 }
 
 class _PropertyChange extends Change {
-  final Object _oldValue;
+  final Object? _oldValue;
   final Function _execute;
   final Function _undo;
 
@@ -103,17 +103,17 @@ class _InlineChange extends Change {
 
 class _ChangeGroup extends ChangeGroupBase implements Change {
   @override
-  String label;
+  String? label;
 
   final List<Change> _changes = [];
 
   @override
-  void _add(Change change, {String label, bool doExecute = true}) {
+  void _add(Change change, {String? label, bool? doExecute = true}) {
     if (label != null) {
       change.label = label;
     }
     _changes.add(change);
-    if (doExecute) {
+    if (doExecute!) {
       change.execute();
     }
   }

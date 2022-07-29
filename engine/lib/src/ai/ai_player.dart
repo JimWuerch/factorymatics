@@ -1,12 +1,13 @@
 import 'dart:isolate';
 
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/monte_carlo_tree_search.dart';
 import 'package:tuple/tuple.dart';
 
 class AiPlayer {
   //final Game srcGame;
-  final PlayerData/*!*/ aiPlayer;
+  final PlayerData aiPlayer;
   //GameController gc = GameController();
   //Stopwatch stopwatch = Stopwatch()..start();
 
@@ -22,7 +23,7 @@ class AiPlayer {
     return g;
   }
 
-  void takeTurn(Game/*!*/ game) {
+  void takeTurn(Game game) {
     var best = _takeTurnInternal(game);
     // rehome action to this game
     if (best != null) {
@@ -37,8 +38,8 @@ class AiPlayer {
     final p = ReceivePort();
     var gc = GameController();
     gc.game = game;
-    await Isolate.spawn(_takeTurnIsolate, Tuple3(p.sendPort, gc.toJson(), game.playerService.toJson()));
-    var json = await p.first as Map<String, dynamic>;
+    await Isolate.spawn(_takeTurnIsolate, Tuple3(p.sendPort, gc.toJson(), game.playerService!.toJson()));
+    var json = await p.first as Map<String, dynamic>?;
     if (json != null) {
       var srcAction = actionFromJson(game, json['action'] as Map<String, dynamic>);
       var selectedAction = ActionType.values[json['selected'] as int];
@@ -48,7 +49,7 @@ class AiPlayer {
     }
   }
 
-  void _finishTurn(Game game, ActionType/*!*/ selectedAction, GameAction srcAction) {
+  void _finishTurn(Game game, ActionType selectedAction, GameAction? srcAction) {
     if (srcAction != null) {
       _takeSelectActionAction(game, selectedAction);
       // re-home action to this game, as internal bits point to other game objects
@@ -70,7 +71,7 @@ class AiPlayer {
   }
 
   /// Take the turn of game.currentPlayer
-  MCTSNode _takeTurnInternal(Game startGame) {
+  MCTSNode? _takeTurnInternal(Game startGame) {
     // now calculate the best action
     var ts = MCTreeSearch(startGame);
 
@@ -82,7 +83,7 @@ class AiPlayer {
       //   print('loop $loop');
       // }
       //if (stopwatch.elapsedMilliseconds > 10000) break;
-      var node = ts.root;
+      var node = ts.root!;
       // find leaf node
       while (node.visits != 0) {
         if (node.children.isEmpty) {
@@ -91,14 +92,14 @@ class AiPlayer {
         node = node.getBestChild();
       }
       if (stopwatch.elapsedMilliseconds > gameSettings.aiTurnTime &&
-          ts.root.getMostVistedChild().visits >= gameSettings.aiMinVisits) break;
+          ts.root!.getMostVistedChild()!.visits >= gameSettings.aiMinVisits) break;
       if (stopwatch.elapsedMilliseconds > gameSettings.aiTurnTimeCutoff) break;
-      if (node.game.currentTurn.gameEnded) {
-        _backPropagate(node, _gameScore(node.game, 0));
+      if (node.game!.currentTurn.gameEnded) {
+        _backPropagate(node, _gameScore(node.game!, 0));
         continue;
       }
       // we are at a leaf, so generate new child nodes for every action
-      var actions = node.game.currentTurn.getAvailableActions(isAi: true);
+      var actions = node.game!.currentTurn.getAvailableActions(isAi: true);
       if (actions.length == 1) {
         //var newNode = MCTSNode(node, _duplicateGame(node.game));
         //newNode.visits++;
@@ -107,8 +108,8 @@ class AiPlayer {
         continue;
       }
       // force the AI to construct early game if it can, otherwise, prioritize storing one of the 4 acquire after build parts
-      List<GameAction> forceStore;
-      if (node.game.round <= 8) {
+      List<GameAction>? forceStore;
+      if (node.game!.round <= 8) {
         // if we can construct, we must.
         var forceConstruct = <GameAction>[];
         for (var action in actions) {
@@ -118,25 +119,25 @@ class AiPlayer {
         }
         if (forceConstruct.isNotEmpty) {
           actions = forceConstruct;
-        } else if (node.game.currentPlayer.hasPartStorageSpace && node.game.currentPlayer.canStore) {
+        } else if (node.game!.currentPlayer.hasPartStorageSpace && node.game!.currentPlayer.canStore) {
           forceStore = <GameAction>[];
-          for (var part in node.game.saleParts[0]) {
+          for (var part in node.game!.saleParts[0]) {
             if (part.id == '4' || part.id == '16' || part.id == '17' || part.id == '18') {
-              forceStore.add(StoreAction(node.game.currentPlayer.id, part, null));
+              forceStore.add(StoreAction(node.game!.currentPlayer.id, part, null));
             }
           }
           if (forceStore.isNotEmpty) {
-            actions = <GameAction>[SelectActionAction(node.game.currentPlayer.id, ActionType.store)];
+            actions = <GameAction>[SelectActionAction(node.game!.currentPlayer.id, ActionType.store)];
           } else {
             forceStore = null;
           }
         }
       }
-      if (node.game.currentPlayer.maxResources == null) {
-        node.game.currentPlayer.updateMaxResources(node.game.currentTurn);
+      if (node.game!.currentPlayer.maxResources == null) {
+        node.game!.currentPlayer.updateMaxResources(node.game!.currentTurn);
       }
       for (var action in actions) {
-        var tmpGame = _duplicateGame(node.game);
+        var tmpGame = _duplicateGame(node.game!);
         var a = action as SelectActionAction;
         _takeSelectActionAction(tmpGame, a.selectedAction);
         switch (a.selectedAction) {
@@ -148,9 +149,9 @@ class AiPlayer {
                 newNode.action = a2;
               }
               newNode.selectedAction = a.selectedAction;
-              _constructPart(newNode.game, (a2 as ConstructAction).part, node: newNode);
-              _doTriggers(newNode.game);
-              _processAction(newNode.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+              _constructPart(newNode.game!, (a2 as ConstructAction).part, node: newNode);
+              _doTriggers(newNode.game!);
+              _processAction(newNode.game!, GameModeAction(node.game!.currentPlayer.id, GameModeType.endTurn));
             }
             break;
 
@@ -160,14 +161,14 @@ class AiPlayer {
               var i = tmpGame.availableResources.indexOf(rt);
               if (i != -1) {
                 var newNode = MCTSNode(node, _duplicateGame(tmpGame));
-                var a2 = AcquireAction(node.game.currentPlayer.id, i, null);
+                var a2 = AcquireAction(node.game!.currentPlayer.id, i, null);
                 if (newNode.parent == ts.root) {
                   newNode.action = a2;
                 }
                 newNode.selectedAction = a.selectedAction;
-                _processAction(newNode.game, a2);
-                _doTriggers(newNode.game);
-                _processAction(newNode.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+                _processAction(newNode.game!, a2);
+                _doTriggers(newNode.game!);
+                _processAction(newNode.game!, GameModeAction(node.game!.currentPlayer.id, GameModeType.endTurn));
               }
             }
             break;
@@ -189,9 +190,9 @@ class AiPlayer {
                   newNode.action = a2;
                 }
                 newNode.selectedAction = a.selectedAction;
-                _processAction(newNode.game, a2);
-                _doTriggers(newNode.game);
-                _processAction(newNode.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+                _processAction(newNode.game!, a2);
+                _doTriggers(newNode.game!);
+                _processAction(newNode.game!, GameModeAction(node.game!.currentPlayer.id, GameModeType.endTurn));
               }
             }
             break;
@@ -207,13 +208,13 @@ class AiPlayer {
           default:
             break;
         }
-        tmpGame = null;
+        //tmpGame = null;
       }
       if (node.children.isEmpty) {
         print('***** taking search turn *****');
         // if we get here, likely the only thing we can do is search.
-        if ((actions.first as SelectActionAction)?.selectedAction == ActionType.search) {
-          var tmpGame = _duplicateGame(node.game);
+        if ((actions.first as SelectActionAction).selectedAction == ActionType.search) {
+          var tmpGame = _duplicateGame(node.game!);
           var a = actions.first as SelectActionAction;
           _takeSelectActionAction(tmpGame, a.selectedAction);
           var searchActions = tmpGame.currentTurn.getAvailableActions(isAi: true);
@@ -222,34 +223,34 @@ class AiPlayer {
             newNode.action = searchActions.first;
           }
           newNode.selectedAction = a.selectedAction;
-          takeSearchTurn(newNode.game);
-          _doTriggers(newNode.game);
-          _processAction(newNode.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+          takeSearchTurn(newNode.game!);
+          _doTriggers(newNode.game!);
+          _processAction(newNode.game!, GameModeAction(node.game!.currentPlayer.id, GameModeType.endTurn));
         } else {
           print('bad juju');
           // dunno what's up, try to force the end of the turn
-          node.game.testMode = true;
-          _processAction(node.game, GameModeAction(node.game.currentPlayer.id, GameModeType.endTurn));
+          node.game!.testMode = true;
+          _processAction(node.game!, GameModeAction(node.game!.currentPlayer.id, GameModeType.endTurn));
         }
       }
 
       // now rollout from the first child
-      var rGame = _rollout(node.children.first.game);
-      var res = node.children.first.game.currentPlayer.resourceCount() * 1.0;
+      var rGame = _rollout(node.children.first.game!);
+      var res = node.children.first.game!.currentPlayer.resourceCount() * 1.0;
       var score = _gameScore(rGame, res > 0 ? res - 1.0 : res);
       _backPropagate(node.children.first, score);
     }
-    var best = ts.root.getMostVistedChild();
+    var best = ts.root!.getMostVistedChild();
     if (best != null) {
       print(
-          '${best.action.owner} took action (${startGame.round}): ${best.action.actionType} score:${best.score} avg:${best.score / best.visits}/${ts.root.getExplorationScore(best)} visits:${best.visits}/$count time:${stopwatch.elapsedMilliseconds}');
+          '${best.action.owner} took action (${startGame.round}): ${best.action.actionType} score:${best.score} avg:${best.score / best.visits}/${ts.root!.getExplorationScore(best)} visits:${best.visits}/$count time:${stopwatch.elapsedMilliseconds}');
     } else {
       print('${aiPlayer.id} skipped (${startGame.round})');
     }
     return best;
   }
 
-  void _backPropagate(MCTSNode node, double score) {
+  void _backPropagate(MCTSNode? node, double score) {
     while (node != null) {
       node.score += score;
       node.visits++;
@@ -383,9 +384,9 @@ class AiPlayer {
       }
     }
     // next try to pick a resource that matches one of our converters, if we don't already have one
-    for (var part in game.currentPlayer.parts[PartType.converter]) {
+    for (var part in game.currentPlayer.parts[PartType.converter]!) {
       var i = game.availableResources.list.indexOf((part.products[0] as ConverterBaseProduct).sourceResource);
-      if (i != -1 && game.currentPlayer.resources[game.availableResources[i]].value == 0) {
+      if (i != -1 && game.currentPlayer.resources[game.availableResources[i]]!.value == 0) {
         return i;
       }
     }
@@ -445,9 +446,9 @@ class AiPlayer {
       for (var action in actions) {
         var a = action as StoreAction;
         // we're going to pick a part that is no more than 1 resource more than we can afford
-        if (a != null && a.part.cost <= game.currentPlayer.maxResources.count(a.part.resource) + 1) {
+        if (a != null && a.part.cost <= game.currentPlayer.maxResources!.count(a.part.resource) + 1) {
           // also make sure we don't pick a converter if we already have 5
-          if (game.currentPlayer.parts[PartType.converter].length < 5 || a.part.partType != PartType.converter) {
+          if (game.currentPlayer.parts[PartType.converter]!.length < 5 || a.part.partType != PartType.converter) {
             choices.add(a);
           }
         }
@@ -464,7 +465,7 @@ class AiPlayer {
     }
   }
 
-  static void _constructPart(Game game, Part part, {MCTSNode node}) {
+  static void _constructPart(Game game, Part part, {MCTSNode? node}) {
     var discount = game.currentTurn.partDiscount(part);
     if (part.cost - discount == 0 || game.currentTurn.turnState.value == TurnState.constructL1Requested) {
       // it's free, just build it
@@ -483,7 +484,7 @@ class AiPlayer {
       if (used.product.productType != ProductType.spend) {
         var action = used.product.produce(game.currentPlayer.id);
         // need to look up the original product, as this is a copy
-        action.producedBy = allParts[action.producedBy.part.id].products[action.producedBy.prodIndex];
+        action.producedBy = allParts[action.producedBy!.part.id]!.products[action.producedBy!.prodIndex];
         convertersUsed.add(action);
       }
     }
@@ -506,7 +507,7 @@ class AiPlayer {
 
   static void takeConstructTurn(Game game) {
     var actions = game.currentTurn.getAvailableActions(isAi: true);
-    Part part;
+    Part? part;
     // build from storage first
     if (game.currentPlayer.savedParts.isNotEmpty) {
       for (var action in actions) {
@@ -518,7 +519,7 @@ class AiPlayer {
     }
     // prevent turns from taking forever by keeping rollout plays from building more than
     // 5 converters, unless that's all there is
-    if (game.currentPlayer.parts[PartType.converter].length >= 5) {
+    if (game.currentPlayer.parts[PartType.converter]!.length >= 5) {
       // remove any action that is constructing a converter
       var fixedActions = <GameAction>[];
       for (var action in actions) {
@@ -560,16 +561,16 @@ class AiPlayer {
     }
     var level = 0;
     if (game.currentPlayer.maxResources != null) {
-      if (game.currentPlayer.maxResources.count(ResourceType.any) > 6 ||
-          game.currentPlayer.maxResources.count(ResourceType.club) > 4 ||
-          game.currentPlayer.maxResources.count(ResourceType.heart) > 4 ||
-          game.currentPlayer.maxResources.count(ResourceType.spade) > 4 ||
-          game.currentPlayer.maxResources.count(ResourceType.diamond) > 4) {
+      if (game.currentPlayer.maxResources!.count(ResourceType.any) > 6 ||
+          game.currentPlayer.maxResources!.count(ResourceType.club) > 4 ||
+          game.currentPlayer.maxResources!.count(ResourceType.heart) > 4 ||
+          game.currentPlayer.maxResources!.count(ResourceType.spade) > 4 ||
+          game.currentPlayer.maxResources!.count(ResourceType.diamond) > 4) {
         level = 2;
-      } else if (game.currentPlayer.maxResources.count(ResourceType.club) > 2 ||
-          game.currentPlayer.maxResources.count(ResourceType.heart) > 2 ||
-          game.currentPlayer.maxResources.count(ResourceType.spade) > 2 ||
-          game.currentPlayer.maxResources.count(ResourceType.diamond) > 2) {
+      } else if (game.currentPlayer.maxResources!.count(ResourceType.club) > 2 ||
+          game.currentPlayer.maxResources!.count(ResourceType.heart) > 2 ||
+          game.currentPlayer.maxResources!.count(ResourceType.spade) > 2 ||
+          game.currentPlayer.maxResources!.count(ResourceType.diamond) > 2) {
         level = 1;
       }
     }
@@ -620,8 +621,7 @@ class AiPlayer {
       actions = game.currentTurn.getAvailableActions(isAi: true);
       if (actions.isNotEmpty) {
         // we'll prioritize acquire first, in case our resource storage fills up
-        var action =
-            actions.firstWhere((element) => element.actionType == ActionType.requestAcquire, orElse: () => null);
+        var action = actions.firstWhereOrNull((element) => element.actionType == ActionType.requestAcquire);
         if (action == null) {
           action = actions.first;
         }

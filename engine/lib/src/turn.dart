@@ -24,10 +24,10 @@ class Turn {
   final Game game;
   final PlayerData player;
   final GameStateVar<TurnState> turnState;
-  final GameStateVar<ActionType> selectedAction;
+  final GameStateVar<ActionType?> selectedAction;
   final ChangeStack changeStack;
   final Map<ResourceType, GameStateVar<int>> convertedResources;
-  ListState<Part/*!*/> searchedParts;
+  final ListState<Part> searchedParts;
   DefaultValueMapState<String, bool> partReady;
   DefaultValueMapState<String, bool> productActivated;
 
@@ -47,18 +47,16 @@ class Turn {
   Map<String, dynamic> toJson() {
     var ret = <String, dynamic>{
       //'player': player.id,
-      'state': TurnState.values.indexOf(turnState.value),
+      'state': TurnState.values.indexOf(turnState.value!),
     };
     if (selectedAction.value != null) {
-      ret['selectedAction'] = ActionType.values.indexOf(selectedAction.value);
+      ret['selectedAction'] = ActionType.values.indexOf(selectedAction.value!);
     }
-    if (searchedParts != null) {
-      var p = <String>[];
-      for (var part in searchedParts) {
-        p.add(part.id);
-      }
-      ret['searchedParts'] = p;
+    var p = <String>[];
+    for (var part in searchedParts) {
+      p.add(part.id);
     }
+    ret['searchedParts'] = p;
     var convertedResString = resourceMapStateToString(convertedResources);
     if (convertedResString.isNotEmpty) {
       ret['convRes'] = convertedResString;
@@ -69,7 +67,7 @@ class Turn {
     return ret;
   }
 
-  Turn._fromJsonHelper(this.game, this.player, TurnState state, ActionType selected, List<Part> searchedParts,
+  Turn._fromJsonHelper(this.game, this.player, TurnState state, ActionType? selected, List<Part> searchedParts,
       this.convertedResources, Map<String, bool> ready, Map<String, bool> activated)
       : changeStack = ChangeStack(),
         turnState = GameStateVar(game, 'turnState', state),
@@ -85,25 +83,25 @@ class Turn {
   factory Turn.fromJson(Game game, PlayerData player, Map<String, dynamic> json) {
     //var player = game.getPlayerFromId(json['player'] as String);
     var turnState = TurnState.values[json['state'] as int];
-    ActionType selectedAction;
+    ActionType? selectedAction;
     if (json.containsKey('selectedAction')) {
       selectedAction = ActionType.values[json['selectedAction'] as int];
     }
-    List<Part> searchedParts;
+    var searchedParts = <Part>[];
     if (json.containsKey('searchedParts')) {
       var plist = listFromJson<String>(json['searchedParts']);
-      searchedParts = <Part>[];
+      //searchedParts = <Part>[];
       for (var p in plist) {
-        searchedParts.add(allParts[p]);
+        searchedParts.add(allParts[p]!);
       }
     }
-    var res = stringToResourceMap(json['res'] as String);
+    var res = stringToResourceMap(json['res'] as String?);
     var convRes = <ResourceType, GameStateVar<int>>{};
     PlayerData.initResourceMap(game, convRes, 'cRes');
-    convRes[ResourceType.heart].reinitialize(res[ResourceType.heart]);
-    convRes[ResourceType.club].reinitialize(res[ResourceType.club]);
-    convRes[ResourceType.spade].reinitialize(res[ResourceType.spade]);
-    convRes[ResourceType.diamond].reinitialize(res[ResourceType.diamond]);
+    convRes[ResourceType.heart]!.reinitialize(res[ResourceType.heart]);
+    convRes[ResourceType.club]!.reinitialize(res[ResourceType.club]);
+    convRes[ResourceType.spade]!.reinitialize(res[ResourceType.spade]);
+    convRes[ResourceType.diamond]!.reinitialize(res[ResourceType.diamond]);
 
     var ready = mapFromJson<String, bool>(jsonDecode(json['ready'] as String));
     var activated = mapFromJson<String, bool>(jsonDecode(json['activated'] as String));
@@ -157,9 +155,9 @@ class Turn {
 
     // converter actions are available at this point
     if (!isAi) {
-      for (var part in player.parts[PartType.converter]) {
+      for (var part in player.parts[PartType.converter]!) {
         for (var product in part.products) {
-          if (!productActivated[product.productCode]) {
+          if (!productActivated[product.productCode]!) {
             _addAllAvailableActions(ret, part, product.produce(player.id));
           }
         }
@@ -168,7 +166,7 @@ class Turn {
 
     // did we do the action we selected yet?
     if (turnState.value == TurnState.actionSelected) {
-      _addAllAvailableActions(ret, null, SelectActionAction(player.id, selectedAction.value));
+      _addAllAvailableActions(ret, null, SelectActionAction(player.id, selectedAction.value!));
       return ret;
     }
 
@@ -213,9 +211,9 @@ class Turn {
           if (part.partType == PartType.storage ||
               part.partType == PartType.acquire ||
               part.partType == PartType.construct) {
-            if (partReady[part.id]) {
+            if (partReady[part.id]!) {
               for (var product in part.products) {
-                if (!productActivated[product.productCode] && _productCanActivate(product)) {
+                if (!productActivated[product.productCode]! && _productCanActivate(product)) {
                   // if (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat) {
                   //   if (!player.hasResourceStorageSpace) {
                   //     continue;
@@ -257,7 +255,7 @@ class Turn {
   }
 
   void _addSearchedPartActions(List<GameAction> actions) {
-    if (searchedParts == null) return;
+    //if (searchedParts == null) return;
     for (var part in searchedParts) {
       if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources, this)) {
         actions.add(ConstructAction(player.id, part, null, null, null));
@@ -283,7 +281,7 @@ class Turn {
     }
   }
 
-  void _addAllAvailableActions(List<GameAction> actions, Part part, GameAction action) {
+  void _addAllAvailableActions(List<GameAction> actions, Part? part, GameAction action) {
     if (action is SelectActionAction) {
       switch (action.selectedAction) {
         case ActionType.store:
@@ -318,21 +316,21 @@ class Turn {
         if (player.maxResources == null) {
           player.updateMaxResources(this);
         }
-        if (player.maxResources.getResourceCount() > 0) {
+        if (player.maxResources!.getResourceCount() > 0) {
           actions.add(action);
-        } else if (convertedResources[ResourceType.heart].value > 0 ||
-            convertedResources[ResourceType.spade].value > 0 ||
-            convertedResources[ResourceType.club].value > 0 ||
-            convertedResources[ResourceType.diamond].value > 0) {
+        } else if (convertedResources[ResourceType.heart]!.value! > 0 ||
+            convertedResources[ResourceType.spade]!.value! > 0 ||
+            convertedResources[ResourceType.club]!.value! > 0 ||
+            convertedResources[ResourceType.diamond]!.value! > 0) {
           actions.add(action);
         }
       } else {
-        if (player.hasResource(action.source) || convertedResources[action.source].value > 0) {
+        if (player.hasResource(action.source) || convertedResources[action.source]!.value! > 0) {
           actions.add(action);
         }
       }
     } else if (action is DoubleConvertAction) {
-      if (player.hasResource(action.source) || convertedResources[action.source].value > 0) {
+      if (player.hasResource(action.source) || convertedResources[action.source]!.value! > 0) {
         actions.add(action);
       }
     } else if (action is RequestAcquireAction) {
@@ -348,7 +346,7 @@ class Turn {
     }
   }
 
-  void _addStorePartActions(List<GameAction> actions, Product producedBy) {
+  void _addStorePartActions(List<GameAction> actions, Product? producedBy) {
     if (player.hasPartStorageSpace) {
       for (var i = 0; i < 3; ++i) {
         for (var part in game.saleParts[i]) {
@@ -364,7 +362,7 @@ class Turn {
     if (part.level == 1) discount += player.constructLevel2Discount;
 
     if (turnState.value == TurnState.searchSelected) {
-      if (searchedParts.contains(part)) {
+      if (searchedParts.contains(part) == true) {
         discount += player.constructFromSearchDiscount;
       }
     } else if (player.isInStorage(part)) {
@@ -422,7 +420,7 @@ class Turn {
     return items;
   }
 
-  void _addAffordablePartActions(List<GameAction> actions, Product producedBy) {
+  void _addAffordablePartActions(List<GameAction> actions, Product? producedBy) {
     var parts = getAffordableParts();
     for (var part in parts) {
       actions.add(ConstructAction(player.id, part, <ResourceType>[], producedBy, null));
@@ -438,7 +436,7 @@ class Turn {
     game.changeStack = changeStack;
     resetPartActivations();
     // converters don't rely on previous triggers, so enable them
-    for (var part in player.parts[PartType.converter]) {
+    for (var part in player.parts[PartType.converter]!) {
       partReady[part.id] = true;
     }
     turnState.value = TurnState.started;
@@ -464,7 +462,7 @@ class Turn {
   }
 
   // check to see if the player is even allowed to do the action
-  GameAction _isAvailableAction(GameAction action) {
+  GameAction? _isAvailableAction(GameAction action) {
     var availableActions = getAvailableActions();
     for (var a in availableActions) {
       if (a.matches(action)) return a;
@@ -473,16 +471,16 @@ class Turn {
     return null;
   }
 
-  Tuple2<ValidateResponseCode, GameAction> processAction(GameAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> processAction(GameAction action) {
     if (action.owner != player.id) {
       log.info('Action requested by non-current player ${action.owner}');
-      return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+      return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.notAllowed, null);
     }
 
     if (!game.testMode) {
       var matchedAction = _isAvailableAction(action);
       if (matchedAction == null) {
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.notAllowed, null);
       }
     }
 
@@ -494,51 +492,43 @@ class Turn {
         if (action is GameModeAction) {
           if (action.mode == GameModeType.startTurn) {
             startTurn();
-            return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+            return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.ok, null);
           } else if (action.mode == GameModeType.endTurn) {
             endTurn();
-            return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+            return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.ok, null);
           } else if (action.mode == GameModeType.undo) {
             if (changeStack.canUndo) {
               changeStack.undo();
-              return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+              return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.ok, null);
             } else {
-              return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+              return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.notAllowed, null);
             }
           }
         }
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.notAllowed, null);
       case ActionType.selectAction:
         changeStack.group();
         var a = action as SelectActionAction;
         selectedAction.value = a.selectedAction;
         turnState.value = TurnState.actionSelected;
         changeStack.commit();
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.ok, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.ok, null);
       case ActionType.store:
         return _doStore(action as StoreAction);
-        break;
       case ActionType.construct:
         return _doConstruct(action as ConstructAction);
-        break;
       case ActionType.acquire:
         return _doAcquire(action as AcquireAction);
-        break;
       case ActionType.search:
         return _doSearch(action as SearchAction);
-        break;
       case ActionType.convert:
         return _doConvert(action as ConvertAction);
-        break;
       case ActionType.doubleConvert:
         return _doDoubleConvert(action as DoubleConvertAction);
-        break;
       case ActionType.mysteryMeat:
         return _doMysteryMeat(action as MysteryMeatAction);
-        break;
       case ActionType.vp:
         return _doVp(action as VpAction);
-        break;
       case ActionType.requestAcquire:
         return _doRequestAcquire(action as RequestAcquireAction);
       case ActionType.searchDeclined:
@@ -550,17 +540,17 @@ class Turn {
       case ActionType.requestStore:
         return _doRequestStore(action as RequestStoreAction);
       default:
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.unknownAction, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.unknownAction, null);
     }
   }
 
-  void _doTriggers(Game game, GameAction gameAction, PartType partType, Part srcPart) {
-    for (var part in player.parts[partType]) {
+  void _doTriggers(Game game, GameAction gameAction, PartType partType, Part? srcPart) {
+    for (var part in player.parts[partType]!) {
       if (srcPart == part) {
         // don't trigger ourself
         continue;
       }
-      if (!partReady[part.id]) {
+      if (!partReady[part.id]!) {
         for (var trigger in part.triggers) {
           if (trigger.isTriggeredBy(gameAction)) {
             partReady[part.id] = true;
@@ -575,7 +565,7 @@ class Turn {
   // don't make the user manually trigger VP actions
   void _doTriggeredVpProducts(Game game, Part part, String playerId) {
     for (var product in part.products) {
-      if (!productActivated[product.productCode] && product is VpProduct) {
+      if (!productActivated[product.productCode]! && product is VpProduct) {
         _doVp((product.produce(playerId)) as VpAction);
       }
     }
@@ -588,7 +578,7 @@ class Turn {
     for (var partList in player.parts.values) {
       for (var part in partList) {
         for (var product in part.products) {
-          if (!productActivated[product.productCode] &&
+          if (!productActivated[product.productCode]! &&
               (product.productType == ProductType.aquire || product.productType == ProductType.mysteryMeat)) {
             productActivated[product.productCode] = true;
           }
@@ -606,8 +596,8 @@ class Turn {
   //   }
   // }
 
-  ValidateResponseCode _doSearchCompleted(Part part) {
-    if (part != null && (!searchedParts.contains(part) || turnState.value != TurnState.searchSelected)) {
+  ValidateResponseCode _doSearchCompleted(Part? part) {
+    if (part != null && (searchedParts.contains(part) != true || turnState.value != TurnState.searchSelected)) {
       return ValidateResponseCode.notAllowed;
     }
 
@@ -623,7 +613,7 @@ class Turn {
     return ValidateResponseCode.ok;
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doStore(StoreAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doStore(StoreAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
@@ -633,14 +623,14 @@ class Turn {
       ret = _doSearchCompleted(action.part);
       if (ValidateResponseCode.ok != ret) {
         changeStack.discard();
-        return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
       }
     } else {
       game.removePart(action.part);
     }
 
     if (action.producedBy != null) {
-      productActivated[action.producedBy.productCode] = true;
+      productActivated[action.producedBy!.productCode] = true;
     }
 
     _doTriggers(game, action, PartType.storage, action.part);
@@ -651,16 +641,16 @@ class Turn {
 
     game.refillMarket();
     changeStack.commit();
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doConstruct(ConstructAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doConstruct(ConstructAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
     // run the converters needed
     if (action.convertersUsed != null) {
-      for (var cv in action.convertersUsed) {
+      for (var cv in action.convertersUsed!) {
         if (cv.actionType != ActionType.convert && cv.actionType != ActionType.doubleConvert) {
           log.severe('Player ${player.id} tried to use a non-converter action as a converter');
           changeStack.discard();
@@ -679,7 +669,7 @@ class Turn {
 
     // do this first so we don't trigger ourself
     if (action.producedBy != null) {
-      productActivated[action.producedBy.productCode] = true;
+      productActivated[action.producedBy!.productCode] = true;
     }
 
     if (turnState.value != TurnState.searchSelected) {
@@ -689,7 +679,7 @@ class Turn {
         player.unsavePart(action.part);
       } else {
         changeStack.discard();
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.partNotForSale, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.partNotForSale, null);
       }
     }
 
@@ -703,23 +693,23 @@ class Turn {
         // in case we have lots of discounts
         costRemaining = 0;
       }
-      for (var resource in action.payment) {
-        if (convertedResources[resource].value > 0) {
-          convertedResources[resource].value--;
-        } else if (player.resources[resource].value > 0) {
+      for (var resource in action.payment!) {
+        if (convertedResources[resource]!.value! > 0) {
+          convertedResources[resource]!.value = convertedResources[resource]!.value! - 1;
+        } else if (player.resources[resource]!.value! > 0) {
           player.removeResource(resource);
           game.addToWell(resource);
         } else {
           log.severe('Player ${player.id} failed to spend ${resource.name}');
           changeStack.discard();
-          return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.notAllowed, null);
+          return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.notAllowed, null);
         }
         costRemaining--;
       }
       if (costRemaining != 0) {
         log.severe('Player ${player.id} failed to pay for ${action.part.id}');
         changeStack.discard();
-        return Tuple2<ValidateResponseCode, GameAction>(ValidateResponseCode.cantAfford, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ValidateResponseCode.cantAfford, null);
       }
     }
 
@@ -735,7 +725,7 @@ class Turn {
       ret = _doSearchCompleted(action.part);
       if (ValidateResponseCode.ok != ret) {
         changeStack.discard();
-        return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+        return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
       }
     } else if (turnState.value == TurnState.actionSelected || turnState.value == TurnState.constructL1Requested) {
       turnState.value = TurnState.selectedActionCompleted;
@@ -743,10 +733,10 @@ class Turn {
 
     game.refillMarket();
     changeStack.commit();
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doAcquire(AcquireAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doAcquire(AcquireAction action) {
     var ret = ValidateResponseCode.ok;
 
     if (player.hasResourceStorageSpace) {
@@ -756,7 +746,7 @@ class Turn {
       player.storeResource(action.acquiredResource);
 
       if (action.producedBy != null) {
-        productActivated[action.producedBy.productCode] = true;
+        productActivated[action.producedBy!.productCode] = true;
       }
 
       _doTriggers(game, action, PartType.acquire, null);
@@ -771,10 +761,10 @@ class Turn {
     } else {
       ret = ValidateResponseCode.noStorage;
     }
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doSearch(SearchAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doSearch(SearchAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
@@ -795,129 +785,129 @@ class Turn {
     // var result = SearchActionResult(player.id, parts);
     // return Tuple2<ValidateResponseCode, GameAction>(ret, result);
     // since we are serializing searchedParts, we don't need the specialized result
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doSearchDeclined(SearchDeclinedAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doSearchDeclined(SearchDeclinedAction action) {
     changeStack.group();
     var ret = _doSearchCompleted(null);
     changeStack.commit();
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doConvert(ConvertAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doConvert(ConvertAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    if (convertedResources[action.source].value > 0) {
-      convertedResources[action.source].value--;
-    } else if (player.resources[action.source].value > 0) {
+    if (convertedResources[action.source]!.value! > 0) {
+      convertedResources[action.source]!.value = convertedResources[action.source]!.value! - 1;
+    } else if (player.resources[action.source]!.value! > 0) {
       player.removeResource(action.source);
       game.addToWell(action.source);
     } else {
       throw InvalidOperationError('tried to spend non-existence resource');
     }
-    convertedResources[action.destination].value = convertedResources[action.destination].value + 1;
-    productActivated[action.producedBy.productCode] = true;
+    convertedResources[action.destination]!.value = convertedResources[action.destination]!.value! + 1;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doDoubleConvert(DoubleConvertAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doDoubleConvert(DoubleConvertAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
 
-    if (convertedResources[action.source].value > 0) {
-      convertedResources[action.source].value--;
-    } else if (player.resources[action.source].value > 0) {
+    if (convertedResources[action.source]!.value! > 0) {
+      convertedResources[action.source]!.value = convertedResources[action.source]!.value! - 1;
+    } else if (player.resources[action.source]!.value! > 0) {
       player.removeResource(action.source);
       game.addToWell(action.source);
     } else {
       throw InvalidOperationError('tried to spend non-existence resource');
     }
-    convertedResources[action.source].value = convertedResources[action.source].value + 2;
-    productActivated[action.producedBy.productCode] = true;
+    convertedResources[action.source]!.value = convertedResources[action.source]!.value! + 2;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doMysteryMeat(MysteryMeatAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doMysteryMeat(MysteryMeatAction action) {
     var ret = ValidateResponseCode.ok;
 
     if (player.hasResourceStorageSpace) {
       changeStack.group();
       action.resource = game.getFromWell();
       player.storeResource(action.resource);
-      productActivated[action.producedBy.productCode] = true;
+      productActivated[action.producedBy!.productCode] = true;
       _fixResourceAcquireProducts(player);
       changeStack.commit();
       changeStack.clear();
     } else {
       ValidateResponseCode.noStorage;
     }
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doVp(VpAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doVp(VpAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     for (var i = 0; i < action.vp; i++) {
       player.giveVpChit();
     }
-    productActivated[action.producedBy.productCode] = true;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
 
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doRequestAcquire(RequestAcquireAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doRequestAcquire(RequestAcquireAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.acquireRequested;
-    productActivated[action.producedBy.productCode] = true;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
 
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doRequestSearch(RequestSearchAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doRequestSearch(RequestSearchAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.searchRequested;
-    productActivated[action.producedBy.productCode] = true;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
 
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doRequestConstructL1(RequestConstructL1Action action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doRequestConstructL1(RequestConstructL1Action action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.constructL1Requested;
-    productActivated[action.producedBy.productCode] = true;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
 
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
-  Tuple2<ValidateResponseCode, GameAction> _doRequestStore(RequestStoreAction action) {
+  Tuple2<ValidateResponseCode, GameAction?> _doRequestStore(RequestStoreAction action) {
     var ret = ValidateResponseCode.ok;
     changeStack.group();
     turnState.value = TurnState.storeRequested;
-    productActivated[action.producedBy.productCode] = true;
+    productActivated[action.producedBy!.productCode] = true;
     changeStack.commit();
 
-    return Tuple2<ValidateResponseCode, GameAction>(ret, null);
+    return Tuple2<ValidateResponseCode, GameAction?>(ret, null);
   }
 
   int unusedProductCount() {
     var count = 0;
     for (var partType in player.parts.getMap.keys) {
       if (partType == PartType.storage || partType == PartType.acquire || partType == PartType.construct) {
-        for (var part in player.parts[partType]) {
-          if (!partReady[part.id]) continue;
+        for (var part in player.parts[partType]!) {
+          if (!partReady[part.id]!) continue;
           for (var product in part.products) {
-            if (!productActivated[product.productCode] && _productCanActivate(product)) {
+            if (!productActivated[product.productCode]! && _productCanActivate(product)) {
               count++;
             }
           }

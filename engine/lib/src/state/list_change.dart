@@ -3,9 +3,9 @@ import 'package:engine/engine.dart';
 enum ListChangeOperation { add, remove, update }
 
 class ListChange<T> extends Change {
-  final ListState<T> state;
-  final T/*?*/ item;
-  final T oldItem;
+  final ListState<T?> state;
+  final T? item;
+  final T? oldItem;
   final int index;
   final ListChangeOperation operation;
 
@@ -35,7 +35,7 @@ class ListChange<T> extends Change {
 
   @override
   void undo() {
-    ListChangeOperation op;
+    late ListChangeOperation op;
     switch (operation) {
       case ListChangeOperation.add:
         op = ListChangeOperation.remove;

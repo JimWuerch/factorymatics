@@ -7,7 +7,7 @@ import 'package:engine/engine.dart';
 class UsedProduct {
   final bool usedSource;
   final ConverterBaseProduct product;
-  final int/*!*/ id;
+  final int id;
   ResourceType get source => product.sourceResource;
 
   // ignore: avoid_positional_boolean_parameters
@@ -102,7 +102,7 @@ class ResourcePool {
   ResourcePool.fromResources(Map<ResourceType, GameStateVar<int>> src) : _resources = _createResourcePool() {
     for (var resourceType in src.keys) {
       if (resourceType == ResourceType.none) continue;
-      set(resourceType, src[resourceType].value);
+      set(resourceType, src[resourceType]!.value!);
     }
   }
 
@@ -257,7 +257,7 @@ class SpendHistory {
 class _AnyToAnyProduct extends ConvertProduct {
   final ConvertProduct src;
   // instances are so we can have separate id's for each source type, so the dedup still works
-  Map<ResourceType, ConvertProduct> instances;
+  late Map<ResourceType, ConvertProduct> instances;
   _AnyToAnyProduct(this.src, CalcResources cr) : super(src.source, src.dest) {
     part = src.part;
     prodIndex = src.prodIndex;
@@ -267,9 +267,9 @@ class _AnyToAnyProduct extends ConvertProduct {
       var newProd = ConvertProduct(rt, ResourceType.any);
       newProd.part = src.part;
       newProd.prodIndex = src.prodIndex;
-      if (src.part == null) {
-        //print('hmmm');
-      }
+      // if (src.part == null) {
+      //   //print('hmmm');
+      // }
       newProd.prodIndex = src.prodIndex;
       instances[rt] = newProd;
       cr.addProduct(newProd);
@@ -285,10 +285,10 @@ class TimeoutCalcResources implements Exception {
 }
 
 class CalcResources {
-  Map<ConverterBaseProduct, int> _prodIds;
-  Map<int, ConverterBaseProduct> _idToProd;
+  late Map<ConverterBaseProduct, int> _prodIds;
+  late Map<int, ConverterBaseProduct> _idToProd;
   int _prodCount = 0;
-  Stopwatch/*!*/ stopwatch;
+  Stopwatch? stopwatch;
 
   void addProduct(ConverterBaseProduct conv) {
     _idToProd[1 << _prodCount] = conv;
@@ -300,10 +300,10 @@ class CalcResources {
   static List<ConverterBaseProduct> makeProductList(MapState<PartType, ListState<Part>> parts, Turn turn) {
     // make a Set of available converters
     var products = <ConverterBaseProduct>[];
-    for (var part in parts[PartType.converter]) {
-      if (!turn.partReady[part.id]) continue;
+    for (var part in parts[PartType.converter]!) {
+      if (!turn.partReady[part.id]!) continue;
       for (var index = 0; index < part.products.length; ++index) {
-        if (!turn.productActivated[part.products[index].productCode]) {
+        if (!turn.productActivated[part.products[index].productCode]!) {
           // if (part is MultipleConverterPart) {
           //   products.add(part.converters[0].products[0] as ConverterBaseProduct);
           //   products.add(part.converters[1].products[0] as ConverterBaseProduct);
@@ -400,7 +400,7 @@ class CalcResources {
         var history2 = SpendHistory.of(history);
         var ip2 = ResourcePool.of(inputPool);
         var sp2 = List<SpendResourceProduct>.of(spenders);
-        history2.add(UsedProduct(spender, true, _prodIds[spender]));
+        history2.add(UsedProduct(spender, true, _prodIds[spender]!));
         sp2.remove(spender);
         ip2.sub1(spender.resourceType);
         if (needed - 1 == 0) {
@@ -424,7 +424,7 @@ class CalcResources {
         var resourceCount = 0;
         for (var cv in currentSpenders) {
           resourceCount++;
-          history2.add(UsedProduct(cv, true, _prodIds[cv]));
+          history2.add(UsedProduct(cv, true, _prodIds[cv]!));
           ip2.sub1(cv.resourceType);
           if (needed - resourceCount == 0) {
             paths.add(history2);
@@ -499,12 +499,20 @@ class CalcResources {
               var op2 = ResourcePool.of(outputPool);
               if (inputPool.count(srcRt) > 0) {
                 ip2.sub1(srcRt);
-                history2.add(UsedProduct(newProd, true,
-                    cv.source == ResourceType.any ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : _prodIds[c]));
+                history2.add(UsedProduct(
+                    newProd,
+                    true,
+                    cv.source == ResourceType.any
+                        ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]!]!
+                        : _prodIds[c]!));
               } else {
                 op2.sub1(srcRt);
-                history2.add(UsedProduct(newProd, false,
-                    cv.source == ResourceType.any ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]] : _prodIds[c]));
+                history2.add(UsedProduct(
+                    newProd,
+                    false,
+                    cv.source == ResourceType.any
+                        ? _prodIds[(c as _AnyToAnyProduct).instances[srcRt]!]!
+                        : _prodIds[c]!));
               }
               op2.add1(destRt);
               // var conv2 = List<ConverterBaseProduct>.of(conv);
@@ -545,12 +553,12 @@ class CalcResources {
           var op2 = ResourcePool.of(outputPool);
           if (op2.count(cv.resourceType) > 0) {
             op2.add1(cv.resourceType);
-            history2.add(UsedProduct(c, false, _prodIds[c]));
+            history2.add(UsedProduct(c, false, _prodIds[c]!));
           } else if (ip2.count(cv.resourceType) > 0) {
             ip2.sub1(cv.resourceType);
             op2.add1(cv.resourceType);
             op2.add1(cv.resourceType);
-            history2.add(UsedProduct(c, true, _prodIds[c]));
+            history2.add(UsedProduct(c, true, _prodIds[c]!));
           }
           // var conv2 = List<ConverterBaseProduct>.of(conv);
           // conv2.remove(c);
@@ -613,7 +621,7 @@ class CalcResources {
 
 // recursively try all permutations of products
   void _findMaxResources(ResourcePool max, List<ConverterBaseProduct> conv, int inputPool, int outputPool) {
-    if (stopwatch != null && stopwatch.elapsedMilliseconds > gameSettings.maxTimeCalcResources) {
+    if (stopwatch != null && stopwatch!.elapsedMilliseconds > gameSettings.maxTimeCalcResources) {
       throw TimeoutCalcResources();
     }
     var convCount = conv.length;

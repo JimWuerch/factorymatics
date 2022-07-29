@@ -3,7 +3,7 @@ import 'package:engine/src/ai/ai_player.dart';
 import 'package:test/test.dart';
 import 'dart:developer' as developer;
 
-Game game;
+late Game game;
 
 String player = 'p1';
 
@@ -14,9 +14,10 @@ void _createGame() {
   game = Game(<String>[player, 'p2'], playerService, '1');
   game.tmpName = 'test';
   game.createGame();
-  var startingPartDecks = List<List<Part>>.filled(3, null);
+  var startingPartDecks = <List<Part>>[]; //.filled(3, null);
   for (var i = 0; i < 3; ++i) {
-    startingPartDecks[i] = <Part>[];
+    //startingPartDecks[i] = <Part>[];
+    startingPartDecks.add(<Part>[]);
   }
   for (var part in allParts.values) {
     if (part.level != -1) {

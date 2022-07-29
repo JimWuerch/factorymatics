@@ -6,7 +6,7 @@ class MapState<K, V> extends GameStateBase {
   final Map<K, V> _map;
   Map<K, V> get getMap => Map<K, V>.unmodifiable(_map);
 
-  MapState(Game game, String label, {StateVarCallback onChanged, Object onChangedParam, Map<K, V> starting})
+  MapState(Game game, String label, {StateVarCallback? onChanged, Object? onChangedParam, Map<K, V>? starting})
       : _map = <K, V>{},
         super(game, label, onChanged, onChangedParam) {
     if (starting != null) {
@@ -14,7 +14,7 @@ class MapState<K, V> extends GameStateBase {
     }
   }
 
-  MapState.fromMap(Game game, String label, Map<K, V> map, {StateVarCallback onChanged, Object onChangedParam})
+  MapState.fromMap(Game game, String label, Map<K, V> map, {StateVarCallback? onChanged, Object? onChangedParam})
       : _map = map,
         super(game, label, onChanged, onChangedParam);
 
@@ -30,10 +30,10 @@ class MapState<K, V> extends GameStateBase {
     // }
   }
 
-  V operator [](K key) => _map[key];
-  V getValue(K key) => _map[key];
+  V? operator [](K key) => _map[key];
+  V? getValue(K key) => _map[key];
 
-  V remove(K key) {
+  V? remove(K key) {
     if (!_map.containsKey(key)) return null;
     var old = _map[key];
     MapChange<K, V>.remove(this, key);
@@ -66,6 +66,6 @@ class MapState<K, V> extends GameStateBase {
     } else {
       _map[key] = value;
     }
-    if (onChanged != null) onChanged(this, onChangedParam);
+    if (onChanged != null) onChanged!(this, onChangedParam);
   }
 }

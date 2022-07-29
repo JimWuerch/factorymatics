@@ -3,22 +3,22 @@ import 'dart:math' as math;
 import 'package:engine/engine.dart';
 
 class MCTSNode {
-  final MCTSNode parent;
-  Game game;
-  List<MCTSNode> children;
-  ActionType selectedAction;
-  GameAction action;
-  double score;
-  int/*!*/ visits;
+  final MCTSNode? parent;
+  Game? game;
+  late List<MCTSNode> children;
+  late ActionType selectedAction;
+  late GameAction action;
+  late double score;
+  late int visits;
   // ignore: non_constant_identifier_names
-  double/*!*/ _UCB;
+  late double _UCB;
 
   MCTSNode(this.parent, this.game) {
     children = <MCTSNode>[];
     score = 0.0;
     visits = 0;
     if (parent != null) {
-      parent.addChild(this);
+      parent!.addChild(this);
     }
   }
 
@@ -56,7 +56,7 @@ class MCTSNode {
     return ret;
   }
 
-  MCTSNode getMostVistedChild() {
+  MCTSNode? getMostVistedChild() {
     if (children.isEmpty) {
       return null;
     }
@@ -83,7 +83,7 @@ class MCTSNode {
 }
 
 class MCTreeSearch {
-  MCTSNode root;
+  MCTSNode? root;
 
   MCTreeSearch(Game game) {
     root = MCTSNode(null, game);

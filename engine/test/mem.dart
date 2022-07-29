@@ -5,7 +5,7 @@ import 'dart:io';
 
 import 'package:args/args.dart';
 
-Game game;
+late Game game;
 
 String player = 'p1';
 
@@ -17,21 +17,21 @@ void _createGame() {
   game = Game(<String>[player], playerService, '1');
   game.tmpName = 'test';
   game.createGame();
-  var startingPartDecks = List<List<Part>>.filled(3, null);
+  var startingPartDecks = List<List<Part>?>.filled(3, null);
   for (var i = 0; i < 3; ++i) {
     startingPartDecks[i] = <Part>[];
   }
   for (var part in allParts.values) {
     if (part.level != -1) {
       // initial part is lvl -1
-      startingPartDecks[part.level].add(part);
+      startingPartDecks[part.level]!.add(part);
     }
   }
   for (var i = 0; i < 3; ++i) {
-    startingPartDecks[i].shuffle();
+    startingPartDecks[i]!.shuffle();
   }
-  startingPartDecks[2].removeRange(16, startingPartDecks[2].length);
-  game.assignStartingDecks(startingPartDecks);
+  startingPartDecks[2]!.removeRange(16, startingPartDecks[2]!.length);
+  game.assignStartingDecks(startingPartDecks as List<List<Part>>);
   game.startGame();
   game.startNextTurn();
   //game.testMode = true;
@@ -60,7 +60,7 @@ void main(List<String> arguments) async {
   var games = 0;
   var numberFormat = NumberFormat('0000000', "en_US");
 
-  String outputFile;
+  String? outputFile;
   if (arguments.isNotEmpty) {
     outputFile = arguments[0];
   }
@@ -71,7 +71,7 @@ void main(List<String> arguments) async {
 //    var ai2 = AiPlayer(game.players[1]);
 
     while (!game.currentTurn.gameEnded) {
-      await ai.takeTurn(game);
+      /*await*/ ai.takeTurn(game);
       //ai2.takeTurn(game);
       for (var i = 0; i < game.players.length; i++) {
         print('Score for ${game.players[i].id} is ${game.players[i].score} at round ${game.round}');
@@ -87,8 +87,8 @@ void main(List<String> arguments) async {
         if (!cards.containsKey(part.id)) {
           cards[part.id] = Data(1, bonus);
         } else {
-          cards[part.id].count++;
-          cards[part.id].bonus += bonus;
+          cards[part.id]!.count++;
+          cards[part.id]!.bonus += bonus;
         }
       }
     }

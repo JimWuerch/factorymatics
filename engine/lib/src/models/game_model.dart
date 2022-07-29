@@ -27,11 +27,11 @@ enum GameModelType {
 enum ResponseCode { ok, error, failedValidation }
 
 abstract class GameModel {
-  final String/*!*/ _gameId;
-  String/*!*/ get gameId => _gameId;
-  final String/*!*/ _description;
-  String/*!*/ get description => _description;
-  final String/*!*/ _ownerId;
+  final String _gameId;
+  String get gameId => _gameId;
+  final String _description;
+  String get description => _description;
+  final String _ownerId;
   String get ownerId => _ownerId;
 
   GameModelType get modelType;
@@ -51,7 +51,7 @@ abstract class GameModel {
   GameModel.fromJson(Map<String, dynamic> json) : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String);
 }
 
-String/*!*/ gameIdFromJson(Map<String, dynamic> json) {
+String gameIdFromJson(Map<String, dynamic> json) {
   return json['gameId'] as String;
 }
 

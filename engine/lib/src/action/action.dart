@@ -52,7 +52,7 @@ abstract class GameAction {
   String get message => 'action';
 
   // for actions that are the result of part activations
-  Product producedBy;
+  Product? producedBy;
 
   GameAction(this.owner, [this.producedBy]);
 
@@ -69,24 +69,24 @@ abstract class GameAction {
       'owner': owner,
     };
     if (producedBy != null) {
-      ret['part'] = producedBy.part.id;
-      ret['pi'] = producedBy.prodIndex;
+      ret['part'] = producedBy!.part.id;
+      ret['pi'] = producedBy!.prodIndex;
     }
     return ret;
   }
 
   GameAction.fromJson(Game game, Map<String, dynamic> json)
-      : owner = game.playerService.getPlayer(json['owner'] as String).playerId {
+      : owner = game.playerService!.getPlayer(json['owner'] as String).playerId {
     if (json.containsKey('part')) {
-      var part = allParts[json['part'] as String];
+      var part = allParts[(json['part'] as String?)!];
       if (json.containsKey('pi')) {
-        producedBy = part.products[json['pi'] as int];
+        producedBy = part!.products[json['pi'] as int];
       }
     }
   }
 }
 
-GameAction actionFromJson(Game/*!*/ game, Map<String, dynamic> json) {
+GameAction actionFromJson(Game game, Map<String, dynamic> json) {
   switch (ActionType.values[json['type'] as int]) {
     case ActionType.store:
       return StoreAction.fromJson(game, json);
@@ -135,6 +135,6 @@ GameAction actionFromJson(Game/*!*/ game, Map<String, dynamic> json) {
     // case ActionType.requestVp:
     //   return RequestVpAction.fromJson(game, json);
     default:
-      throw InvalidOperationError('Unknown action: ${json['type'] as int}');
+      throw InvalidOperationError('Unknown action: ${json['type'] as int?}');
   }
 }

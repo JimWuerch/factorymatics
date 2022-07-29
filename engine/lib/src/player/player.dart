@@ -3,8 +3,8 @@ import 'local_player.dart';
 enum PlayerType { local, network }
 
 abstract class Player {
-  final String/*!*/ name;
-  final String/*!*/ playerId;
+  final String name;
+  final String playerId;
   PlayerType get playerType;
 
   Player(this.name, this.playerId);
