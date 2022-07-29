@@ -1,7 +1,7 @@
 import 'package:engine/engine.dart';
 
 class SelectActionAction extends GameAction {
-  final ActionType selectedAction;
+  final ActionType/*!*/ selectedAction;
 
   SelectActionAction(String player, this.selectedAction) : super(player);
 

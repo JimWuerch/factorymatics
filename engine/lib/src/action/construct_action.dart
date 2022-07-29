@@ -1,10 +1,10 @@
 import 'package:engine/engine.dart';
 
 class ConstructAction extends GameAction {
-  final Part part;
+  final Part/*!*/ part;
   final List<ResourceType> payment;
   final List<GameAction> convertersUsed;
-  bool fromStorage; // Turn will force update this
+  bool/*!*/ fromStorage; // Turn will force update this
 
   ConstructAction(String player, this.part, this.payment, Product producedBy, this.convertersUsed,
       {this.fromStorage = false})

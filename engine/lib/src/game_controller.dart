@@ -5,7 +5,7 @@ import 'package:engine/engine.dart';
 
 class GameController {
   Game game;
-  Random random;
+  Random/*!*/ random;
   //List<List<Part>> startingPartDecks;
   //List<String> playerIds;
 

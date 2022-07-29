@@ -1,7 +1,7 @@
 import 'package:engine/engine.dart';
 
 class JoinGameResponse extends ResponseModel {
-  final String gameState;
+  final String/*!*/ gameState;
 
   JoinGameResponse(Game game, String owner, String desc, ResponseCode code, this.gameState)
       : super(game.gameId, owner, 'joinGame response', code);

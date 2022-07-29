@@ -1,7 +1,7 @@
 import 'package:engine/engine.dart';
 
 class SearchAction extends GameAction {
-  final int level;
+  final int/*!*/ level;
 
   SearchAction(String player, this.level, [Product producedBy]) : super(player, producedBy);
 

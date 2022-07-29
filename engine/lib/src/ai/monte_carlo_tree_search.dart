@@ -9,9 +9,9 @@ class MCTSNode {
   ActionType selectedAction;
   GameAction action;
   double score;
-  int visits;
+  int/*!*/ visits;
   // ignore: non_constant_identifier_names
-  double _UCB;
+  double/*!*/ _UCB;
 
   MCTSNode(this.parent, this.game) {
     children = <MCTSNode>[];

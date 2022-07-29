@@ -28,27 +28,27 @@ class Game {
 
   List<PlayerData> players;
 
-  String tmpName;
+  String/*!*/ tmpName;
 
-  String gameId;
+  String/*!*/ gameId;
   int nextObjectId = 0;
   Uuid uuidGen;
   PlayerService playerService;
   //Map<String, Part> allParts;
   Random random = Random();
 
-  ListState<ResourceType> availableResources;
+  ListState<ResourceType>/*!*/ availableResources;
 
-  List<ListState<Part>> partDecks;
-  List<int> partsRemaining; // this is maintained for the client to query
-  ListState<ResourceType> well;
-  List<ListState<Part>> saleParts;
+  List<ListState<Part/*!*/>/*!*/> partDecks;
+  List<int>/*!*/ partsRemaining; // this is maintained for the client to query
+  ListState<ResourceType>/*!*/ well;
+  List<ListState<Part/*!*/>/*!*/> saleParts;
   CalcResources calcResources;
-  Turn currentTurn;
-  int round = 0;
-  bool gameEndTriggered = false;
+  Turn/*!*/ currentTurn;
+  int/*!*/ round = 0;
+  bool/*!*/ gameEndTriggered = false;
 
-  int _currentPlayerIndex = 0;
+  int/*!*/ _currentPlayerIndex = 0;
   PlayerData get currentPlayer => players[_currentPlayerIndex];
 
   ChangeStack changeStack;
@@ -57,7 +57,7 @@ class Game {
   bool isAuthoritativeSave = false;
 
   // this is only set for the client, it is not used or accurate for the server
-  bool canUndo;
+  bool/*!*/ canUndo;
 
   // if the ai is simulating a game, this is true
   bool inSimulation = false;
@@ -113,11 +113,11 @@ class Game {
     // we'll discard this changeStack
     changeStack = ChangeStack();
 
-    partDecks = List<ListState<Part>>.filled(3, null);
+    partDecks = List<ListState<Part>/*!*/>.filled(3, null);
     partsRemaining = List<int>.filled(3, 0);
     well = ListState<ResourceType>(this, 'well');
     availableResources = ListState(this, 'availableResources');
-    saleParts = List<ListState<Part>>.filled(3, null);
+    saleParts = List<ListState<Part>/*!*/>.filled(3, null);
     for (var i = 0; i < 3; ++i) {
       saleParts[i] = ListState<Part>(this, 'lvl${i}Sale');
     }
@@ -127,9 +127,9 @@ class Game {
     // }
   }
 
-  void assignStartingDecks(List<List<Part>> decks) {
+  void assignStartingDecks(List<List<Part/*!*/>/*!*/> decks) {
     for (var i = 0; i < 3; ++i) {
-      partDecks[i] = ListState<Part>(this, 'lvl${i}Deck', starting: decks[i]);
+      partDecks[i] = ListState<Part/*!*/>(this, 'lvl${i}Deck', starting: decks[i]);
       partsRemaining[i] = partDecks[i].length;
     }
   }
@@ -143,7 +143,7 @@ class Game {
     }
   }
 
-  ResourceType getFromWell() {
+  ResourceType/*!*/ getFromWell() {
     return well.removeAt(random.nextInt(well.length));
   }
 
@@ -218,7 +218,7 @@ class Game {
     return currentPlayer;
   }
 
-  PlayerData getPlayerFromId(String id) {
+  PlayerData getPlayerFromId(String/*!*/ id) {
     return players.firstWhere((element) => element.id == id, orElse: () => null);
   }
 
@@ -342,8 +342,8 @@ class Game {
   }
 
   /// Returns playerIds unless non-authoritative, in which case player names are returned
-  List<String> getPlayerIds() {
-    var ret = <String>[];
+  List<String/*!*/> getPlayerIds() {
+    var ret = <String/*!*/>[];
     for (var player in players) {
       ret.add(playerService != null ? playerService.getPlayer(player.id).name : player.id);
     }
@@ -359,7 +359,7 @@ class Game {
     return ret;
   }
 
-  ResourceType acquireResource(int index) {
+  ResourceType/*!*/ acquireResource(int index) {
     var ret = availableResources.removeAt(index);
     availableResources.add(getFromWell());
     return ret;
@@ -442,7 +442,7 @@ class Game {
   }
 }
 
-String partListToString(List<Part> parts) {
+String partListToString(List<Part/*!*/> parts) {
   var buf = StringBuffer();
   for (var part in parts) {
     var i = int.parse(part.id);
@@ -451,7 +451,7 @@ String partListToString(List<Part> parts) {
   return buf.toString();
 }
 
-void partStringToList(String src, void Function(Part) addFn, Map<String, Part> allParts) {
+void partStringToList(String src, void Function(Part/*!*/) addFn, Map<String, Part> allParts) {
   for (var i = 0; i <= src.length - 2; i += 2) {
     var hex = src.substring(i, i + 2);
     var partId = int.parse(hex, radix: 16).toString();
@@ -459,7 +459,7 @@ void partStringToList(String src, void Function(Part) addFn, Map<String, Part> a
   }
 }
 
-void stringToResourceListState(String src, ListState<ResourceType> list) {
+void stringToResourceListState(String/*!*/ src, ListState<ResourceType> list) {
   var resources = stringToResourceList(src);
   for (var resource in resources) {
     list.add(resource);

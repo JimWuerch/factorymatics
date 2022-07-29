@@ -4,8 +4,8 @@ class CreateLobbyRequest extends GameModel {
   @override
   GameModelType get modelType => GameModelType.createLobbyRequest;
 
-  final String gameName;
-  final String playerName;
+  final String/*!*/ gameName;
+  final String/*!*/ playerName;
   final String password;
 
   CreateLobbyRequest(String ownerId, this.gameName, this.playerName, this.password)

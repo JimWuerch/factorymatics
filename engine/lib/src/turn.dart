@@ -27,7 +27,7 @@ class Turn {
   final GameStateVar<ActionType> selectedAction;
   final ChangeStack changeStack;
   final Map<ResourceType, GameStateVar<int>> convertedResources;
-  ListState<Part> searchedParts;
+  ListState<Part/*!*/> searchedParts;
   DefaultValueMapState<String, bool> partReady;
   DefaultValueMapState<String, bool> productActivated;
 

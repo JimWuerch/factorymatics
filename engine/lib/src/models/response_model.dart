@@ -14,6 +14,6 @@ abstract class ResponseModel extends GameModel {
 
   ResponseModel.fromJson(Map<String, dynamic> json)
       : responseCode =
-            ResponseCode.values.firstWhere((e) => e.toString() == 'ResponseCode.${json['responseCode'] as String}'),
+            ResponseCode.values.firstWhere((e) => e.toString() == 'ResponseCode.${json['responseCode'] as String/*!*/}'),
         super.fromJson(json);
 }

@@ -7,7 +7,7 @@ import 'package:engine/engine.dart';
 class UsedProduct {
   final bool usedSource;
   final ConverterBaseProduct product;
-  final int id;
+  final int/*!*/ id;
   ResourceType get source => product.sourceResource;
 
   // ignore: avoid_positional_boolean_parameters
@@ -288,7 +288,7 @@ class CalcResources {
   Map<ConverterBaseProduct, int> _prodIds;
   Map<int, ConverterBaseProduct> _idToProd;
   int _prodCount = 0;
-  Stopwatch stopwatch;
+  Stopwatch/*!*/ stopwatch;
 
   void addProduct(ConverterBaseProduct conv) {
     _idToProd[1 << _prodCount] = conv;

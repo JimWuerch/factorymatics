@@ -6,7 +6,7 @@ import 'package:tuple/tuple.dart';
 
 class AiPlayer {
   //final Game srcGame;
-  final PlayerData aiPlayer;
+  final PlayerData/*!*/ aiPlayer;
   //GameController gc = GameController();
   //Stopwatch stopwatch = Stopwatch()..start();
 
@@ -22,7 +22,7 @@ class AiPlayer {
     return g;
   }
 
-  void takeTurn(Game game) {
+  void takeTurn(Game/*!*/ game) {
     var best = _takeTurnInternal(game);
     // rehome action to this game
     if (best != null) {
@@ -48,7 +48,7 @@ class AiPlayer {
     }
   }
 
-  void _finishTurn(Game game, ActionType selectedAction, GameAction srcAction) {
+  void _finishTurn(Game game, ActionType/*!*/ selectedAction, GameAction srcAction) {
     if (srcAction != null) {
       _takeSelectActionAction(game, selectedAction);
       // re-home action to this game, as internal bits point to other game objects

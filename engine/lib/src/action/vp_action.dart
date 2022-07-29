@@ -1,7 +1,7 @@
 import 'package:engine/engine.dart';
 
 class VpAction extends GameAction {
-  final int vp;
+  final int/*!*/ vp;
 
   VpAction(String player, this.vp, Product producedBy) : super(player, producedBy);
 

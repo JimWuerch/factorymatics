@@ -5,7 +5,7 @@ class JoinLobbyRequest extends GameModel {
   GameModelType get modelType => GameModelType.joinLobbyRequest;
 
   final String gameId;
-  final String playerName;
+  final String/*!*/ playerName;
   final String password;
 
   JoinLobbyRequest(String ownerId, this.gameId, this.playerName, this.password) : super('create', ownerId, 'joinLobby request');

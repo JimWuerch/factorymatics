@@ -25,7 +25,7 @@ class PlayerService {
     return player;
   }
 
-  Player getPlayer(String playerId) {
+  Player getPlayer(String/*!*/ playerId) {
     return players.firstWhere((element) => element.playerId == playerId);
   }
 

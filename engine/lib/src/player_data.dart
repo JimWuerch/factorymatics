@@ -5,16 +5,16 @@ class PlayerData {
   static const int basePartStorage = 1;
   static const int baseSearch = 3;
 
-  final String id;
+  final String/*!*/ id;
   final MapState<PartType, ListState<Part>> parts;
-  final GameStateVar<int> _vpChits;
-  final Map<ResourceType, GameStateVar<int>> resources;
+  final GameStateVar<int/*!*/> _vpChits;
+  final Map<ResourceType, GameStateVar<int/*!*/>> resources;
   final Game game;
-  final ListState<Part> savedParts;
+  final ListState<Part/*!*/> savedParts;
   // maxResources is a cache, so it can be null.
   ResourcePool maxResources;
 
-  int get vpChits => _vpChits.value;
+  int/*!*/ get vpChits => _vpChits.value;
 
   PlayerData(this.game, this.id)
       : parts = MapState<PartType, ListState<Part>>(game, '$id:parts'),
@@ -26,7 +26,7 @@ class PlayerData {
     _initParts(parts);
   }
 
-  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int>> resources, String label,
+  static void initResourceMap(Game game, Map<ResourceType, GameStateVar<int/*!*/>> resources, String label,
       {StateVarCallback callback, Object callbackParam}) {
     for (var resource in ResourceType.values) {
       if (resource != ResourceType.none && resource != ResourceType.any) {

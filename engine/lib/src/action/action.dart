@@ -86,7 +86,7 @@ abstract class GameAction {
   }
 }
 
-GameAction actionFromJson(Game game, Map<String, dynamic> json) {
+GameAction actionFromJson(Game/*!*/ game, Map<String, dynamic> json) {
   switch (ActionType.values[json['type'] as int]) {
     case ActionType.store:
       return StoreAction.fromJson(game, json);

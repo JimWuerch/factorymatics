@@ -4,8 +4,8 @@ enum ProductType { mysteryMeat, aquire, convert, vp, doubleResource, search, sto
 
 abstract class Product {
   final ProductType productType;
-  Part part; // set in the part constructor
-  int prodIndex; // also set in the part constructor
+  Part/*!*/ part; // set in the part constructor
+  int/*!*/ prodIndex; // also set in the part constructor
   //final GameStateVar<bool> activated;
 
   Product(this.productType); // : activated = GameStateVar(game, 'product:activated', false);
