@@ -3,7 +3,7 @@ import 'package:engine/engine.dart';
 class GameLobby {
   String gameId;
   GameController game;
-  List<Player> players;
+  List<Player>/*!*/ players;
 
   GameLobby() {
     players = <Player>[];

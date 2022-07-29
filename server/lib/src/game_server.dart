@@ -8,7 +8,7 @@ typedef ClientCallback = void Function(GameAction);
 /// This is just a local server for now, it will run inside the client
 class GameServer {
   //Game game;
-  int gameId;
+  int/*!*/ gameId;
   // final _serverActionsStreamController = StreamController<GameAction>.broadcast();
   // Stream<GameAction> get serverActions => _serverActionsStreamController.stream.asBroadcastStream();
   // StreamSubscription<GameAction> gameActions;
@@ -27,7 +27,7 @@ class GameServer {
     games.addPlayer(gameId, playerService.getPlayer(playerId));
   }
 
-  String createGameLobby(String playerId) {
+  String/*!*/ createGameLobby(String playerId) {
     var lobby = games.createLobby();
     games.addPlayer(lobby.gameId, playerService.getPlayer(playerId));
     return lobby.gameId;
@@ -54,7 +54,7 @@ class GameServer {
     return await game.applyAction(action);
   }
 
-  Future<ResponseModel> handleRequest(GameModel model) async {
+  Future<ResponseModel/*!*/> handleRequest(GameModel model) async {
     //TODO: add validator
     // validateRequest(model);
 
