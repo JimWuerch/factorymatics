@@ -1,9 +1,9 @@
 import 'package:engine/engine.dart';
 
 class GameLobby {
-  String gameId;
-  GameController game;
-  List<Player>/*!*/ players;
+  String? gameId;
+  GameController? game;
+  late List<Player> players;
 
   GameLobby() {
     players = <Player>[];
@@ -13,17 +13,17 @@ class GameLobby {
 class GameStore {
   // for now just put in a Map
   // later use sembast
-  final Map<String, GameLobby> _games;
+  final Map<String?, GameLobby> _games;
   int _nextGameIndex = 0;
 
-  GameStore() : _games = <String, GameLobby>{};
+  GameStore() : _games = <String?, GameLobby>{};
 
-  GameController find(String gameId) {
-    return _games[gameId].game;
+  GameController? find(String gameId) {
+    return _games[gameId]!.game;
   }
 
   List<Player> findPlayers(String gameId) {
-    return _games[gameId].players;
+    return _games[gameId]!.players;
   }
 
   GameLobby createLobby() {
@@ -38,15 +38,15 @@ class GameStore {
     if (!_games.containsKey(game.gameId)) {
       return false;
     }
-    _games[game.gameId].game = game;
+    _games[game.gameId]!.game = game;
     return true;
   }
 
-  bool addPlayer(String gameId, Player player) {
+  bool addPlayer(String? gameId, Player player) {
     if (!_games.containsKey(gameId)) {
       return false;
     }
-    _games[gameId].players.add(player);
+    _games[gameId]!.players.add(player);
     return true;
   }
 

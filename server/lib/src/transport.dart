@@ -6,7 +6,7 @@ typedef GameRequestCallback = void Function(GameModel model);
 
 abstract class GameTransport {
   void init();
-  Future<GameModel> sendRequest(GameModel model);
+  Future<GameModel?> sendRequest(GameModel model);
 }
 
 class LocalServerTransport implements GameTransport {
@@ -16,15 +16,15 @@ class LocalServerTransport implements GameTransport {
 
   Future<ResponseModel> receiveLocalRequest(Map<String, dynamic> json) async {
     var gameModelType = gameModelTypeFromJson(json);
-    Game game;
+    Game? game;
     if (gameModelType == GameModelType.actionRequest ||
         gameModelType == GameModelType.actionResponse ||
         gameModelType == GameModelType.joinGameResponse) {
       var gameId = gameIdFromJson(json);
-      var gameController = server.games.find(gameId);
+      var gameController = server.games.find(gameId)!;
       game = gameController.game;
     }
-    var model = gameModelFromJson(game, json);
+    var model = gameModelFromJson(game!, json);
     return await sendRequest(model);
   }
 
@@ -74,7 +74,7 @@ class HttpClientTransport implements GameTransport {
   HttpClientTransport();
 
   @override
-  Future<GameModel> sendRequest(GameModel model) async {
+  Future<GameModel?> sendRequest(GameModel model) async {
     // send request over http and get reply
     return null;
   }

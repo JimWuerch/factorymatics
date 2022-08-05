@@ -8,13 +8,13 @@ typedef ClientCallback = void Function(GameAction);
 /// This is just a local server for now, it will run inside the client
 class GameServer {
   //Game game;
-  int/*!*/ gameId;
+  late int gameId;
   // final _serverActionsStreamController = StreamController<GameAction>.broadcast();
   // Stream<GameAction> get serverActions => _serverActionsStreamController.stream.asBroadcastStream();
   // StreamSubscription<GameAction> gameActions;
   ClientCallback clientCallback;
   GameStore games = GameStore();
-  GameTransport gameTransport;
+  GameTransport? gameTransport;
   PlayerService playerService;
 
   GameServer(this.clientCallback) : playerService = PlayerService.createService();
@@ -27,10 +27,10 @@ class GameServer {
     games.addPlayer(gameId, playerService.getPlayer(playerId));
   }
 
-  String/*!*/ createGameLobby(String playerId) {
+  String createGameLobby(String playerId) {
     var lobby = games.createLobby();
     games.addPlayer(lobby.gameId, playerService.getPlayer(playerId));
-    return lobby.gameId;
+    return lobby.gameId!;
   }
 
   GameController createGame(String gameId) {
@@ -49,12 +49,12 @@ class GameServer {
     games.delete(gameId);
   }
 
-  Future<Tuple2<ValidateResponseCode, GameAction>> doAction(String gameId, GameAction action) async {
-    var game = games.find(gameId).game;
+  Future<Tuple2<ValidateResponseCode, GameAction?>> doAction(String gameId, GameAction action) async {
+    var game = games.find(gameId)!.game!;
     return await game.applyAction(action);
   }
 
-  Future<ResponseModel/*!*/> handleRequest(GameModel model) async {
+  Future<ResponseModel> handleRequest(GameModel model) async {
     //TODO: add validator
     // validateRequest(model);
 
@@ -62,7 +62,7 @@ class GameServer {
       case GameModelType.createGameRequest:
         var request = model as CreateGameRequest;
         var gc = createGame(request.gameId);
-        return CreateGameResponse(gc.game, model.ownerId, 'create game', ResponseCode.ok);
+        return CreateGameResponse(gc.game!, model.ownerId, 'create game', ResponseCode.ok);
 
       case GameModelType.actionRequest:
         var request = model as ActionRequest;
@@ -72,9 +72,9 @@ class GameServer {
 
       case GameModelType.joinGameRequest:
         var request = model as JoinGameRequest;
-        var gc = games.find(request.gameId);
+        var gc = games.find(request.gameId)!;
         var gameState = gc.getGameState();
-        return JoinGameResponse(gc.game, request.ownerId, 'joinGameResponse', ResponseCode.ok, gameState);
+        return JoinGameResponse(gc.game!, request.ownerId, 'joinGameResponse', ResponseCode.ok, gameState);
 
       case GameModelType.createLobbyRequest:
         var request = model as CreateLobbyRequest;
