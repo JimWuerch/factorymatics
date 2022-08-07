@@ -19,7 +19,7 @@ List<Widget> _getOptions(BuildContext context, Game game) {
   return items;
 }
 
-Future<int> showAskSearchDeckDialog(BuildContext context, Game/*!*/ game) async {
+Future<int?> showAskSearchDeckDialog(BuildContext context, Game game) async {
   return await showDialog<int>(
       context: context,
       builder: (context) {

@@ -9,21 +9,21 @@ import 'part_helpers.dart';
 
 class PartWidget extends StatefulWidget {
   PartWidget(
-      {this.part,
-      this.enabled,
+      {required this.part,
+      required this.enabled,
       this.onTap,
       this.onProductTap,
-      this.isResourcePickerEnabled,
+      required this.isResourcePickerEnabled,
       this.gamePageModel,
-      this.displaySizes});
+      required this.displaySizes});
 
-  final Part/*!*/ part;
-  final bool/*!*/ enabled;
-  final void Function(Part part) onTap;
-  final void Function(Product product) onProductTap;
-  final bool/*!*/ isResourcePickerEnabled;
-  final GamePageModel gamePageModel;
-  final DisplaySizes/*!*/ displaySizes;
+  final Part part;
+  final bool enabled;
+  final void Function(Part part)? onTap;
+  final void Function(Product product)? onProductTap;
+  final bool isResourcePickerEnabled;
+  final GamePageModel? gamePageModel;
+  final DisplaySizes displaySizes;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();
@@ -107,17 +107,17 @@ class _PartWidgetState extends State<PartWidget> {
               color: _fixColor(
                   resourceToColor(widget.part.resource), resourceToColor((trigger as AcquireTrigger).resourceType))));
           items.add(resourceToIcon(
-              (trigger as AcquireTrigger).resourceType,
+              trigger.resourceType,
               _fixColor(
-                  resourceToColor(widget.part.resource), resourceToColor((trigger as AcquireTrigger).resourceType))));
+                  resourceToColor(widget.part.resource), resourceToColor(trigger.resourceType))));
           break;
         case TriggerType.construct:
           items.add(Icon(partTypeToIcon(PartType.construct),
               color: resourceToColor((trigger as ConstructTrigger).resourceType)));
           items.add(resourceToIcon(
-              (trigger as ConstructTrigger).resourceType,
+              trigger.resourceType,
               _fixColor(
-                  resourceToColor(widget.part.resource), resourceToColor((trigger as ConstructTrigger).resourceType))));
+                  resourceToColor(widget.part.resource), resourceToColor(trigger.resourceType))));
           break;
         case TriggerType.convert:
           var t = trigger as ConvertTrigger;
@@ -189,7 +189,7 @@ class _PartWidgetState extends State<PartWidget> {
         child: ElevatedButton(
           style: ButtonStyle(
               backgroundColor: resourceToColor(widget.part.resource) == Colors.black
-                  ? MaterialStateProperty.resolveWith<Color>(
+                  ? MaterialStateProperty.resolveWith<Color?>(
                       (states) {
                         if (states.contains(MaterialState.disabled)) {
                           return Colors.grey; //Theme.of(context).colorScheme.background;
@@ -201,13 +201,13 @@ class _PartWidgetState extends State<PartWidget> {
           child: _productWidget(product),
           onPressed: widget.gamePageModel != null &&
                   !widget.isResourcePickerEnabled &&
-                  widget.gamePageModel.isPartReady(widget.part) &&
+                  widget.gamePageModel!.isPartReady(widget.part) &&
                   //!widget.gamePageModel.isProductActivated(product) &&
-                  widget.gamePageModel.isActivationAllowed(product) &&
+                  widget.gamePageModel!.isActivationAllowed(product) &&
                   //widget.part.ready.value &&
                   //!product.activated.value &&
                   (widget.onProductTap != null)
-              ? () async => await widget.onProductTap(product)
+              ? () async => await widget.onProductTap!(product)
               : null,
         ),
       ));
@@ -217,9 +217,9 @@ class _PartWidgetState extends State<PartWidget> {
 
   bool isUsed() {
     if (widget.part.products.isEmpty) return false;
-    if (widget.gamePageModel == null || !widget.gamePageModel.game.currentTurn.partReady[widget.part.id]) return false;
+    if (widget.gamePageModel == null || !widget.gamePageModel!.game.currentTurn.partReady[widget.part.id]!) return false;
     for (var product in widget.part.products) {
-      if (widget.gamePageModel.game.currentTurn.productActivated[product.productCode] == false) {
+      if (widget.gamePageModel!.game.currentTurn.productActivated[product.productCode] == false) {
         return false;
       }
     }
@@ -252,7 +252,7 @@ class _PartWidgetState extends State<PartWidget> {
           ),
           child: InkWell(
             onTap: () {
-              if (widget.enabled) widget.onTap(widget.part);
+              if (widget.enabled) widget.onTap!(widget.part);
             },
             child: Padding(
               padding: EdgeInsets.all(8),

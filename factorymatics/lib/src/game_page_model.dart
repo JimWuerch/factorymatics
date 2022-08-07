@@ -16,15 +16,15 @@ enum SearchExecutionOptions { doNothing, construct, store, unselected }
 class GamePageModel {
   DisplaySizes displaySizes = DisplaySizes();
 
-  Game/*!*/ game;
-  String/*!*/ playerId; // = 'id1';
-  String/*!*/ playerName; // = 'bob';
-  PlayerData displayPlayer;
+  Game game;
+  String playerId; // = 'id1';
+  String playerName; // = 'bob';
+  PlayerData? displayPlayer;
   final StreamController<int> _notifierController = StreamController<int>.broadcast();
   Stream<int> get notifier => _notifierController.stream;
   List<GameAction> availableActions = <GameAction>[];
   final BuildContext gamePageContext;
-  final GameInfoModel/*!*/ gameInfoModel;
+  final GameInfoModel gameInfoModel;
   SearchExecutionOptions _searchExecutionOption = SearchExecutionOptions.unselected;
   bool showWait = false;
 
@@ -57,7 +57,7 @@ class GamePageModel {
           showTurnDlg = true;
         } else {
           // we make a new game object so we need to refresh the player object
-          displayPlayer = game.getPlayerFromId(displayPlayer.id);
+          displayPlayer = game.getPlayerFromId(displayPlayer!.id);
         }
         if (game.currentPlayer.id != playerId || showTurnDlg) {
           playerId = game.currentPlayer.id;
@@ -118,7 +118,7 @@ class GamePageModel {
       game.currentTurn?.turnState?.value == TurnState.acquireRequested);
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
-  bool get isActivePlayer => !showWait && displayPlayer.id == game.currentPlayer.id;
+  bool get isActivePlayer => !showWait && displayPlayer!.id == game.currentPlayer.id;
 
   bool get canUndo => game.canUndo && isOurTurn;
 
@@ -132,10 +132,10 @@ class GamePageModel {
     _notifierController.add(1); // redraw gamepage
   }
 
-  Map<ResourceType, int> getAvailableResources() {
-    var ret = <ResourceType, int>{};
+  Map<ResourceType, int?> getAvailableResources() {
+    var ret = <ResourceType, int?>{};
     //var player = game.getPlayerFromId(displayPlayer.id)
-    for (var item in displayPlayer.resources.entries) {
+    for (var item in displayPlayer!.resources.entries) {
       ret[item.key] = item.value.value;
     }
     return ret;
@@ -205,14 +205,14 @@ class GamePageModel {
 
   bool get inSearch => game.currentTurn.turnState.value == TurnState.searchSelected;
 
-  bool/*!*/ isPartReady(Part part) => game.currentTurn.partReady[part.id];
-  bool/*!*/ isProductActivated(Product product) => game.currentTurn.productActivated[product.productCode];
+  bool isPartReady(Part part) => game.currentTurn.partReady[part.id]!;
+  bool isProductActivated(Product product) => game.currentTurn.productActivated[product.productCode]!;
 
   bool isActivationAllowed(Product product) {
     for (var action in availableActions) {
       if (action.producedBy != null &&
-          action.producedBy/*!*/.part.id == product.part.id &&
-          action.producedBy/*!*/.prodIndex == product.prodIndex) {
+          action.producedBy!.part.id == product.part.id &&
+          action.producedBy!.prodIndex == product.prodIndex) {
         return true;
       }
     }
@@ -271,7 +271,7 @@ class GamePageModel {
     return await doGameUpdate();
   }
 
-  Future<GameAction> _handleConstructRequest(Part part) async {
+  Future<GameAction?> _handleConstructRequest(Part part) async {
     // is the part free as a result of a product?
     if (game.currentTurn.turnState.value == TurnState.constructL1Requested && part.level == 0) {
       return ConstructAction(playerId, part, [], null, null);
@@ -287,7 +287,7 @@ class GamePageModel {
       throw InvalidOperationError('No way to pay for part ${part.id}');
     }
 
-    var index = 0;
+    int? index = 0;
     if (paths.length != 1) {
       // more than 1 way to pay, ask user for which one
       index = await showAskPaymentDialog(gamePageContext, paths);
@@ -298,7 +298,7 @@ class GamePageModel {
 
     // run the converters for the selected payment path
     var convertersUsed = <GameAction>[];
-    for (var used in paths[index].history) {
+    for (var used in paths[index!].history) {
       if (used.product.productType != ProductType.spend) {
         convertersUsed.add(used.product.produce(playerId));
       }
@@ -315,7 +315,7 @@ class GamePageModel {
   }
 
   Future<void> partTapped(Part part) async {
-    GameAction action;
+    GameAction? action;
     if (game.currentTurn.turnState.value == TurnState.actionSelected) {
       if (game.currentTurn.selectedAction.value == ActionType.store) {
         action = StoreAction(playerId, part, null);

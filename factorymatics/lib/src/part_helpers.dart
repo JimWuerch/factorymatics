@@ -62,27 +62,27 @@ IconData resourceToIconData(ResourceType resourceType, {bool outline = false}) {
   }
 }
 
-Icon resourceToIcon(ResourceType resourceType, Color/*!*/ color) {
+Icon resourceToIcon(ResourceType resourceType, Color color) {
   return Icon(resourceToIconData(resourceType), color: color);
 }
 
-Color/*!*/ resourceToColor(ResourceType resourceType) {
+Color resourceToColor(ResourceType resourceType) {
   switch (resourceType) {
     case ResourceType.none:
-      return Colors.grey[300];
+      return Colors.grey[300]!;
     case ResourceType.heart:
-      return Colors.red[700];
+      return Colors.red[700]!;
     case ResourceType.spade:
       return Colors.black;
     case ResourceType.diamond:
       return Colors.yellow;
     case ResourceType.club:
-      return Colors.blue[800];
+      return Colors.blue[800]!;
     case ResourceType.any:
       return Colors.purple;
     //return Colors.black;
     default:
-      return Colors.lightGreen[600];
+      return Colors.lightGreen[600]!;
   }
 }
 

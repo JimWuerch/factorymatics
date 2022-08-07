@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 
 class GamePage extends StatefulWidget {
   final String title = 'Factorymatics';
-  final GameInfoModel/*!*/ gameInfoModel;
+  final GameInfoModel gameInfoModel;
 
   GamePage(this.gameInfoModel);
 
@@ -20,7 +20,7 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  GamePageModel/*!*/ model;
+  GamePageModel model;
 
   @override
   void initState() {
@@ -104,7 +104,7 @@ class _GamePageState extends State<GamePage> {
         ),
       ),
     ));
-    for (var part in model.displayPlayer.savedParts) {
+    for (var part in model.displayPlayer!.savedParts) {
       items.add(PartWidget(
         part: part,
         enabled: enabledParts.contains(part.id),
@@ -134,16 +134,16 @@ class _GamePageState extends State<GamePage> {
                 Icon(partTypeToIcon(PartType.enhancement)),
                 Text(' '),
                 Icon(partTypeToIcon(PartType.acquire)),
-                Text(':${model.displayPlayer.resourceStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(':${model.displayPlayer!.resourceStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)),
                 Icon(partTypeToIcon(PartType.storage)),
-                Text(':${model.displayPlayer.partStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(':${model.displayPlayer!.partStorage} ', style: const TextStyle(fontWeight: FontWeight.bold)),
                 Icon(actionToIcon(ActionType.search)),
-                Text(':${model.displayPlayer.search}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(':${model.displayPlayer!.search}', style: const TextStyle(fontWeight: FontWeight.bold)),
               ],
             ),
           ),
         ));
-        for (var part in model.displayPlayer.parts[PartType.enhancement]) {
+        for (var part in model.displayPlayer!.parts[PartType.enhancement]!) {
           children.add(PartWidget(
             part: part,
             enabled: false,
@@ -155,7 +155,7 @@ class _GamePageState extends State<GamePage> {
         break;
       case 1:
         children.add(_makeActionButton(ActionType.convert, false, ''));
-        for (var part in model.displayPlayer.parts[PartType.converter]) {
+        for (var part in model.displayPlayer!.parts[PartType.converter]!) {
           children.add(PartWidget(
             part: part,
             enabled: false,
@@ -167,7 +167,7 @@ class _GamePageState extends State<GamePage> {
         break;
       case 2:
         children.add(_makeActionButton(ActionType.store, model.canStore, 'Store'));
-        for (var part in model.displayPlayer.parts[PartType.storage]) {
+        for (var part in model.displayPlayer!.parts[PartType.storage]!) {
           children.add(PartWidget(
             part: part,
             enabled: false,
@@ -180,7 +180,7 @@ class _GamePageState extends State<GamePage> {
         break;
       case 3:
         children.add(_makeActionButton(ActionType.acquire, model.canAcquire, 'Acquire'));
-        for (var part in model.displayPlayer.parts[PartType.acquire]) {
+        for (var part in model.displayPlayer!.parts[PartType.acquire]!) {
           children.add(PartWidget(
             part: part,
             enabled: false,
@@ -193,7 +193,7 @@ class _GamePageState extends State<GamePage> {
         break;
       case 4:
         children.add(_makeActionButton(ActionType.construct, model.canConstruct, 'Construct'));
-        for (var part in model.displayPlayer.parts[PartType.construct]) {
+        for (var part in model.displayPlayer!.parts[PartType.construct]!) {
           children.add(PartWidget(
             part: part,
             enabled: false,
@@ -311,7 +311,7 @@ class _GamePageState extends State<GamePage> {
               return Center(child: Text('loading...'));
             } else {
               return WillPopScope(
-                onWillPop: () => showDialog<bool>(
+                onWillPop: (() => showDialog<bool>(
                   context: context,
                   builder: (c) => AlertDialog(
                     title: Text('Warning'),
@@ -327,13 +327,13 @@ class _GamePageState extends State<GamePage> {
                       ),
                     ],
                   ),
-                ),
+                ).then((value) => value!)) as Future<bool> Function()?,
                 child: Scaffold(
                   backgroundColor: Colors.yellow.shade100,
                   appBar: AppBar(
                     // Here we take the value from the MyHomePage object that was created by
                     // the App.build method, and use it to set our appbar title.
-                    title: Text('Round:${model.game.round}, ${model.displayPlayer.id}\'s Turn'),
+                    title: Text('Round:${model.game.round}, ${model.displayPlayer!.id}\'s Turn'),
                     actions: model.isGameEnded
                         ? <Widget>[]
                         : <Widget>[
@@ -444,7 +444,7 @@ class _GamePageState extends State<GamePage> {
                                                   children: [
                                                     ResourceStorageWidget(resources: model.getAvailableResources()),
                                                     Text(
-                                                      '  ${model.displayPlayer.vpChits}',
+                                                      '  ${model.displayPlayer!.vpChits}',
                                                       style: TextStyle(
                                                         fontWeight: FontWeight.bold,
                                                         color: Colors.black,
@@ -519,7 +519,7 @@ class _GamePageState extends State<GamePage> {
   Future<void> _onEndTurnTapped() async {
     var unused = model.unusedProducts();
     if (unused > 0) {
-      if (!await showDialog<bool>(
+      if (!await (showDialog<bool>(
         context: context,
         builder: (context) {
           return AlertDialog(
@@ -541,7 +541,7 @@ class _GamePageState extends State<GamePage> {
             ],
           );
         },
-      )) {
+      ) as FutureOr<bool>)) {
         return;
       }
     }

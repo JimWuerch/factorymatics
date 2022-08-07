@@ -5,10 +5,10 @@ import 'icons.dart';
 import 'part_helpers.dart';
 
 class GetPaymentWidget extends StatefulWidget {
-  GetPaymentWidget(this.paths, {Key key, this.onTap}) : super(key: key);
+  GetPaymentWidget(this.paths, {Key? key, this.onTap}) : super(key: key);
 
   final List<SpendHistory> paths;
-  final void Function(int index) onTap;
+  final void Function(int index)? onTap;
 
   @override
   State<GetPaymentWidget> createState() => _GetPaymentWidgetState();

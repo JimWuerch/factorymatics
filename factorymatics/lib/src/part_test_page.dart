@@ -5,9 +5,9 @@ import 'package:flutter/material.dart';
 import 'part_widget.dart';
 
 class PartTestWidget extends StatelessWidget {
-  PartTestWidget({Key key, this.parts}) : super(key: key);
+  PartTestWidget({Key? key, this.parts}) : super(key: key);
 
-  final List<Part> parts;
+  final List<Part>? parts;
   final DisplaySizes displaySizes = DisplaySizes();
 
   @override
@@ -19,12 +19,12 @@ class PartTestWidget extends StatelessWidget {
       body: Center(
         child: ListView.builder(
           shrinkWrap: true,
-          itemCount: parts.length,
+          itemCount: parts!.length,
           itemBuilder: ((context, index) {
             return Wrap(
               children: [
                 PartWidget(
-                  part: parts[index],
+                  part: parts![index],
                   enabled: false,
                   onTap: null,
                   onProductTap: null,

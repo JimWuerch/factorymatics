@@ -3,9 +3,9 @@ import 'package:factorymatics/src/part_helpers.dart';
 import 'package:flutter/material.dart';
 
 class FinalScoreWidget extends StatefulWidget {
-  FinalScoreWidget({Key key, this.players}) : super(key: key);
+  FinalScoreWidget({Key? key, required this.players}) : super(key: key);
 
-  final List<PlayerData>/*!*/ players;
+  final List<PlayerData> players;
 
   @override
   State<FinalScoreWidget> createState() => _FinalScoreWidgetState();

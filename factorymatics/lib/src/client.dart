@@ -17,12 +17,12 @@ class LocalClient extends Client {
 
   LocalClient._create(this.server, this.clientTransport);
 
-  factory LocalClient(List<String> players) {
+  factory LocalClient(List<String?> players) {
     var server = LocalServer();
     var clientTransport = LocalClientTransport(server.transport);
 
     for (var element in players) {
-      server.server.createPlayer(element, element);
+      server.server.createPlayer(element!, element);
     }
     //server.server.createPlayer('bob', 'id1');
 

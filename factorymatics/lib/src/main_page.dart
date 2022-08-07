@@ -11,7 +11,7 @@ import 'main_page_model.dart';
 String version = '1.0';
 
 class MainPage extends StatefulWidget {
-  MainPage({Key key}) : super(key: key);
+  MainPage({Key? key}) : super(key: key);
   final String title = 'Factorymatics $version';
 
   @override
@@ -19,11 +19,11 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
-  MainPageModel model;
-  TextEditingController _textEditController;
+  late MainPageModel model;
+  late TextEditingController _textEditController;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>(debugLabel: 'player names form');
   final RegExp _validPlayerNames = RegExp(r'^[a-zA-Z0-9_\-\^]+$');
-  int _numPlayers;
+  late int _numPlayers;
 
   @override
   void initState() {

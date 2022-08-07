@@ -7,14 +7,14 @@ import 'package:factorymatics/src/settings.dart';
 import 'package:flutter/cupertino.dart';
 
 class MainPageModel {
-  Game game;
+  Game? game;
   final StreamController<int> _notifierController = StreamController<int>.broadcast();
   Stream<int> get notifier => _notifierController.stream;
   final BuildContext context;
   bool isLocalGame = true;
-  List<String> players = <String>['Player1', 'AI1', 'AI2', 'AI3'];
+  List<String?> players = <String?>['Player1', 'AI1', 'AI2', 'AI3'];
   int numPlayers = 4;
-  GameInfoModel gameInfoModel;
+  late GameInfoModel gameInfoModel;
   FMSettings fmSettings = FMSettings();
 
   MainPageModel(this.context);
@@ -37,18 +37,18 @@ class MainPageModel {
 
     playerService = PlayerService.createService();
     client = LocalClient(players.take(numPlayers).toList());
-    var response = await client.postRequest(CreateLobbyRequest(players[0], 'game_name', players[0], ''));
+    var response = await client.postRequest(CreateLobbyRequest(players[0]!, 'game_name', players[0]!, ''));
     if (response.responseCode != ResponseCode.ok) {
       _notifierController.addError(null);
     }
     gameId = (response as CreateLobbyResponse).gameId;
     for (var index = 1; index < numPlayers; ++index) {
-      response = await client.postRequest(JoinLobbyRequest(players[index], gameId, players[index], ''));
+      response = await client.postRequest(JoinLobbyRequest(players[index]!, gameId, players[index]!, ''));
       if (response.responseCode != ResponseCode.ok) {
         _notifierController.addError(null);
       }
     }
-    response = await client.postRequest(CreateGameRequest(gameId, players[0]));
+    response = await client.postRequest(CreateGameRequest(gameId, players[0]!));
     if (response.responseCode != ResponseCode.ok) {
       _notifierController.addError(null);
     }

@@ -6,10 +6,10 @@ import 'game_page_model.dart';
 import 'part_helpers.dart';
 
 class PlayerListWidget extends StatefulWidget {
-  PlayerListWidget({Key key, this.model, this.onTap}) : super(key: key);
+  PlayerListWidget({Key? key, required this.model, this.onTap}) : super(key: key);
 
-  final GamePageModel/*!*/ model;
-  final void Function(String playerId) onTap;
+  final GamePageModel model;
+  final void Function(String playerId)? onTap;
 
   @override
   State<PlayerListWidget> createState() => _PlayerListWidgetState();
@@ -36,12 +36,12 @@ class _PlayerListWidgetState extends State<PlayerListWidget> {
               ],
             ),
             //trailing: Icon(Icons.more_vert),
-            trailing: widget.model.displayPlayer.id == player.id ? Icon(iconArrowRightBold) : null,
+            trailing: widget.model.displayPlayer!.id == player.id ? Icon(iconArrowRightBold) : null,
             selected: widget.model.game.currentPlayer.id == player.id,
             onTap: widget.onTap == null
                 ? null
                 : () {
-                    widget.onTap(player.id);
+                    widget.onTap!(player.id);
                   },
           ),
         ),

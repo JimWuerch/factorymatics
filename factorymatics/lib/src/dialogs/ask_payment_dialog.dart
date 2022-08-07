@@ -53,7 +53,7 @@ List<Widget> _makeChoices(BuildContext context, List<SpendHistory> paths) {
   return list;
 }
 
-Future<int> showAskPaymentDialog(BuildContext context, List<SpendHistory> paths) async {
+Future<int?> showAskPaymentDialog(BuildContext context, List<SpendHistory> paths) async {
   return await showDialog<int>(
       context: context,
       builder: (context) {
