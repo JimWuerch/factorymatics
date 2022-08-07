@@ -3,7 +3,7 @@ import 'package:factorymatics/src/part_helpers.dart';
 import 'package:flutter/material.dart';
 
 class ResourceStorageWidget extends StatelessWidget {
-  final Map<ResourceType, int> resources;
+  final Map<ResourceType, int/*!*/>/*!*/ resources;
 
   const ResourceStorageWidget({Key key, this.resources}) : super(key: key);
 

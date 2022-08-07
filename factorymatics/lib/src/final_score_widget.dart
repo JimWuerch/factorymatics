@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 class FinalScoreWidget extends StatefulWidget {
   FinalScoreWidget({Key key, this.players}) : super(key: key);
 
-  final List<PlayerData> players;
+  final List<PlayerData>/*!*/ players;
 
   @override
   State<FinalScoreWidget> createState() => _FinalScoreWidgetState();

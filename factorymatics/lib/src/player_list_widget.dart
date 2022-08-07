@@ -8,7 +8,7 @@ import 'part_helpers.dart';
 class PlayerListWidget extends StatefulWidget {
   PlayerListWidget({Key key, this.model, this.onTap}) : super(key: key);
 
-  final GamePageModel model;
+  final GamePageModel/*!*/ model;
   final void Function(String playerId) onTap;
 
   @override

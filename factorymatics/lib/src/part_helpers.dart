@@ -62,11 +62,11 @@ IconData resourceToIconData(ResourceType resourceType, {bool outline = false}) {
   }
 }
 
-Icon resourceToIcon(ResourceType resourceType, Color color) {
+Icon resourceToIcon(ResourceType resourceType, Color/*!*/ color) {
   return Icon(resourceToIconData(resourceType), color: color);
 }
 
-Color resourceToColor(ResourceType resourceType) {
+Color/*!*/ resourceToColor(ResourceType resourceType) {
   switch (resourceType) {
     case ResourceType.none:
       return Colors.grey[300];

@@ -16,15 +16,15 @@ enum SearchExecutionOptions { doNothing, construct, store, unselected }
 class GamePageModel {
   DisplaySizes displaySizes = DisplaySizes();
 
-  Game game;
-  String playerId; // = 'id1';
-  String playerName; // = 'bob';
+  Game/*!*/ game;
+  String/*!*/ playerId; // = 'id1';
+  String/*!*/ playerName; // = 'bob';
   PlayerData displayPlayer;
   final StreamController<int> _notifierController = StreamController<int>.broadcast();
   Stream<int> get notifier => _notifierController.stream;
   List<GameAction> availableActions = <GameAction>[];
   final BuildContext gamePageContext;
-  final GameInfoModel gameInfoModel;
+  final GameInfoModel/*!*/ gameInfoModel;
   SearchExecutionOptions _searchExecutionOption = SearchExecutionOptions.unselected;
   bool showWait = false;
 
@@ -205,14 +205,14 @@ class GamePageModel {
 
   bool get inSearch => game.currentTurn.turnState.value == TurnState.searchSelected;
 
-  bool isPartReady(Part part) => game.currentTurn.partReady[part.id];
-  bool isProductActivated(Product product) => game.currentTurn.productActivated[product.productCode];
+  bool/*!*/ isPartReady(Part part) => game.currentTurn.partReady[part.id];
+  bool/*!*/ isProductActivated(Product product) => game.currentTurn.productActivated[product.productCode];
 
   bool isActivationAllowed(Product product) {
     for (var action in availableActions) {
       if (action.producedBy != null &&
-          action.producedBy.part.id == product.part.id &&
-          action.producedBy.prodIndex == product.prodIndex) {
+          action.producedBy/*!*/.part.id == product.part.id &&
+          action.producedBy/*!*/.prodIndex == product.prodIndex) {
         return true;
       }
     }

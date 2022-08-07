@@ -11,7 +11,7 @@ import 'package:flutter/material.dart';
 
 class GamePage extends StatefulWidget {
   final String title = 'Factorymatics';
-  final GameInfoModel gameInfoModel;
+  final GameInfoModel/*!*/ gameInfoModel;
 
   GamePage(this.gameInfoModel);
 
@@ -20,7 +20,7 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  GamePageModel model;
+  GamePageModel/*!*/ model;
 
   @override
   void initState() {

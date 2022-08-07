@@ -11,7 +11,7 @@ abstract class Server {
 class LocalServer extends Server {
   GameServer server;
   final _streamController = StreamController<GameAction>.broadcast();
-  Stream<GameAction> _outboundActions;
+  Stream<GameAction>/*!*/ _outboundActions;
   LocalServerTransport transport;
   Game _game;
 

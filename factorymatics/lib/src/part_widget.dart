@@ -17,13 +17,13 @@ class PartWidget extends StatefulWidget {
       this.gamePageModel,
       this.displaySizes});
 
-  final Part part;
-  final bool enabled;
+  final Part/*!*/ part;
+  final bool/*!*/ enabled;
   final void Function(Part part) onTap;
   final void Function(Product product) onProductTap;
-  final bool isResourcePickerEnabled;
+  final bool/*!*/ isResourcePickerEnabled;
   final GamePageModel gamePageModel;
-  final DisplaySizes displaySizes;
+  final DisplaySizes/*!*/ displaySizes;
 
   @override
   _PartWidgetState createState() => _PartWidgetState();

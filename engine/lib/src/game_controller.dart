@@ -99,7 +99,7 @@ class GameController {
   }
 
   /// Restores game state from json string [src].  Used by the client to update.
-  static Game restoreGame(PlayerService playerService, String src) {
+  static Game restoreGame(PlayerService? playerService, String src) {
     var json = jsonDecode(src) as Map<String, dynamic>;
     return Game.fromJson(playerService, json);
   }
