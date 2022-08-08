@@ -19,8 +19,8 @@ class PartWidget extends StatefulWidget {
 
   final Part part;
   final bool enabled;
-  final void Function(Part part)? onTap;
-  final void Function(Product product)? onProductTap;
+  final Future<void> Function(Part part)? onTap;
+  final Future<void> Function(Product product)? onProductTap;
   final bool isResourcePickerEnabled;
   final GamePageModel? gamePageModel;
   final DisplaySizes displaySizes;
@@ -106,18 +106,14 @@ class _PartWidgetState extends State<PartWidget> {
           items.add(Icon(partTypeToIcon(PartType.acquire),
               color: _fixColor(
                   resourceToColor(widget.part.resource), resourceToColor((trigger as AcquireTrigger).resourceType))));
-          items.add(resourceToIcon(
-              trigger.resourceType,
-              _fixColor(
-                  resourceToColor(widget.part.resource), resourceToColor(trigger.resourceType))));
+          items.add(resourceToIcon(trigger.resourceType,
+              _fixColor(resourceToColor(widget.part.resource), resourceToColor(trigger.resourceType))));
           break;
         case TriggerType.construct:
           items.add(Icon(partTypeToIcon(PartType.construct),
               color: resourceToColor((trigger as ConstructTrigger).resourceType)));
-          items.add(resourceToIcon(
-              trigger.resourceType,
-              _fixColor(
-                  resourceToColor(widget.part.resource), resourceToColor(trigger.resourceType))));
+          items.add(resourceToIcon(trigger.resourceType,
+              _fixColor(resourceToColor(widget.part.resource), resourceToColor(trigger.resourceType))));
           break;
         case TriggerType.convert:
           var t = trigger as ConvertTrigger;
@@ -217,7 +213,8 @@ class _PartWidgetState extends State<PartWidget> {
 
   bool isUsed() {
     if (widget.part.products.isEmpty) return false;
-    if (widget.gamePageModel == null || !widget.gamePageModel!.game.currentTurn.partReady[widget.part.id]!) return false;
+    if (widget.gamePageModel == null || !widget.gamePageModel!.game.currentTurn.partReady[widget.part.id]!)
+      return false;
     for (var product in widget.part.products) {
       if (widget.gamePageModel!.game.currentTurn.productActivated[product.productCode] == false) {
         return false;

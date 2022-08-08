@@ -20,7 +20,7 @@ class GamePage extends StatefulWidget {
 }
 
 class _GamePageState extends State<GamePage> {
-  GamePageModel model;
+  late GamePageModel model;
 
   @override
   void initState() {
@@ -312,22 +312,22 @@ class _GamePageState extends State<GamePage> {
             } else {
               return WillPopScope(
                 onWillPop: (() => showDialog<bool>(
-                  context: context,
-                  builder: (c) => AlertDialog(
-                    title: Text('Warning'),
-                    content: Text('Exiting will quit the game. Continue?'),
-                    actions: [
-                      TextButton(
-                        child: Text('Yes'),
-                        onPressed: () => Navigator.pop(c, true),
+                      context: context,
+                      builder: (c) => AlertDialog(
+                        title: Text('Warning'),
+                        content: Text('Exiting will quit the game. Continue?'),
+                        actions: [
+                          TextButton(
+                            child: Text('Yes'),
+                            onPressed: () => Navigator.pop(c, true),
+                          ),
+                          TextButton(
+                            child: Text('No'),
+                            onPressed: () => Navigator.pop(c, false),
+                          ),
+                        ],
                       ),
-                      TextButton(
-                        child: Text('No'),
-                        onPressed: () => Navigator.pop(c, false),
-                      ),
-                    ],
-                  ),
-                ).then((value) => value!)) as Future<bool> Function()?,
+                    ).then((value) => value!)) as Future<bool> Function()?,
                 child: Scaffold(
                   backgroundColor: Colors.yellow.shade100,
                   appBar: AppBar(
@@ -519,37 +519,38 @@ class _GamePageState extends State<GamePage> {
   Future<void> _onEndTurnTapped() async {
     var unused = model.unusedProducts();
     if (unused > 0) {
-      if (!await (showDialog<bool>(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('End Turn'),
-            content: Text('You have $unused unused products.  Do you want to end your turn?'),
-            actions: <Widget>[
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, true);
-                },
-                child: const Text('OK'),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pop(context, false);
-                },
-                child: const Text('Cancel'),
-              ),
-            ],
-          );
-        },
-      ) as FutureOr<bool>)) {
+      if (true !=
+          await showDialog<bool>(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('End Turn'),
+                content: Text('You have $unused unused products.  Do you want to end your turn?'),
+                actions: <Widget>[
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context, true);
+                    },
+                    child: const Text('OK'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      Navigator.pop(context, false);
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                ],
+              );
+            },
+          )) {
         return;
       }
     }
 
     model.showWait = true;
-    model.RequestUpdate();
+    model.requestUpdate();
 
-    await Future<Object>.delayed(Duration(milliseconds: 20));
+    await Future<Object?>.delayed(Duration(milliseconds: 20));
     await model.doEndTurn();
   }
 }

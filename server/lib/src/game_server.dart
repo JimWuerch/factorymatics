@@ -88,7 +88,8 @@ class GameServer {
         return JoinLobbyResponse(request.gameId, request.ownerId, ResponseCode.ok);
 
       default:
-        return null;
+        //return null;
+        throw InvalidOperationError('Unknown modelType');
     }
   }
 }

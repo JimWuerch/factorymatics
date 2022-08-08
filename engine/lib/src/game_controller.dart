@@ -21,9 +21,10 @@ class GameController {
     game = Game(players, playerService, gameId);
     game!.tmpName = 'controller';
     game!.createGame();
-    var startingPartDecks = List<List<Part>?>.filled(3, null);
+    var startingPartDecks = <List<Part>>[]; //.filled(3, null);
     for (var i = 0; i < 3; ++i) {
-      startingPartDecks[i] = <Part>[];
+      //startingPartDecks[i] = <Part>[];
+      startingPartDecks.add(<Part>[]);
     }
     for (var part in allParts.values) {
       if (part.level != -1) {
@@ -32,10 +33,10 @@ class GameController {
       }
     }
     for (var i = 0; i < 3; ++i) {
-      startingPartDecks[i]!.shuffle();
+      startingPartDecks[i].shuffle();
     }
-    startingPartDecks[2]!.removeRange(16, startingPartDecks[2]!.length);
-    game!.assignStartingDecks(startingPartDecks as List<List<Part>>);
+    startingPartDecks[2].removeRange(16, startingPartDecks[2]!.length);
+    game!.assignStartingDecks(startingPartDecks);
 
     game!.startGame();
     game!.startNextTurn();

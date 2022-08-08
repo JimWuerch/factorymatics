@@ -16,9 +16,9 @@ enum SearchExecutionOptions { doNothing, construct, store, unselected }
 class GamePageModel {
   DisplaySizes displaySizes = DisplaySizes();
 
-  Game game;
-  String playerId; // = 'id1';
-  String playerName; // = 'bob';
+  late Game game;
+  late String playerId = '_';
+  late String playerName; // = 'bob';
   PlayerData? displayPlayer;
   final StreamController<int> _notifierController = StreamController<int>.broadcast();
   Stream<int> get notifier => _notifierController.stream;
@@ -34,7 +34,7 @@ class GamePageModel {
     await doGameUpdate();
   }
 
-  void RequestUpdate() {
+  void requestUpdate() {
     _notifierController.add(2);
   }
 
@@ -132,11 +132,11 @@ class GamePageModel {
     _notifierController.add(1); // redraw gamepage
   }
 
-  Map<ResourceType, int?> getAvailableResources() {
-    var ret = <ResourceType, int?>{};
+  Map<ResourceType, int> getAvailableResources() {
+    var ret = <ResourceType, int>{};
     //var player = game.getPlayerFromId(displayPlayer.id)
     for (var item in displayPlayer!.resources.entries) {
-      ret[item.key] = item.value.value;
+      ret[item.key] = item.value.value!;
     }
     return ret;
   }
@@ -233,11 +233,11 @@ class GamePageModel {
     return await _postAction(SelectActionAction(playerId, ActionType.store));
   }
 
-  Future<void> _selectAcquire() async {
+  Future<ResponseCode> _selectAcquire() async {
     return await _postAction(SelectActionAction(playerId, ActionType.acquire));
   }
 
-  Future<void> _selectConstruct() async {
+  Future<ResponseCode> _selectConstruct() async {
     return await _postAction(SelectActionAction(playerId, ActionType.construct));
   }
 
@@ -262,7 +262,7 @@ class GamePageModel {
     return await doGameUpdate();
   }
 
-  Future<void> resourceSelected(int index) async {
+  Future<ResponseCode> resourceSelected(int index) async {
     return await _postAction(AcquireAction(playerId, index, null));
   }
 

@@ -24,6 +24,7 @@ enum GameModelType {
   joinLobbyRequest,
   joinLobbyResponse
 }
+
 enum ResponseCode { ok, error, failedValidation }
 
 abstract class GameModel {
@@ -48,7 +49,8 @@ abstract class GameModel {
         'owner': ownerId,
       };
 
-  GameModel.fromJson(Map<String, dynamic> json) : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String);
+  GameModel.fromJson(Map<String, dynamic> json)
+      : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String);
 }
 
 String gameIdFromJson(Map<String, dynamic> json) {
@@ -59,7 +61,7 @@ GameModelType gameModelTypeFromJson(Map<String, dynamic> json) {
   return GameModelType.values[json['type'] as int];
 }
 
-GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
+GameModel gameModelFromJson(Game? game, Map<String, dynamic> json) {
   var type = gameModelTypeFromJson(json);
   switch (type) {
     case GameModelType.createGameRequest:
@@ -67,9 +69,9 @@ GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
     case GameModelType.createGameResponse:
       return CreateGameResponse.fromJson(json);
     case GameModelType.actionRequest:
-      return ActionRequest.fromJson(game, json);
+      return ActionRequest.fromJson(game!, json);
     case GameModelType.actionResponse:
-      return ActionResponse.fromJson(game, json);
+      return ActionResponse.fromJson(game!, json);
     case GameModelType.createLobbyRequest:
       return CreateLobbyRequest.fromJson(json);
     case GameModelType.createLobbyResponse:
@@ -77,7 +79,7 @@ GameModel gameModelFromJson(Game game, Map<String, dynamic> json) {
     case GameModelType.joinGameRequest:
       return JoinGameRequest.fromJson(json);
     case GameModelType.joinGameResponse:
-      return JoinGameResponse.fromJson(game, json);
+      return JoinGameResponse.fromJson(game!, json);
     case GameModelType.joinLobbyRequest:
       return JoinLobbyRequest.fromJson(json);
     case GameModelType.joinLobbyResponse:

@@ -39,18 +39,18 @@ class MainPageModel {
     client = LocalClient(players.take(numPlayers).toList());
     var response = await client.postRequest(CreateLobbyRequest(players[0]!, 'game_name', players[0]!, ''));
     if (response.responseCode != ResponseCode.ok) {
-      _notifierController.addError(null);
+      _notifierController.addError(response);
     }
     gameId = (response as CreateLobbyResponse).gameId;
     for (var index = 1; index < numPlayers; ++index) {
       response = await client.postRequest(JoinLobbyRequest(players[index]!, gameId, players[index]!, ''));
       if (response.responseCode != ResponseCode.ok) {
-        _notifierController.addError(null);
+        _notifierController.addError(response);
       }
     }
     response = await client.postRequest(CreateGameRequest(gameId, players[0]!));
     if (response.responseCode != ResponseCode.ok) {
-      _notifierController.addError(null);
+      _notifierController.addError(response);
     }
     var createGameResponse = response as CreateGameResponse;
     if (createGameResponse != null) {

@@ -24,7 +24,7 @@ class LocalServerTransport implements GameTransport {
       var gameController = server.games.find(gameId)!;
       game = gameController.game;
     }
-    var model = gameModelFromJson(game!, json);
+    var model = gameModelFromJson(game, json);
     return await sendRequest(model);
   }
 
