@@ -33,3 +33,6 @@
 1.0.0+9
 - Fixed part 81 (search after construct)
 - Fixed calc_resources optimization that broke calculating payments
+
+1.0.0+10
+- Updated to Dart 2.19 with null safety
