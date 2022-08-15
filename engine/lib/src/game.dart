@@ -400,9 +400,7 @@ class Game {
       ret['canUndo'] = changeStack.canUndo;
     }
 
-    if (currentTurn != null) {
-      ret['turn'] = currentTurn.toJson();
-    }
+    ret['turn'] = currentTurn.toJson();
 
     return ret;
   }

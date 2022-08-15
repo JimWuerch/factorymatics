@@ -213,8 +213,9 @@ class _PartWidgetState extends State<PartWidget> {
 
   bool isUsed() {
     if (widget.part.products.isEmpty) return false;
-    if (widget.gamePageModel == null || !widget.gamePageModel!.game.currentTurn.partReady[widget.part.id]!)
+    if (widget.gamePageModel == null || !widget.gamePageModel!.game.currentTurn.partReady[widget.part.id]!) {
       return false;
+    }
     for (var product in widget.part.products) {
       if (widget.gamePageModel!.game.currentTurn.productActivated[product.productCode] == false) {
         return false;

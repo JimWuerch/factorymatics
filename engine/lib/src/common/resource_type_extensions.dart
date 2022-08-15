@@ -26,7 +26,7 @@ String resourceMapToString(Map<ResourceType, int> resources) {
   var chars = <String>['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
   var ret = StringBuffer();
   resources.forEach((key, value) {
-    if (value != null && key != ResourceType.any && key != ResourceType.none) {
+    if (key != ResourceType.any && key != ResourceType.none) {
       for (var i = 0; i < value; i++) {
         ret.write(chars[ResourceType.values.indexOf(key)]);
       }
@@ -58,7 +58,7 @@ String resourceMapStateToString(Map<ResourceType, GameStateVar<int>> resources) 
   var chars = <String>['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I'];
   var ret = StringBuffer();
   resources.forEach((key, value) {
-    if (value != null && key != ResourceType.any && key != ResourceType.none) {
+    if (key != ResourceType.any && key != ResourceType.none) {
       for (var i = 0; i < value.value!; i++) {
         ret.write(chars[ResourceType.values.indexOf(key)]);
       }

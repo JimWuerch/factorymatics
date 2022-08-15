@@ -1,7 +1,6 @@
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/ai_player.dart';
 import 'package:test/test.dart';
-import 'dart:developer' as developer;
 
 late Game game;
 
@@ -41,7 +40,7 @@ void main() {
 
     test('Take turn', () {
       var ai = AiPlayer(game.players[0]);
-      var ai2 = AiPlayer(game.players[1]);
+      //var ai2 = AiPlayer(game.players[1]);
       while (!game.currentTurn.gameEnded) {
         ai.takeTurn(game);
         //ai2.takeTurn(game);

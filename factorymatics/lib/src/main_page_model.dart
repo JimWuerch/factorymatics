@@ -53,11 +53,9 @@ class MainPageModel {
       _notifierController.addError(response);
     }
     var createGameResponse = response as CreateGameResponse;
-    if (createGameResponse != null) {
-      players = createGameResponse.players;
-      for (var player in createGameResponse.players) {
-        playerService.addPlayer(player, player);
-      }
+    players = createGameResponse.players;
+    for (var player in createGameResponse.players) {
+      playerService.addPlayer(player, player);
     }
     gameInfoModel = GameInfoModel(client, playerService, gameId);
   }

@@ -120,7 +120,7 @@ class _GamePageState extends State<GamePage> {
 
   Column _makeColumn(int index) {
     var children = <Widget>[];
-    var enabledParts = model.getEnabledParts();
+    //var enabledParts = model.getEnabledParts();
     switch (index) {
       case 0:
         children.add(_makeActionButton(ActionType.search, model.canSearch, 'Search'));
@@ -327,7 +327,7 @@ class _GamePageState extends State<GamePage> {
                           ),
                         ],
                       ),
-                    ).then((value) => value!)) as Future<bool> Function()?,
+                    ).then((value) => value!)),
                 child: Scaffold(
                   backgroundColor: Colors.yellow.shade100,
                   appBar: AppBar(
@@ -350,7 +350,7 @@ class _GamePageState extends State<GamePage> {
                             TextButton(
                               //textColor: Colors.white,
                               style: TextButton.styleFrom(
-                                primary: Colors.white, // foreground
+                                foregroundColor: Colors.white, // foreground
                               ),
                               onPressed: model.canUndo && model.isActivePlayer ? _onUndoTapped : null,
                               child: Text("Undo"),
@@ -359,7 +359,7 @@ class _GamePageState extends State<GamePage> {
                             TextButton(
                               //textColor: Colors.white,
                               style: TextButton.styleFrom(
-                                primary: Colors.white, // foreground
+                                foregroundColor: Colors.white, // foreground
                               ),
 
                               onPressed: model.canEndTurn && model.isActivePlayer ? _onEndTurnTapped : null,

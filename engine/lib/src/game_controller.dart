@@ -29,13 +29,13 @@ class GameController {
     for (var part in allParts.values) {
       if (part.level != -1) {
         // initial part is lvl -1
-        startingPartDecks[part.level]!.add(part);
+        startingPartDecks[part.level].add(part);
       }
     }
     for (var i = 0; i < 3; ++i) {
       startingPartDecks[i].shuffle();
     }
-    startingPartDecks[2].removeRange(16, startingPartDecks[2]!.length);
+    startingPartDecks[2].removeRange(16, startingPartDecks[2].length);
     game!.assignStartingDecks(startingPartDecks);
 
     game!.startGame();

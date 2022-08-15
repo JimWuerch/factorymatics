@@ -3,7 +3,7 @@ part of undo;
 abstract class Change {
   Change();
 
-  factory Change.property(Object? oldValue, void Function() execute, void Function(Object oldValue) undo) {
+  factory Change.property(Object? oldValue, void Function() execute, void Function(Object? oldValue) undo) {
     return _PropertyChange(oldValue, execute, undo);
   }
 
@@ -71,7 +71,7 @@ class _PropertyChange extends Change {
   final Function _execute;
   final Function _undo;
 
-  _PropertyChange(this._oldValue, this._execute(), this._undo(Object oldValue));
+  _PropertyChange(this._oldValue, this._execute(), this._undo(Object? oldValue));
 
   @override
   void execute() {

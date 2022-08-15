@@ -1,9 +1,8 @@
+import 'dart:io';
+
 import 'package:engine/engine.dart';
 import 'package:engine/src/ai/ai_player.dart';
 import 'package:intl/intl.dart';
-import 'dart:io';
-
-import 'package:args/args.dart';
 
 late Game game;
 
@@ -38,7 +37,7 @@ void _createGame() {
 }
 
 int gameCount = 0;
-Game _duplicateGame(Game game) {
+Game duplicateGame(Game game) {
   var gc = GameController();
   gc.game = game;
   var g = gc.gameFromJson(game.playerService, gc.toJson());

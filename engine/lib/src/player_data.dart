@@ -22,8 +22,7 @@ class PlayerData {
         _vpChits = GameStateVar<int>(game, '$id:vpChits', 0),
         resources = <ResourceType, GameStateVar<int>>{},
         maxResources = null {
-    initResourceMap(game, resources, id,
-        callback: _onChangedCallback as void Function(GameState, Object?)?, callbackParam: this);
+    initResourceMap(game, resources, id, callback: _onChangedCallback, callbackParam: this);
     _initParts(parts);
   }
 
@@ -41,8 +40,7 @@ class PlayerData {
     for (var p in PartType.values) {
       if (p == PartType.converter) {
         // we only need to know if we buy a converter for updating maxResources
-        parts[p] = ListState<Part>(game, '$id:$p:parts',
-            onChanged: _onChangedCallback as void Function(GameState, Object?)?, onChangedParam: this);
+        parts[p] = ListState<Part>(game, '$id:$p:parts', onChanged: _onChangedCallback, onChangedParam: this);
       } else {
         parts[p] = ListState<Part>(game, '$id:$p:parts');
       }
@@ -80,8 +78,7 @@ class PlayerData {
 
   PlayerData._fromJsonHelper(this.game, this.id, this.parts, this._vpChits, this.resources, this.savedParts)
       : maxResources = null {
-    initResourceMap(game, resources, id,
-        callback: _onChangedCallback as void Function(GameState, Object?)?, callbackParam: this);
+    initResourceMap(game, resources, id, callback: _onChangedCallback, callbackParam: this);
     _initParts(parts);
   }
 

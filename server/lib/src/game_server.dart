@@ -41,7 +41,6 @@ class GameServer {
   }
 
   void closeGame(String gameId) {
-    if (gameId == null) return;
     var game = games.find(gameId);
     if (game == null) return;
 

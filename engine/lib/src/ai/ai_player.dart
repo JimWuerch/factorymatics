@@ -446,7 +446,7 @@ class AiPlayer {
       for (var action in actions) {
         var a = action as StoreAction;
         // we're going to pick a part that is no more than 1 resource more than we can afford
-        if (a != null && a.part.cost <= game.currentPlayer.maxResources!.count(a.part.resource) + 1) {
+        if (a.part.cost <= game.currentPlayer.maxResources!.count(a.part.resource) + 1) {
           // also make sure we don't pick a converter if we already have 5
           if (game.currentPlayer.parts[PartType.converter]!.length < 5 || a.part.partType != PartType.converter) {
             choices.add(a);
@@ -512,7 +512,7 @@ class AiPlayer {
     if (game.currentPlayer.savedParts.isNotEmpty) {
       for (var action in actions) {
         var a = action as ConstructAction;
-        if (a != null && game.currentPlayer.savedParts.contains(a.part)) {
+        if (game.currentPlayer.savedParts.contains(a.part)) {
           part = a.part;
         }
       }

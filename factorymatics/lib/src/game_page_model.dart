@@ -47,9 +47,7 @@ class GamePageModel {
     if (response is JoinGameResponse) {
       game = GameController.restoreGame(null, response.gameState);
       game.tmpName = 'client';
-      if (game.currentTurn != null) {
-        availableActions = game.currentTurn.getAvailableActions();
-      }
+      availableActions = game.currentTurn.getAvailableActions();
       if (gameInfoModel.client is LocalClient) {
         var showTurnDlg = false;
         if (displayPlayer == null) {
@@ -111,18 +109,18 @@ class GamePageModel {
   // }
 
   bool get isGameEnded => game.currentTurn.turnState.value == TurnState.gameEnded;
-  bool get isActionSelection => game.currentTurn?.turnState?.value == TurnState.started;
+  bool get isActionSelection => game.currentTurn.turnState.value == TurnState.started;
 
-  bool get isResourcePickerEnabled => ((game.currentTurn?.selectedAction?.value == ActionType.acquire &&
-          game.currentTurn?.turnState?.value == TurnState.actionSelected) ||
-      game.currentTurn?.turnState?.value == TurnState.acquireRequested);
+  bool get isResourcePickerEnabled => ((game.currentTurn.selectedAction.value == ActionType.acquire &&
+          game.currentTurn.turnState.value == TurnState.actionSelected) ||
+      game.currentTurn.turnState.value == TurnState.acquireRequested);
 
   bool get isOurTurn => game.currentPlayer.id == playerName;
   bool get isActivePlayer => !showWait && displayPlayer!.id == game.currentPlayer.id;
 
   bool get canUndo => game.canUndo && isOurTurn;
 
-  bool get canEndTurn => isOurTurn && game.currentTurn?.turnState?.value == TurnState.selectedActionCompleted;
+  bool get canEndTurn => isOurTurn && game.currentTurn.turnState.value == TurnState.selectedActionCompleted;
 
   List<Part> get searchedParts => game.currentTurn.searchedParts.list;
 
@@ -298,7 +296,7 @@ class GamePageModel {
 
     // run the converters for the selected payment path
     var convertersUsed = <GameAction>[];
-    for (var used in paths[index!].history) {
+    for (var used in paths[index].history) {
       if (used.product.productType != ProductType.spend) {
         convertersUsed.add(used.product.produce(playerId));
       }
@@ -346,8 +344,6 @@ class GamePageModel {
   }
 
   Future<void> handleSearchProduct(SearchProduct product) async {
-    if (product == null) return;
-
     var level = await showAskSearchDeckDialog(gamePageContext, game);
     if (level == null) return;
 
@@ -381,14 +377,12 @@ class GamePageModel {
     GameAction action;
     action = product.produce(playerId);
 
-    if (action != null) {
-      var response = await gameInfoModel.client.postAction(game, action);
-      if (response.responseCode != ResponseCode.ok) {
-        //return;
-        // response.responseCode;
-      }
-      await doGameUpdate();
+    var response = await gameInfoModel.client.postAction(game, action);
+    if (response.responseCode != ResponseCode.ok) {
+      //return;
+      // response.responseCode;
     }
+    await doGameUpdate();
     return;
   }
 

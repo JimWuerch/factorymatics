@@ -1,8 +1,6 @@
 import 'package:engine/engine.dart';
-import 'package:factorymatics/src/display_sizes.dart';
 import 'package:factorymatics/src/game_page.dart';
 import 'package:factorymatics/src/part_test_page.dart';
-import 'package:factorymatics/src/settings_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
