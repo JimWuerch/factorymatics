@@ -2,12 +2,17 @@ import 'package:engine/engine.dart';
 import 'package:server/server.dart';
 import 'server.dart';
 
+enum ConnectionStates { disconnected, connecting, connected }
+
 abstract class Client {
+  ConnectionStates connectionState;
   Stream<GameAction> get inbound;
   Future<ResponseModel> postAction(Game game, GameAction action);
   List<Future<ResponseModel>> postActionList(Game game, List<GameAction> actions);
   Future<ResponseModel> postRequest(GameModel model);
   //Future<bool> createGame(String gameId);
+
+  Client() : connectionState = ConnectionStates.disconnected;
 }
 
 class LocalClient extends Client {
@@ -15,14 +20,14 @@ class LocalClient extends Client {
   final LocalClientTransport clientTransport;
   //final String owner;
 
-  LocalClient._create(this.server, this.clientTransport);
+  LocalClient._create(this.server, this.clientTransport) : super();
 
-  factory LocalClient(List<String?> players) {
+  factory LocalClient(List<String> players) {
     var server = LocalServer();
     var clientTransport = LocalClientTransport(server.transport);
 
     for (var element in players) {
-      server.server.createPlayer(element!, element);
+      server.server.createPlayer(element, element);
     }
     //server.server.createPlayer('bob', 'id1');
 

@@ -36,3 +36,4 @@
 
 1.0.0+10
 - Updated to Dart 2.19 with null safety
+- Fixed part 80 (discount on level 2 parts) not working when doing construct after search.

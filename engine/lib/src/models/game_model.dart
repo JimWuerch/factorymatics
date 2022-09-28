@@ -34,23 +34,27 @@ abstract class GameModel {
   String get description => _description;
   final String _ownerId;
   String get ownerId => _ownerId;
+  final String _auth;
+  String get auth => _auth;
 
   GameModelType get modelType;
 
-  GameModel(String gameId, String owner, String desc)
+  GameModel(String gameId, String owner, String desc, {String auth = 'none'})
       : _gameId = gameId,
         _description = desc,
-        _ownerId = owner;
+        _ownerId = owner,
+        _auth = auth;
 
   Map<String, dynamic> toJson() => <String, dynamic>{
         'type': GameModelType.values.indexOf(modelType),
         'gameId': gameId,
         'desc': description,
         'owner': ownerId,
+        'auth': auth,
       };
 
   GameModel.fromJson(Map<String, dynamic> json)
-      : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String);
+      : this(json['gameId'] as String, json['owner'] as String, json['desc'] as String, auth:json['auth'] as String);
 }
 
 String gameIdFromJson(Map<String, dynamic> json) {

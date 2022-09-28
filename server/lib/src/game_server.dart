@@ -28,9 +28,9 @@ class GameServer {
   }
 
   String createGameLobby(String playerId) {
-    var lobby = games.createLobby();
-    games.addPlayer(lobby.gameId, playerService.getPlayer(playerId));
-    return lobby.gameId!;
+    var lobby = games.createLobby(playerService.getPlayer(playerId));
+    //games.addPlayer(lobby.gameId, playerService.getPlayer(playerId));
+    return lobby.gameId;
   }
 
   GameController createGame(String gameId) {

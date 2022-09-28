@@ -25,7 +25,7 @@ class Game {
   static const int level2MarketSize = 3;
   static const int level3MarketSize = 2;
 
-  bool testMode = false;
+  bool testMode = true;
 
   late List<PlayerData> players;
 
@@ -78,13 +78,20 @@ class Game {
   }
 
   void _doTestSetup() {
-    var part = allParts["81"]!;
+    var part = allParts["80"]!;
     players[0].buyPart(part);
     removePart(part);
-    players[0].storeResource(ResourceType.club);
-    players[0].storeResource(ResourceType.club);
-    players[0].storeResource(ResourceType.spade);
-    players[0].storeResource(ResourceType.spade);
+    part = allParts["69"]!;
+    players[0].buyPart(part);
+    removePart(part);
+    // part = allParts["70"]!;
+    // players[0].buyPart(part);
+    // removePart(part);
+
+    players[0].storeResource(ResourceType.diamond);
+    players[0].storeResource(ResourceType.diamond);
+    // players[0].storeResource(ResourceType.spade);
+    // players[0].storeResource(ResourceType.spade);
   }
 
   Game._fromSerialize(this.gameId, this.playerService) {

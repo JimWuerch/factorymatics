@@ -1,12 +1,14 @@
 import 'package:engine/engine.dart';
 
 class GameLobby {
-  String? gameId;
+  String gameId;
   GameController? game;
   late List<Player> players;
+  Player owner;
 
-  GameLobby() {
+  GameLobby(this.gameId, this.owner) {
     players = <Player>[];
+    players.add(owner);
   }
 }
 
@@ -26,9 +28,11 @@ class GameStore {
     return _games[gameId]!.players;
   }
 
-  GameLobby createLobby() {
-    var lobby = GameLobby();
-    lobby.gameId = (_nextGameIndex++).toString();
+  GameLobby createLobby(Player owner) {
+    // TODO: id should be GUID
+    var gameId = (_nextGameIndex++).toString();
+    var lobby = GameLobby(gameId, owner);
+    //lobby.gameId = (_nextGameIndex++).toString();
     _games[lobby.gameId] = lobby;
     return lobby;
   }
@@ -42,7 +46,7 @@ class GameStore {
     return true;
   }
 
-  bool addPlayer(String? gameId, Player player) {
+  bool addPlayer(String gameId, Player player) {
     if (!_games.containsKey(gameId)) {
       return false;
     }

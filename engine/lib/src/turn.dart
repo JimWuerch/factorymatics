@@ -257,7 +257,7 @@ class Turn {
   void _addSearchedPartActions(List<GameAction> actions) {
     //if (searchedParts == null) return;
     for (var part in searchedParts) {
-      if (player.canAfford(part, player.constructFromSearchDiscount, convertedResources, this)) {
+      if (player.canAfford(part, partDiscount(part), convertedResources, this)) {
         actions.add(ConstructAction(player.id, part, null, null, null));
       }
       if (player.hasPartStorageSpace) {
@@ -356,6 +356,7 @@ class Turn {
     }
   }
 
+  // TODO: use this in getAffordableParts
   /// Part discount
   int partDiscount(Part part) {
     var discount = 0;

@@ -54,7 +54,7 @@ class _MainPageState extends State<MainPage> {
           autocorrect: false,
           initialValue: model.players[index],
           onSaved: (value) {
-            model.players[index] = value;
+            model.players[index] = value ?? 'null';
           },
           decoration: const InputDecoration(
             icon: Icon(Icons.person),
