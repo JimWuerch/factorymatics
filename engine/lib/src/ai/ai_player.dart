@@ -30,6 +30,8 @@ class AiPlayer {
       var srcAction = actionFromJson(game, best.action.toJson());
       _finishTurn(game, best.selectedAction, srcAction);
     } else {
+      // ai skipped turn
+      game.currentTurn.setStateTurnSkipped();
       _finishTurn(game, ActionType.gameMode, null); // gameMode is a placeholder
     }
   }
@@ -201,7 +203,6 @@ class AiPlayer {
             {
               // game = _duplicateGame(game);
               // _takeSelectActionAction(ActionType.search);
-
             }
             break;
 
@@ -376,7 +377,36 @@ class AiPlayer {
   }
 
   static int _optimalResource(Game game) {
-    // we want to pick a resource that we can use.  So first, we want one that matches our part in storage
+    // If we have parts that give us more picks, prioritize that
+    if (!game.currentPlayer.parts[PartType.acquire]!.isEmpty &&
+        game.currentPlayer.resourceCount() + 1 <= game.currentPlayer.resourceStorage) {
+      var best = ResourcePool();
+      for (var part in game.currentPlayer.parts[PartType.acquire]!) {
+        for (var trigger in part.triggers) {
+          if (trigger is AcquireTrigger) {
+            if (-1 != game.availableResources.list.indexOf(trigger.resourceType)) {
+              best.add1(trigger.resourceType);
+            }
+          }
+        }
+      }
+      // find which of the types gets us the most marbles
+      var rt = ResourceType.none;
+      var max = 0;
+      for (var t in ResourceType.values) {
+        if (best.count(t) > max) {
+          rt = t;
+          max = best.count(t);
+        }
+      }
+      if (rt != ResourceType.none) {
+        var i = game.availableResources.list.indexOf(rt);
+        if (i != -1) {
+          return i;
+        }
+      }
+    }
+    // we want to pick a resource that we can use.  Look for one that matches our part in storage
     if (game.currentPlayer.savedParts.isNotEmpty) {
       var i = game.availableResources.list.indexOf(game.currentPlayer.savedParts.first.resource);
       if (i != -1) {

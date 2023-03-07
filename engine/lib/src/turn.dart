@@ -917,4 +917,10 @@ class Turn {
     }
     return count;
   }
+
+  // used by the AI player to skip their turn
+  void setStateTurnSkipped() {
+    // setting this state, says we did our action, so we are allowed to end turn
+    turnState.value = TurnState.selectedActionCompleted;
+  }
 }
